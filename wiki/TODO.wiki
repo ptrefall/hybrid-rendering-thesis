@@ -18,7 +18,7 @@
   * Rewrite render pipeline into something flexible enough to give mix-and-match support to rasterization and raytracing techniques.
   * Integrate a good performance/profiling tool/logger.
 ==== Rasterization ====
-  * Vanilla deferred shading integration based on http://www.codinglabs.net/tutorial_simple_def_rendering.aspx
+  * Vanilla deferred shading integration based on [http://www.codinglabs.net/tutorial_simple_def_rendering.aspx Coding Labs]'s article.
 ==== Raytracing ====
 ==== Voxels ====
 
