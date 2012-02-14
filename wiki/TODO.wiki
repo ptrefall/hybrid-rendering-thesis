@@ -14,6 +14,7 @@
   * sensible dataset to visualize.
   * Evaluate cutting edge voxel data storage libraries.
     * [https://sites.google.com/site/field3d/ Field3D]
+==== Cloud ====
 == Paper ==
 == Programming ==
 ==== Framework ====
@@ -26,6 +27,7 @@
   * Vanilla deferred shading integration based on [http://www.codinglabs.net/tutorial_simple_def_rendering.aspx Coding Labs]'s article.
 ==== Raytracing ====
 ==== Voxels ====
+==== Cloud ====
 
 
 = FIXED TODO's =
