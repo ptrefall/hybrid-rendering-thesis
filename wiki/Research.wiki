@@ -1,0 +1,5 @@
+#summary Links to diverse papers and websites with information that can come in handy for the thesis.
+
+= Rasterization =
+= Raytracing =
+= Volumetric Data =
