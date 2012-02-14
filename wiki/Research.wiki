@@ -1,5 +1,7 @@
 #summary Links to diverse papers and websites with information that can come in handy for the thesis.
 
 = Rasterization =
+ * Vanilla Deferred Rendering:
+   * http://www.codinglabs.net/tutorial_simple_def_rendering.aspx
 = Raytracing =
 = Voxels =
