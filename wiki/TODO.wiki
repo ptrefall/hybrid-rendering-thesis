@@ -15,3 +15,6 @@
 === Rasterization ===
   * Vanilla deferred shading integration based on http://www.codinglabs.net/tutorial_simple_def_rendering.aspx
 === Raytracing ===
+
+
+= FIXED TODO's =
