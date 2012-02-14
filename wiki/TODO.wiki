@@ -2,10 +2,13 @@
 
 = TODO =
 == Research ==
-  * sensible dataset to visualize.
 ==== Rasterization ====
+  * Research cutting edge methods of rasterization.
+    * Tile-based Deferred Rendering [AndrewLauritzen2010]
+    * Decoupled Deferred Rendering [GaborLiktor2012]
 ==== Raytracing ====
 ==== Voxels ====
+  * sensible dataset to visualize.
 == Paper ==
 == Programming ==
 ==== Framework ====
