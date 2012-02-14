@@ -4,8 +4,8 @@
 == Research ==
 ==== Rasterization ====
   * Research cutting edge methods of rasterization.
-    * Tile-based Deferred Rendering [AndrewLauritzen2010]
-    * Decoupled Deferred Rendering [GaborLiktor2012]
+    * Tile-based Deferred Rendering [http://visual-computing.intel-research.net/art/publications/deferred_rendering/ AndrewLauritzen2010]
+    * Decoupled Deferred Rendering [http://hgpu.org/?p=6820 GaborLiktor2012]
 ==== Raytracing ====
 ==== Voxels ====
   * sensible dataset to visualize.
