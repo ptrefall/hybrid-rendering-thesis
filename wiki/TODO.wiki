@@ -5,6 +5,7 @@
   * sensible dataset to visualize.
 ==== Rasterization ====
 ==== Raytracing ====
+==== Voxels ====
 == Paper ==
 == Programming ==
 ==== Framework ====
@@ -16,6 +17,7 @@
 ==== Rasterization ====
   * Vanilla deferred shading integration based on http://www.codinglabs.net/tutorial_simple_def_rendering.aspx
 ==== Raytracing ====
+==== Voxels ====
 
 
 = FIXED TODO's =
