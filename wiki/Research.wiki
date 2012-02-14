@@ -5,7 +5,7 @@
    * http://www.codinglabs.net/tutorial_simple_def_rendering.aspx
 = Raytracing =
 = Voxels =
- * Volume data powerpoint:
+ * Introduction to Volume Rendering:
    * https://docs.google.com/present/edit?id=0AbHvEL9pBMQCZGc0dHptNXhfNzA5Z3NndDJrZ3A
 = Google Docs =
  * Pre-project resources:
