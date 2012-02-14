@@ -1,0 +1,11 @@
+#summary TODO list for Thesis work.
+
+= TODO =
+== Research ==
+=== Rasterization ===
+=== Raytracing ===
+== Paper ==
+== Programming ==
+=== Framework ===
+=== Rasterization ===
+=== Raytracing ===
