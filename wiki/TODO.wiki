@@ -12,6 +12,8 @@
     * [http://www.nvidia.com/object/optix.html OptiX]
 ==== Voxels ====
   * sensible dataset to visualize.
+  * Evaluate cutting edge voxel data storage libraries.
+    * [https://sites.google.com/site/field3d/ Field3D]
 == Paper ==
 == Programming ==
 ==== Framework ====
