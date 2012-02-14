@@ -8,6 +8,7 @@
     * Decoupled Deferred Rendering, [http://hgpu.org/?p=6820 GaborLiktor2012]
 ==== Raytracing ====
   * Research cutting edge methods of raytracing.
+  * Evaluate cutting edge raytracing tools/engines.
     * [http://www.nvidia.com/object/optix.html OptiX]
 ==== Voxels ====
   * sensible dataset to visualize.
