@@ -7,5 +7,11 @@
 == Paper ==
 == Programming ==
 === Framework ===
+  * Set up basic deferred rasterization render pipeline.
+  * Use file watcher to reload edited data files at runtime.
+  * Set up scene and engine using data files for easy parameter tweaking.
+  * Rewrite render pipeline into something flexible enough to give mix-and-match support to rasterization and raytracing techniques.
+  * Integrate a good performance/profiling tool/logger.
 === Rasterization ===
+  * Vanilla deferred shading integration based on http://www.codinglabs.net/tutorial_simple_def_rendering.aspx
 === Raytracing ===
