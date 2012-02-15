@@ -15,6 +15,9 @@
   * Evaluate cutting edge voxel data storage libraries.
     * [https://sites.google.com/site/field3d/ Field3D]
 ==== Cloud ====
+==== GPU Architecture =====
+  * Research GPU programming. What programs map well to GPU's? Explore the costs of memory-access (Arrays of Structs vs Structs of Arrays layout, linked lists vs arrays, program flow ( branching ) and loops.
+
 == Paper ==
 == Programming ==
 ==== Framework ====
