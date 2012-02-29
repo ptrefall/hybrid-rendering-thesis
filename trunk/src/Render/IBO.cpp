@@ -1,6 +1,5 @@
-#include <GM/Render/IBO.h>
+#include "IBO.h"
 
-using namespace GM;
 using namespace Render;
 
 IBO::IBO(const std::vector<unsigned int> &indices, const unsigned int &draw_type)

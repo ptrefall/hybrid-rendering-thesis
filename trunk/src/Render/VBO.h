@@ -5,7 +5,7 @@
 #include <memory>
 #include <vector>
 
-namespace GM { namespace Render
+namespace Render
 {
 	class VBO;
 	typedef std::shared_ptr<VBO> VBOPtr;
@@ -32,4 +32,4 @@ namespace GM { namespace Render
 		unsigned int handle;
 		unsigned int offset;
 	};
-}}
+}

@@ -5,7 +5,7 @@
 #include <memory>
 #include <vector>
 
-namespace GM { namespace Render
+namespace Render
 {
 	class VAO;
 	typedef std::shared_ptr<VAO> VAOPtr;
@@ -22,4 +22,4 @@ namespace GM { namespace Render
 	private:
 		unsigned int handle;
 	};
-}}
+}

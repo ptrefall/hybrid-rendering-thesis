@@ -5,7 +5,7 @@
 #include <memory>
 #include <vector>
 
-namespace GM { namespace Render
+namespace Render
 {
 	class IBO;
 	typedef std::shared_ptr<IBO> IBOPtr;
@@ -22,4 +22,4 @@ namespace GM { namespace Render
 	private:
 		unsigned int handle;
 	};
-}}
+}
