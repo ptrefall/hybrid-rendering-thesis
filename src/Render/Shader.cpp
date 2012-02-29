@@ -1,12 +1,11 @@
-#include <GM/Render/Shader.h>
+#include "Shader.h"
 #include <GL3\gl3w.h>
 #include <iostream>
 
-using namespace GM;
 using namespace Render;
 
-Shader::Shader(GMEntityPtr owner, const std::string &name) 
-: Totem::Component<>(getType(), name), owner(owner), vs_handle(0), gs_handle(0), fs_handle(0), program_handle(0)
+Shader::Shader() 
+: vs_handle(0), gs_handle(0), fs_handle(0), program_handle(0)
 {
 }
 
@@ -39,7 +38,7 @@ void Shader::initialize()
 	}
 }
 
-void Shader::loadVertexShader(GMFilePtr file, const std::string &folder, const std::string &filename)
+/*void Shader::loadVertexShader(GMFilePtr file, const std::string &folder, const std::string &filename)
 {
 	std::string content = file->loadContentOfFile(folder, filename+".vs");
 	vs_handle = glCreateShader(GL_VERTEX_SHADER);
@@ -64,7 +63,7 @@ void Shader::loadFragmentShader(GMFilePtr file, const std::string &folder, const
 	compile(fs_handle, filename, content);
 	fs_folder = folder;
 	fs_file = filename;
-}
+}*/
 
 void Shader::compile(int handle, const std::string &filename, const std::string &source)
 {

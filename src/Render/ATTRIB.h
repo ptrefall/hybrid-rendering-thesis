@@ -8,7 +8,7 @@
         #define BUFFER_OFFSET(bytes) ((GLubyte*) NULL + bytes)
 #endif
 
-namespace GM { namespace Render
+namespace Render
 {
 	class ATTRIB
 	{
@@ -43,4 +43,4 @@ namespace GM { namespace Render
 				glVertexAttribDivisor(loc, divisor);
 		}
 	};
-}}
+}

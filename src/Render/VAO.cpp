@@ -1,6 +1,5 @@
-#include <GM/Render/VAO.h>
+#include "VAO.h"
 
-using namespace GM;
 using namespace Render;
 
 VAO::VAO()

@@ -1,6 +1,5 @@
-#include <GM/Render/VBO.h>
+#include "VBO.h"
 
-using namespace GM;
 using namespace Render;
 
 VBO::VBO(const unsigned int &size, const unsigned int &draw_type)
