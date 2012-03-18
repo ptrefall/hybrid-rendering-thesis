@@ -1,9 +1,15 @@
 #include <GL/freeglut.h>
 
+#include "Render\DeferredRender.h"
+#include "Render\GBuffer.h"
+
 void display();
 void reshape(int w, int h);
 void keyboard(unsigned char key, int x, int y);
 int init(int argc, char** argv);
+
+Render::GBufferPtr g_buffer;
+Render::DeferredRenderPtr renderer;
 
 int main(int argc, char** argv)
 {
@@ -29,11 +35,19 @@ int main(int argc, char** argv)
 
 void display()
 {
+	g_buffer->begin();
+	//scene->render();
+	g_buffer->end();
+
+	renderer->render();
+
 	glutSwapBuffers();
 }
 
 void reshape(int w, int h)
 {
+	g_buffer->reshape(w,h);
+	renderer->reshape(w,h);
 }
 
 void keyboard(unsigned char key, int x, int y)
@@ -42,5 +56,7 @@ void keyboard(unsigned char key, int x, int y)
 
 int init(int argc, char** argv)
 {
+	g_buffer = std::make_shared<Render::GBuffer>();
+	renderer = std::make_shared<Render::DeferredRender>(g_buffer);
 	return 0;
 }
