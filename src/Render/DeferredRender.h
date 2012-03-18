@@ -4,17 +4,24 @@
 
 namespace Render
 {
+	class GBuffer;
+	typedef std::shared_ptr<GBuffer> GBufferPtr;
+
 	class DeferredRender;
 	typedef std::shared_ptr<DeferredRender> DeferredRenderPtr;
 
 	class DeferredRender
 	{
 	public:
-		DeferredRender();
+		DeferredRender(const GBufferPtr &g_buffer);
 		void render();
 
+		void reshape(unsigned int w, unsigned int h) { this->w = w; this->h = h; }
+
 	private:
-		unsigned int screen_width;
-		unsigned int screen_height;
+		unsigned int w;
+		unsigned int h;
+
+		GBufferPtr g_buffer;
 	};
 }

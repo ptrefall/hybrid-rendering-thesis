@@ -3,9 +3,8 @@
 using namespace Render;
 
 GBuffer::GBuffer() 
+	: w(800), h(600)
 {
-	screen_width = 800;
-	screen_height = 600;
 }
 
 void GBuffer::begin()

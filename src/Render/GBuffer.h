@@ -15,8 +15,10 @@ namespace Render
 		void begin();
 		void end();
 
+		void reshape(unsigned int w, unsigned int h) { this->w = w; this->h = h; }
+
 	private:
-		unsigned int screen_width;
-		unsigned int screen_height;
+		unsigned int w;
+		unsigned int h;
 	};
 }
