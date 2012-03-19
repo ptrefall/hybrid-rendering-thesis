@@ -1,3 +1,5 @@
+#include <GL3\gl3.h>
+#include <GL3\gl3w.h>
 #include <GL/freeglut.h>
 
 #include "Render\DeferredRender.h"
@@ -21,6 +23,13 @@ int main(int argc, char** argv)
 	glutInitWindowSize (800, 600); 
 	glutInitWindowPosition (100, 100);
 	glutCreateWindow (argv[0]);
+
+	GLenum gl3wInitErr = gl3wInit();
+	if(gl3wInitErr)
+		throw std::runtime_error("Failed to initialize OpenGL!");
+	if(gl3wIsSupported(3,3) == false)
+		throw std::runtime_error("OpenGL 3.3 is not supported!");
+
 	if(init(argc, argv))
 		return -1; 
 
