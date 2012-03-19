@@ -34,7 +34,7 @@ void GBuffer::begin()
     glGetIntegerv(GL_VIEWPORT, nViewport);
 	temp_w = nViewport[2];
 	temp_h = nViewport[3];
-	glViewport(0,0,w,h);
+	glViewportIndexedf(0,0,0,(float)w,(float)h);
 
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 	glClearColor( 0.0f, 0.0f, 0.0f, 1.0f );
@@ -49,7 +49,7 @@ void GBuffer::begin()
 void GBuffer::end()
 {
 	fbo->unbind();
-	glViewport(0,0,temp_w,temp_h);
+	glViewportIndexedf(0,0,0,(float)temp_w,(float)temp_h);
 }
 
 void GBuffer::reshape(unsigned int w, unsigned int h) 
