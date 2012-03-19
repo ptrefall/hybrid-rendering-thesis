@@ -12,10 +12,13 @@ namespace Render
 	class GBuffer
 	{
 	public:
-		GBuffer();
+		GBuffer(unsigned int w, unsigned int h);
 
 		void begin();
 		void end();
+
+		void bind();
+		void unbind();
 
 		void reshape(unsigned int w, unsigned int h);
 
