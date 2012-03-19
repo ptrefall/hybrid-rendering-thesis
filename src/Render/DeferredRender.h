@@ -16,7 +16,7 @@ namespace Render
 		DeferredRender(const GBufferPtr &g_buffer);
 		void render();
 
-		void reshape(unsigned int w, unsigned int h) { this->w = w; this->h = h; }
+		void reshape(unsigned int w, unsigned int h);
 
 	private:
 		unsigned int w;
