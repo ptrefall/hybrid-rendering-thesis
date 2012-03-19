@@ -5,6 +5,8 @@
 #include "Render\DeferredRender.h"
 #include "Render\GBuffer.h"
 
+#include <string>
+
 void display();
 void reshape(int w, int h);
 void keyboard(unsigned char key, int x, int y);
@@ -17,6 +19,9 @@ unsigned int width, height;
 
 int main(int argc, char** argv)
 {
+	//////////////////////////////////////////
+	// GLUT INITIALIZING
+	//////////////////////////////////////////
 	glutInit(&argc, argv);
 	glutInitDisplayMode (GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
 	glutInitContextVersion (4, 2);
@@ -30,19 +35,32 @@ int main(int argc, char** argv)
 	glutInitWindowPosition (100, 100);
 	glutCreateWindow (argv[0]);
 
+	//////////////////////////////////////////
+	// GL3W INITIALIZING
+	//////////////////////////////////////////
 	GLenum gl3wInitErr = gl3wInit();
 	if(gl3wInitErr)
 		throw std::runtime_error("Failed to initialize OpenGL!");
 	if(gl3wIsSupported(3,3) == false)
 		throw std::runtime_error("OpenGL 3.3 is not supported!");
 
+	//////////////////////////////////////////
+	// GAME INITIALIZING
+	//////////////////////////////////////////
 	if(init(argc, argv))
 		return -1; 
 
+	//////////////////////////////////////////
+	// GLUT FUNCTOR INITIALIZING
+	//////////////////////////////////////////
 	glutIdleFunc(display);
 	glutDisplayFunc(display); 
 	glutReshapeFunc(reshape);
 	glutKeyboardFunc(keyboard);
+
+	//////////////////////////////////////////
+	// HEARTBEAT
+	//////////////////////////////////////////
 	glutMainLoop();
 
 	return 0;
@@ -77,7 +95,36 @@ void keyboard(unsigned char key, int x, int y)
 
 int init(int argc, char** argv)
 {
+	//////////////////////////////////////////
+	// SET UP SAFE RESOURCE DIRECTORY LOOKUP
+	//////////////////////////////////////////
+	std::string resourceDirectory = argv[0];
+	auto pos = resourceDirectory.find_last_of("/");
+	if(pos == resourceDirectory.npos)
+		pos = resourceDirectory.find_last_of("\\");
+	if(pos == resourceDirectory.npos)
+		return -1;
+	resourceDirectory = resourceDirectory.substr(0, pos);
+	
+	pos = resourceDirectory.find_last_of("/");
+	if(pos == resourceDirectory.npos)
+		pos = resourceDirectory.find_last_of("\\");
+	if(pos == resourceDirectory.npos)
+		return -1;
+	resourceDirectory = resourceDirectory.substr(0, pos+1);
+
+	resourceDirectory = resourceDirectory + "resources\\";
+
+	//////////////////////////////////////////
+	// FILE SYSTEM INITIALIZING
+	//////////////////////////////////////////
+
+
+	//////////////////////////////////////////
+	// DEFERRED RENDERER INITIALIZING
+	//////////////////////////////////////////
 	g_buffer = std::make_shared<Render::GBuffer>(width, height);
 	renderer = std::make_shared<Render::DeferredRender>(g_buffer, width, height);
+
 	return 0;
 }
