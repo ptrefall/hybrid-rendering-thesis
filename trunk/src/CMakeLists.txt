@@ -90,14 +90,28 @@ set(Scene_SRCS
 )
 SOURCE_GROUP("Source Files\\Scene" FILES ${Scene_SRCS})
 
+set(File_HDRS
+  ./File/ShaderLoader.h
+  ./File/TextureLoader.h
+)
+SOURCE_GROUP("Header Files\\File" FILES ${File_HDRS})
+
+set(File_SRCS
+  ./File/ShaderLoader.cpp
+  ./File/TextureLoader.cpp
+)
+SOURCE_GROUP("Source Files\\File" FILES ${File_SRCS})
+
 set(HDRS
   ${Render_HDRS}
   ${Scene_HDRS}
+  ${File_HDRS}
 )
 
 set(SRCS
   ${Render_SRCS}
   ${Scene_SRCS}
+  ${File_SRCS}
   main.cpp
 )
  
