@@ -7,6 +7,7 @@ IBO::IBO(const std::vector<unsigned int> &indices, const unsigned int &draw_type
 	glGenBuffers(1, &handle);
 	bind();
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int)*indices.size(), &indices[0], draw_type);
+	index_size = indices.size();
 }
 
 IBO::~IBO()

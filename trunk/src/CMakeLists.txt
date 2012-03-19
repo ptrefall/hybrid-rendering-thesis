@@ -80,12 +80,24 @@ set(Render_SRCS
 )
 SOURCE_GROUP("Source Files\\Render" FILES ${Render_SRCS})
 
+set(Scene_HDRS
+  ./Scene/Quad.h
+)
+SOURCE_GROUP("Header Files\\Scene" FILES ${Scene_HDRS})
+
+set(Scene_SRCS
+  ./Scene/Quad.cpp
+)
+SOURCE_GROUP("Source Files\\Scene" FILES ${Scene_SRCS})
+
 set(HDRS
   ${Render_HDRS}
+  ${Scene_HDRS}
 )
 
 set(SRCS
   ${Render_SRCS}
+  ${Scene_SRCS}
   main.cpp
 )
  

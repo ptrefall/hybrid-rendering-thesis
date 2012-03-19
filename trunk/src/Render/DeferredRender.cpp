@@ -7,6 +7,7 @@ using namespace Render;
 DeferredRender::DeferredRender(const GBufferPtr &g_buffer, unsigned int w, unsigned int h)
 	: g_buffer(g_buffer), w(w), h(h)
 {
+	quad = std::make_shared<Scene::Quad>(w,h);
 }
 
 void DeferredRender::render()
@@ -14,7 +15,7 @@ void DeferredRender::render()
 	//Bind orthographic projection
 	//Bind shader program
 	g_buffer->bind();
-	//Draw quad
+	quad->render();
 	g_buffer->unbind();
 }
 

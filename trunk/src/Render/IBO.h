@@ -19,7 +19,10 @@ namespace Render
 		void bind();
 		void unbind();
 
+		unsigned int size() const { return index_size; }
+
 	private:
 		unsigned int handle;
+		unsigned int index_size;
 	};
 }
