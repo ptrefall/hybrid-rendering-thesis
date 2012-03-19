@@ -56,9 +56,12 @@ set(Render_HDRS
   ./Render/DeferredRender.h
   ./Render/GBuffer.h
   ./Render/Shader.h
+  ./Render/Tex2D.h
   ./Render/VAO.h
   ./Render/VBO.h
   ./Render/IBO.h
+  ./Render/FBO.h
+  ./Render/RT.h
   ./Render/ATTRIB.h
 )
 SOURCE_GROUP("Header Files\\Render" FILES ${Render_HDRS})
@@ -67,9 +70,12 @@ set(Render_SRCS
   ./Render/DeferredRender.cpp
   ./Render/GBuffer.cpp
   ./Render/Shader.cpp
+  ./Render/Tex2D.cpp
   ./Render/VAO.cpp
   ./Render/VBO.cpp
   ./Render/IBO.cpp
+  ./Render/FBO.cpp
+  ./Render/RT.cpp
 )
 SOURCE_GROUP("Source Files\\Render" FILES ${Render_SRCS})
 

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "FBO.h"
+
 #include <memory>
 
 namespace Render
@@ -15,10 +17,15 @@ namespace Render
 		void begin();
 		void end();
 
-		void reshape(unsigned int w, unsigned int h) { this->w = w; this->h = h; }
+		void reshape(unsigned int w, unsigned int h);
 
 	private:
 		unsigned int w;
 		unsigned int h;
+
+		unsigned int temp_w;
+		unsigned int temp_h;
+
+		FBOPtr fbo;
 	};
 }
