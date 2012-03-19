@@ -24,6 +24,24 @@ void FBO::unbind()
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
+void FBO::bind_rt()
+{
+	for(unsigned int i = 0; i < render_textures.size(); i++)
+	{
+		glActiveTexture(GL_TEXTURE0 + i);
+		render_textures[i]->bind();
+	}
+}
+
+void FBO::unbind_rt()
+{
+	for(unsigned int i = 0; i < render_textures.size(); i++)
+	{
+		glActiveTexture(GL_TEXTURE0 + i);
+		render_textures[i]->unbind();
+	}
+}
+
 void FBO::add(unsigned int attachment, const RTPtr &render_target)
 {
 	render_targets.push_back(render_target);

@@ -13,14 +13,20 @@ int init(int argc, char** argv);
 Render::GBufferPtr g_buffer;
 Render::DeferredRenderPtr renderer;
 
+unsigned int width, height;
+
 int main(int argc, char** argv)
 {
 	glutInit(&argc, argv);
 	glutInitDisplayMode (GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
-	glutInitContextVersion (3, 3);
+	glutInitContextVersion (4, 2);
 	glutInitContextFlags (GLUT_FORWARD_COMPATIBLE | GLUT_DEBUG);
 	glutInitContextProfile(GLUT_CORE_PROFILE);
-	glutInitWindowSize (800, 600); 
+
+	width = 800;
+	height = 600;
+
+	glutInitWindowSize (width, height); 
 	glutInitWindowPosition (100, 100);
 	glutCreateWindow (argv[0]);
 
@@ -44,6 +50,12 @@ int main(int argc, char** argv)
 
 void display()
 {
+	float color_buffer_clear[4];
+	memset(color_buffer_clear, 0.0f, sizeof(float)*4);
+	float depth_buffer_clear = 0.0f;
+	glClearBufferfv(GL_COLOR, 0, color_buffer_clear);
+	glClearBufferfv(GL_DEPTH, 0, &depth_buffer_clear);
+
 	g_buffer->begin();
 	//scene->render();
 	g_buffer->end();
@@ -65,7 +77,7 @@ void keyboard(unsigned char key, int x, int y)
 
 int init(int argc, char** argv)
 {
-	g_buffer = std::make_shared<Render::GBuffer>();
-	renderer = std::make_shared<Render::DeferredRender>(g_buffer);
+	g_buffer = std::make_shared<Render::GBuffer>(width, height);
+	renderer = std::make_shared<Render::DeferredRender>(g_buffer, width, height);
 	return 0;
 }

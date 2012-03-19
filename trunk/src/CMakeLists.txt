@@ -56,6 +56,7 @@ set(Render_HDRS
   ./Render/DeferredRender.h
   ./Render/GBuffer.h
   ./Render/Shader.h
+  ./Render/ShaderConstants.h
   ./Render/Tex2D.h
   ./Render/VAO.h
   ./Render/VBO.h

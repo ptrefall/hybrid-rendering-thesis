@@ -13,7 +13,7 @@ namespace Render
 	class DeferredRender
 	{
 	public:
-		DeferredRender(const GBufferPtr &g_buffer);
+		DeferredRender(const GBufferPtr &g_buffer, unsigned int w, unsigned int h);
 		void render();
 
 		void reshape(unsigned int w, unsigned int h);

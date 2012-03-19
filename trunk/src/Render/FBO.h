@@ -22,6 +22,9 @@ namespace Render
 		void bind();
 		void unbind();
 
+		void bind_rt();
+		void unbind_rt();
+
 		void add(unsigned int attachment, const RTPtr &render_target);
 		void add(unsigned int attachment, unsigned int texture_type, const Tex2DPtr &render_texture);
 

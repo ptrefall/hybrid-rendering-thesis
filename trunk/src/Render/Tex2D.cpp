@@ -2,8 +2,9 @@
 
 using namespace Render;
 
-Tex2D::Tex2D(unsigned int internal_format, unsigned int format, unsigned int type, unsigned int w, unsigned int h)
-	: internal_format(internal_format), format(format), type(type), w(w), h(h)
+Tex2D::Tex2D(const T2DShaderParams &shader_params, const T2DTexParams &tex_params)
+	: shader_handle(shader_params.handle), shader_position(shader_params.position), 
+	  internal_format(tex_params.internal_format), format(tex_params.format), type(tex_params.type), w(tex_params.w), h(tex_params.h)
 {
 	glGenTextures(1, &handle);
 	bind();
@@ -22,6 +23,7 @@ Tex2D::~Tex2D()
 void Tex2D::bind()
 {
 	glBindTexture(GL_TEXTURE_2D, handle);
+	glUniform1i(shader_handle, shader_position);
 }
 
 void Tex2D::unbind()
