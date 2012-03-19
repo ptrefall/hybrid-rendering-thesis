@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../Scene/Quad.h"
 #include <memory>
 
 namespace Render
@@ -23,5 +24,7 @@ namespace Render
 		unsigned int h;
 
 		GBufferPtr g_buffer;
+
+		Scene::QuadPtr quad;
 	};
 }
