@@ -7,8 +7,8 @@
 
 using namespace Render;
 
-GBuffer::GBuffer(unsigned int w, unsigned int h) 
-	: w(w), h(h)
+GBuffer::GBuffer(const File::ShaderLoaderPtr &shader_loader, unsigned int w, unsigned int h) 
+	: shader_loader(shader_loader), w(w), h(h)
 {
 	fbo = std::make_shared<FBO>(w,h);
 	
@@ -26,6 +26,8 @@ GBuffer::GBuffer(unsigned int w, unsigned int h)
 	//Check that everything is ok
 	fbo->check();
 	fbo->unbind();
+
+	shader = shader_loader->load("deferredShading.vs", std::string(), "deferredShading.fs");
 }
 
 void GBuffer::begin()
@@ -48,12 +50,15 @@ void GBuffer::begin()
 
 	GLenum buffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
 	glDrawBuffers(3, buffers);
+
+	shader->bind();
 }
 
 void GBuffer::end()
 {
 	fbo->unbind();
 	glViewportIndexedf(0,0,0,(float)temp_w,(float)temp_h);
+	shader->unbind();
 }
 
 void GBuffer::bind()
