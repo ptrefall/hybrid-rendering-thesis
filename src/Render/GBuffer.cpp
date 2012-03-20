@@ -28,10 +28,15 @@ GBuffer::GBuffer(const File::ShaderLoaderPtr &shader_loader, unsigned int w, uns
 	fbo->unbind();
 
 	shader = shader_loader->load("deferredShading.vs", std::string(), "deferredShading.fs");
+
+	mvp		= std::make_shared<Uniform>(shader->getVS(), "MVP");
+	mv		= std::make_shared<Uniform>(shader->getVS(), "MV");
+	n_wri	= std::make_shared<Uniform>(shader->getVS(), "N_WRI");
 }
 
 void GBuffer::begin()
 {
+	shader->bind();
 	fbo->bind();
 
 	GLint nViewport[4];
@@ -50,15 +55,13 @@ void GBuffer::begin()
 
 	GLenum buffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
 	glDrawBuffers(3, buffers);
-
-	shader->bind();
 }
 
 void GBuffer::end()
 {
+	shader->unbind();
 	fbo->unbind();
 	glViewportIndexedf(0,0,0,(float)temp_w,(float)temp_h);
-	shader->unbind();
 }
 
 void GBuffer::bind()
