@@ -1,11 +1,22 @@
-varying vec4		position;
-varying vec3		normals;
-varying mat4		TBN;
-uniform sampler2D	tDiffuse;
+#version 420 core
+#define DIFFUSE		0
+#define POSITION	1
+#define NORMAL		2
+#define TEXCOORD	3
+
+in Vertex
+{
+	vec3 v; //Position in view space
+	vec3 n; //Normal in world space
+};
+
+layout(location = DIFFUSE, 	index = 0) 	out vec4 out_Diffuse;
+layout(location = POSITION, index = 0) 	out vec4 out_Position;
+layout(location = NORMAL, 	index = 0) 	out vec4 out_Normal;
 
 void main( void )
 {
-	gl_FragData[0]		= vec4(texture2D(tDiffuse,gl_TexCoord[0].st).rgb, 0);
-	gl_FragData[1]		= vec4(position.xyz,0);
-	gl_FragData[2]		= vec4(normals.xyz,0);
+	out_Diffuse		= vec4(1.0, 0.0, 0.0, 1.0);
+	out_Position	= vec4(Vertex.v.xyz,0);
+	out_Normal		= vec4(Vertex.n.xyz,0);
 }

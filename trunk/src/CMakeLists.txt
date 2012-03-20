@@ -58,6 +58,7 @@ set(Render_HDRS
   ./Render/Shader.h
   ./Render/ShaderConstants.h
   ./Render/Tex2D.h
+  ./Render/Uniform.h
   ./Render/VAO.h
   ./Render/VBO.h
   ./Render/IBO.h
@@ -72,6 +73,7 @@ set(Render_SRCS
   ./Render/GBuffer.cpp
   ./Render/Shader.cpp
   ./Render/Tex2D.cpp
+  ./Render/Uniform.cpp
   ./Render/VAO.cpp
   ./Render/VBO.cpp
   ./Render/IBO.cpp

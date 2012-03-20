@@ -3,6 +3,7 @@
 #include "FBO.h"
 #include "../File/ShaderLoader.h"
 #include "Shader.h"
+#include "Uniform.h"
 
 #include <memory>
 
@@ -34,5 +35,9 @@ namespace Render
 		FBOPtr fbo;
 		File::ShaderLoaderPtr shader_loader;
 		ShaderPtr shader;
+
+		UniformPtr mvp;
+		UniformPtr mv;
+		UniformPtr n_wri;
 	};
 }

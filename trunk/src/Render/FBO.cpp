@@ -29,7 +29,7 @@ void FBO::bind_rt()
 	for(unsigned int i = 0; i < render_textures.size(); i++)
 	{
 		glActiveTexture(GL_TEXTURE0 + i);
-		render_textures[i]->bind();
+		render_textures[i]->bind(i);
 	}
 }
 
@@ -54,7 +54,7 @@ void FBO::add(unsigned int attachment, unsigned int texture_type, const Tex2DPtr
 {
 	render_textures.push_back(render_texture);
 
-	render_texture->bind();
+	render_texture->bind(-1);
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, attachment, texture_type, render_texture->getHandle());
 }
 

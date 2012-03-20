@@ -35,7 +35,7 @@ namespace Render
 		Tex2D(const T2DShaderParams &shader_params, const T2DTexParams &tex_params);
 		~Tex2D();
 
-		void bind();
+		void bind(int slot);
 		void unbind();
 
 		unsigned int getHandle() const { return handle; }
