@@ -14,16 +14,19 @@ ShaderLoader::ShaderLoader(const std::string &base_dir)
 {
 }
 
-Render::ShaderPtr ShaderLoader::load(const std::string &filename)
+Render::ShaderPtr ShaderLoader::load(const std::string &vs_filename, const std::string &gs_filename, const std::string &fs_filename)
 {
-	auto shader = std::make_shared<Render::Shader>();
-	std::string contents = loadContents(filename);
-	//initialize
-	return shader;
+	std::string vs_contents = loadContents(vs_filename);
+	std::string gs_contents = loadContents(gs_filename);
+	std::string fs_contents = loadContents(fs_filename);
+	return std::make_shared<Render::Shader>(vs_contents, gs_contents, fs_contents);
 }
 
 std::string ShaderLoader::loadContents(const std::string &filename)
 {
+	if(filename.empty())
+		return std::string();
+
 	int fd;
     char name[100];
     int size = -1;

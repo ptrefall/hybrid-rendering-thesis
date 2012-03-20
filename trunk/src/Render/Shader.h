@@ -11,25 +11,21 @@ namespace Render
 	class Shader
 	{
 	public:
-		Shader();
+		Shader(const std::string &vs_contents, const std::string &gs_contents, const std::string &fs_contents);
 		virtual ~Shader();
-
-		void initialize();
-
-	public:
-		//void loadVertexShader(FilePtr file, const std::string &folder, const std::string &filename);
-		//void loadGeometryShader(FilePtr file, const std::string &folder, const std::string &filename);
-		//void loadFragmentShader(FilePtr file, const std::string &folder, const std::string &filename);
 
 		void bind();
 		void unbind();
 
-	private:
-		void compile(int handle, const std::string &filename, const std::string &source);
-		unsigned int vs_handle, gs_handle, fs_handle, program_handle;
+		unsigned int getVS() const { return vs; }
+		unsigned int getGS() const { return gs; }
+		unsigned int getFS() const { return fs; }
 
-		//Potential storage-requirements in order to support file-watch-modifications
-		std::string vs_folder, gs_folder, fs_folder;
-		std::string vs_file, gs_file, fs_file;
+	private:
+		unsigned int createShader(unsigned int type, const std::string &contents);
+		
+		unsigned int handle;
+		unsigned int vs, gs, fs;
+
 	};
 }

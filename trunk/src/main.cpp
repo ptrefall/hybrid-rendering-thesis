@@ -4,6 +4,7 @@
 
 #include "Render\DeferredRender.h"
 #include "Render\GBuffer.h"
+#include "File\ShaderLoader.h"
 
 #include <string>
 
@@ -12,10 +13,15 @@ void reshape(int w, int h);
 void keyboard(unsigned char key, int x, int y);
 int init(int argc, char** argv);
 
-Render::GBufferPtr g_buffer;
-Render::DeferredRenderPtr renderer;
+//Globals available only to this file
+namespace 
+{
+	Render::GBufferPtr g_buffer;
+	Render::DeferredRenderPtr renderer;
+	File::ShaderLoaderPtr shader_loader;
 
-unsigned int width, height;
+	unsigned int width, height;
+}
 
 int main(int argc, char** argv)
 {
@@ -95,36 +101,41 @@ void keyboard(unsigned char key, int x, int y)
 
 int init(int argc, char** argv)
 {
-	//////////////////////////////////////////
-	// SET UP SAFE RESOURCE DIRECTORY LOOKUP
-	//////////////////////////////////////////
-	std::string resourceDirectory = argv[0];
-	auto pos = resourceDirectory.find_last_of("/");
-	if(pos == resourceDirectory.npos)
-		pos = resourceDirectory.find_last_of("\\");
-	if(pos == resourceDirectory.npos)
+	//////////////////////////////////////////////
+	// SET UP SAFE RESOURCE BASE DIRECTORY LOOKUP
+	//////////////////////////////////////////////
+	std::string base_dir = argv[0];
+	auto pos = base_dir.find_last_of("/");
+	if(pos == base_dir.npos)
+		pos = base_dir.find_last_of("\\");
+	if(pos == base_dir.npos)
 		return -1;
-	resourceDirectory = resourceDirectory.substr(0, pos);
+	base_dir = base_dir.substr(0, pos);
 	
-	pos = resourceDirectory.find_last_of("/");
-	if(pos == resourceDirectory.npos)
-		pos = resourceDirectory.find_last_of("\\");
-	if(pos == resourceDirectory.npos)
+	pos = base_dir.find_last_of("/");
+	if(pos == base_dir.npos)
+		pos = base_dir.find_last_of("\\");
+	if(pos == base_dir.npos)
 		return -1;
-	resourceDirectory = resourceDirectory.substr(0, pos+1);
+	base_dir = base_dir.substr(0, pos+1);
 
-	resourceDirectory = resourceDirectory + "resources\\";
+	base_dir = base_dir + "resources\\";
 
 	//////////////////////////////////////////
 	// FILE SYSTEM INITIALIZING
 	//////////////////////////////////////////
+	shader_loader = std::make_shared<File::ShaderLoader>(base_dir+"shaders\\");
 
 
 	//////////////////////////////////////////
 	// DEFERRED RENDERER INITIALIZING
 	//////////////////////////////////////////
-	g_buffer = std::make_shared<Render::GBuffer>(width, height);
-	renderer = std::make_shared<Render::DeferredRender>(g_buffer, width, height);
+	g_buffer = std::make_shared<Render::GBuffer>(shader_loader, width, height);
+	renderer = std::make_shared<Render::DeferredRender>(g_buffer, shader_loader, width, height);
+
+	//////////////////////////////////////////
+	// SCENE INITIALIZING
+	//////////////////////////////////////////
 
 	return 0;
 }

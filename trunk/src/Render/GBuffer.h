@@ -1,6 +1,8 @@
 #pragma once
 
 #include "FBO.h"
+#include "../File/ShaderLoader.h"
+#include "Shader.h"
 
 #include <memory>
 
@@ -12,7 +14,7 @@ namespace Render
 	class GBuffer
 	{
 	public:
-		GBuffer(unsigned int w, unsigned int h);
+		GBuffer(const File::ShaderLoaderPtr &shader_loader, unsigned int w, unsigned int h);
 
 		void begin();
 		void end();
@@ -30,5 +32,7 @@ namespace Render
 		unsigned int temp_h;
 
 		FBOPtr fbo;
+		File::ShaderLoaderPtr shader_loader;
+		ShaderPtr shader;
 	};
 }
