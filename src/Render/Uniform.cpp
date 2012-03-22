@@ -5,7 +5,7 @@
 using namespace Render;
 
 Uniform::Uniform(unsigned int program, const std::string &name) 
-	: program(program)
+	: program(program), location(-1), name(name)
 {
 	location = glGetUniformLocation(program, name.c_str());
 	//if(location < 0)
@@ -19,5 +19,29 @@ void Uniform::bind(int data)
 
 void Uniform::bind(float data)
 {
+	glProgramUniform1f(program, location, data);
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Uniform::Uniform(const std::string &name) 
+	: program(0), location(-1), name(name)
+{
+}
+
+void Uniform::bind(int data, unsigned int program)
+{
+	if(location < 0)
+		location = glGetUniformLocation(program, name.c_str());
+
+	glProgramUniform1i(program, location, data);
+}
+
+void Uniform::bind(float data, unsigned int program)
+{
+	if(location < 0)
+		location = glGetUniformLocation(program, name.c_str());
+
 	glProgramUniform1f(program, location, data);
 }

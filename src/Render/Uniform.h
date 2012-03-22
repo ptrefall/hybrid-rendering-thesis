@@ -12,12 +12,17 @@ namespace Render
 	{
 	public:
 		Uniform(unsigned int program, const std::string &name);
-
 		void bind(int data);
 		void bind(float data);
+
+		Uniform(const std::string &name);
+		void bind(int data, unsigned int program);
+		void bind(float data, unsigned int program);
 
 	private:
 		int location;
 		unsigned int program;
+
+		std::string name;
 	};
 }

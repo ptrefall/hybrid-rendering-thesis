@@ -11,10 +11,10 @@ out gl_PerVertex
     vec4 gl_Position;
 };
 
-out Vertex
+out block
 {
 	vec2 t; //TexCoord
-};
+} Vertex;
 
 void main( void )
 {

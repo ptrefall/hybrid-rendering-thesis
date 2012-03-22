@@ -24,12 +24,13 @@ void FBO::unbind()
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void FBO::bind_rt()
+void FBO::bind_rt(unsigned int active_program)
 {
-	for(unsigned int i = 0; i < render_textures.size(); i++)
+	for(auto i = 0; i < (int)render_textures.size(); i++)
 	{
 		glActiveTexture(GL_TEXTURE0 + i);
-		render_textures[i]->bind(i);
+		render_textures[i]->bind();
+		render_samplers[i]->bind(i, active_program);
 	}
 }
 
@@ -50,12 +51,13 @@ void FBO::add(unsigned int attachment, const RTPtr &render_target)
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, attachment, GL_RENDERBUFFER, render_target->getHandle());
 }
 
-void FBO::add(unsigned int attachment, unsigned int texture_type, const Tex2DPtr &render_texture)
+void FBO::add(unsigned int attachment, unsigned int texture_type, const std::string &sampler_name, const Tex2DPtr &render_texture)
 {
 	render_textures.push_back(render_texture);
+	render_samplers.push_back(std::make_shared<Uniform>(sampler_name));
 
-	render_texture->bind(-1);
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER, attachment, texture_type, render_texture->getHandle());
+	render_texture->bind();
+	glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, texture_type, render_texture->getHandle(), 0);
 }
 
 void FBO::check()
