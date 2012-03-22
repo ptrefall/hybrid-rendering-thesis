@@ -11,10 +11,10 @@ uniform sampler2D TEX_NORM;
 
 uniform vec3 CamPos;
 
-in Vertex
+in block
 {
 	vec2 t; //TexCoord
-};
+} Vertex;
 
 layout(location = FRAG_COLOR, index = 0) out vec4 out_FragColor;
 

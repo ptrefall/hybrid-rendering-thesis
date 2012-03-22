@@ -16,11 +16,11 @@ out gl_PerVertex
     vec4 gl_Position;
 };
 
-out Vertex
+out block
 {
 	vec3 v; //Position in view space
 	vec3 n; //Normal in world space
-};
+} Vertex;
 
 void main( void )
 {	

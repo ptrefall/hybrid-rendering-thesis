@@ -15,7 +15,7 @@ void DeferredRender::render()
 {
 	//Bind orthographic projection
 	shader->bind();
-	g_buffer->bind();
+	g_buffer->bind(shader->getFS());
 	quad->render();
 	g_buffer->unbind();
 }

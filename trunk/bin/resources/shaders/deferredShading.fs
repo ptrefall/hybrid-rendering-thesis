@@ -4,11 +4,11 @@
 #define NORMAL		2
 #define TEXCOORD	3
 
-in Vertex
+in block
 {
 	vec3 v; //Position in view space
 	vec3 n; //Normal in world space
-};
+} Vertex;
 
 layout(location = DIFFUSE, 	index = 0) 	out vec4 out_Diffuse;
 layout(location = POSITION, index = 0) 	out vec4 out_Position;

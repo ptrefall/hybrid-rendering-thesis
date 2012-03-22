@@ -10,6 +10,9 @@ using namespace Render;
 GBuffer::GBuffer(const File::ShaderLoaderPtr &shader_loader, unsigned int w, unsigned int h) 
 	: shader_loader(shader_loader), w(w), h(h)
 {
+	////////////////////////////////////////
+	// LOAD FBO
+	////////////////////////////////////////
 	fbo = std::make_shared<FBO>(w,h);
 	
 	//Add render targets
@@ -19,16 +22,18 @@ GBuffer::GBuffer(const File::ShaderLoaderPtr &shader_loader, unsigned int w, uns
 	fbo->add(GL_DEPTH_ATTACHMENT,  std::make_shared<RT>(GL_DEPTH_COMPONENT24, w,h));	//Depth
 
 	//Add render textures
-	fbo->add(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, std::make_shared<Tex2D>(T2DShaderParams(ShaderConstants::Diffuse(),0),	T2DTexParams(GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, w,h)));//Diffuse
-	fbo->add(GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, std::make_shared<Tex2D>(T2DShaderParams(ShaderConstants::Position(),1),	T2DTexParams(GL_RGBA32F, GL_RGBA, GL_FLOAT, w,h)));		//Position
-	fbo->add(GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, std::make_shared<Tex2D>(T2DShaderParams(ShaderConstants::Normal(),2),		T2DTexParams(GL_RGBA16F, GL_RGBA, GL_FLOAT, w,h)));		//Normal
+	fbo->add(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, "TEX_DIFF", std::make_shared<Tex2D>(T2DTexParams(GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, w,h)));//Diffuse
+	fbo->add(GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, "TEX_POS",  std::make_shared<Tex2D>(T2DTexParams(GL_RGBA32F, GL_RGBA, GL_FLOAT, w,h)));		//Position
+	fbo->add(GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, "TEX_NORM", std::make_shared<Tex2D>(T2DTexParams(GL_RGBA16F, GL_RGBA, GL_FLOAT, w,h)));		//Normal
 
 	//Check that everything is ok
 	fbo->check();
 	fbo->unbind();
 
+	////////////////////////////////////////
+	// LOAD SHADER
+	////////////////////////////////////////
 	shader = shader_loader->load("deferredShading.vs", std::string(), "deferredShading.fs");
-
 	mvp		= std::make_shared<Uniform>(shader->getVS(), "MVP");
 	mv		= std::make_shared<Uniform>(shader->getVS(), "MV");
 	n_wri	= std::make_shared<Uniform>(shader->getVS(), "N_WRI");
@@ -64,9 +69,9 @@ void GBuffer::end()
 	glViewportIndexedf(0,0,0,(float)temp_w,(float)temp_h);
 }
 
-void GBuffer::bind()
+void GBuffer::bind(unsigned int active_program)
 {
-	fbo->bind_rt();
+	fbo->bind_rt(active_program);
 }
 
 void GBuffer::unbind()
