@@ -25,6 +25,10 @@ namespace Render
 
 		void reshape(unsigned int w, unsigned int h);
 
+		UniformPtr getMVP() const { return mvp; }
+		UniformPtr getMV() const { return mv; }
+		UniformPtr getN_WRI() const { return n_wri; }
+
 	private:
 		unsigned int w;
 		unsigned int h;
