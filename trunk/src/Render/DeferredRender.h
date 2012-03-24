@@ -3,6 +3,7 @@
 #include "../Scene/Quad.h"
 #include "../File/ShaderLoader.h"
 #include "Shader.h"
+#include "Uniform.h"
 
 #include <memory>
 
@@ -29,7 +30,7 @@ namespace Render
 		GBufferPtr g_buffer;
 		File::ShaderLoaderPtr shader_loader;
 		ShaderPtr shader;
-
+		UniformPtr camPos;
 
 		Scene::QuadPtr quad;
 	};

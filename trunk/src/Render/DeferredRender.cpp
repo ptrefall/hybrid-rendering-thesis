@@ -9,11 +9,11 @@ DeferredRender::DeferredRender(const GBufferPtr &g_buffer, const File::ShaderLoa
 {
 	quad = std::make_shared<Scene::Quad>(w,h);
 	shader = shader_loader->load("deferredRendering.vs", std::string(), "deferredRendering.fs");
+	camPos = std::make_shared<Uniform>(shader->getFS(), "CamPos");
 }
 
 void DeferredRender::render()
 {
-	//Bind orthographic projection
 	shader->bind();
 	g_buffer->bind(shader->getFS());
 	quad->render();
