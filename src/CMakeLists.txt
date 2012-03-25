@@ -85,6 +85,7 @@ SOURCE_GROUP("Source Files\\Render" FILES ${Render_SRCS})
 set(Scene_HDRS
   ./Scene/SceneManager.h
   ./Scene/SceneNode.h
+  ./Scene/Camera.h
   ./Scene/Quad.h
   ./Scene/Cube.h
 )
@@ -93,6 +94,7 @@ SOURCE_GROUP("Header Files\\Scene" FILES ${Scene_HDRS})
 set(Scene_SRCS
   ./Scene/SceneManager.cpp
   ./Scene/SceneNode.cpp
+  ./Scene/Camera.cpp
   ./Scene/Quad.cpp
   ./Scene/Cube.cpp
 )

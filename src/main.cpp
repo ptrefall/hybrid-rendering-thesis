@@ -150,5 +150,10 @@ int init(int argc, char** argv)
 void loadScene()
 {
 	cube = std::make_shared<Scene::Cube>(2.0f);
-	scene->add(cube);
+	{
+		cube->setMVP(	g_buffer->getMVP());
+		cube->setMV(	g_buffer->getMV());
+		cube->setN_WRI(	g_buffer->getN_WRI());
+		scene->add(cube);
+	}
 }

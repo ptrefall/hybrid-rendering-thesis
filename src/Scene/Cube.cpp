@@ -152,6 +152,11 @@ Cube::Cube(const float &size)
 
 void Cube::render()
 {
+	Matrix4f model = Matrix4f::Identity();
+	model(12) = position.x();
+	model(13) = position.y();
+	model(14) = position.z();
+
 	vao->bind();
 	glDrawElements(GL_TRIANGLES, ibo->size(), GL_UNSIGNED_INT, BUFFER_OFFSET(0));
 }
