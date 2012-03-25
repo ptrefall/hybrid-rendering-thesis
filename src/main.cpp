@@ -5,6 +5,8 @@
 #include "Render\DeferredRender.h"
 #include "Render\GBuffer.h"
 #include "File\ShaderLoader.h"
+#include "Scene\SceneManager.h"
+#include "Scene\Cube.h"
 
 #include <string>
 
@@ -12,6 +14,7 @@ void display();
 void reshape(int w, int h);
 void keyboard(unsigned char key, int x, int y);
 int init(int argc, char** argv);
+void loadScene();
 
 //Globals available only to this file
 namespace 
@@ -19,6 +22,9 @@ namespace
 	Render::GBufferPtr g_buffer;
 	Render::DeferredRenderPtr renderer;
 	File::ShaderLoaderPtr shader_loader;
+	Scene::SceneManagerPtr scene;
+
+	Scene::CubePtr cube;
 
 	unsigned int width, height;
 }
@@ -81,7 +87,7 @@ void display()
 	glClearBufferfv(GL_DEPTH, 0, &depth_buffer_clear);
 
 	g_buffer->begin();
-	//scene->render();
+	scene->render();
 	g_buffer->end();
 
 	renderer->render();
@@ -136,6 +142,13 @@ int init(int argc, char** argv)
 	//////////////////////////////////////////
 	// SCENE INITIALIZING
 	//////////////////////////////////////////
-
+	scene = std::make_shared<Scene::SceneManager>();
+	loadScene();
 	return 0;
+}
+
+void loadScene()
+{
+	cube = std::make_shared<Scene::Cube>(2.0f);
+	scene->add(cube);
 }
