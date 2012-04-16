@@ -7,6 +7,7 @@
 #include "File\ShaderLoader.h"
 #include "Scene\SceneManager.h"
 #include "Scene\Cube.h"
+#include "Scene\Camera.h"
 
 #include <string>
 
@@ -23,7 +24,8 @@ namespace
 	Render::DeferredRenderPtr renderer;
 	File::ShaderLoaderPtr shader_loader;
 	Scene::SceneManagerPtr scene;
-
+  
+  Scene::CameraPtr camera;
 	Scene::CubePtr cube;
 
 	unsigned int width, height;
@@ -86,11 +88,14 @@ void display()
 	glClearBufferfv(GL_COLOR, 0, color_buffer_clear);
 	glClearBufferfv(GL_DEPTH, 0, &depth_buffer_clear);
 
+  //Rasterize
 	g_buffer->begin();
 	scene->render();
 	g_buffer->end();
-
 	renderer->render();
+
+  //Raytrace
+  //raytracer->render(g_buffer, scene);
 
 	glutSwapBuffers();
 }
@@ -149,6 +154,8 @@ int init(int argc, char** argv)
 
 void loadScene()
 {
+  camera = std::make_shared<Scene::Camera>(width, height, M_PI/3.0f, 1.0f, 10000.0f);
+
 	cube = std::make_shared<Scene::Cube>(2.0f);
 	{
 		cube->setMVP(	g_buffer->getMVP());
