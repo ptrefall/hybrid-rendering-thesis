@@ -82,6 +82,16 @@ set(Render_SRCS
 )
 SOURCE_GROUP("Source Files\\Render" FILES ${Render_SRCS})
 
+set(Raytracer_HDRS
+  ./Raytracer/OptixRender.h
+)
+SOURCE_GROUP("Header Files\\Raytracer" FILES ${Raytracer_HDRS})
+
+set(Raytracer_SRCS
+  ./Raytracer/OptixRender.cpp
+)
+SOURCE_GROUP("Source Files\\Raytracer" FILES ${Raytracer_SRCS})
+
 set(Scene_HDRS
   ./Scene/SceneManager.h
   ./Scene/SceneNode.h
@@ -114,12 +124,14 @@ SOURCE_GROUP("Source Files\\File" FILES ${File_SRCS})
 
 set(HDRS
   ${Render_HDRS}
+  ${Raytracer_HDRS}
   ${Scene_HDRS}
   ${File_HDRS}
 )
 
 set(SRCS
   ${Render_SRCS}
+  ${Raytracer_SRCS}
   ${Scene_SRCS}
   ${File_SRCS}
   main.cpp
