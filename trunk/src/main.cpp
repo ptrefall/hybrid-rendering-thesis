@@ -4,10 +4,13 @@
 
 #include "Render\DeferredRender.h"
 #include "Render\GBuffer.h"
+#include "Raytracer\OptixRender.h"
 #include "File\ShaderLoader.h"
 #include "Scene\SceneManager.h"
 #include "Scene\Cube.h"
 #include "Scene\Camera.h"
+
+#include "Render\Shader.h"
 
 #include <string>
 
@@ -22,6 +25,7 @@ namespace
 {
 	Render::GBufferPtr g_buffer;
 	Render::DeferredRenderPtr renderer;
+    Raytracer::OptixRenderRenderPtr raytracer;
 	File::ShaderLoaderPtr shader_loader;
 	Scene::SceneManagerPtr scene;
   
@@ -61,7 +65,7 @@ int main(int argc, char** argv)
 	//////////////////////////////////////////
 	// GAME INITIALIZING
 	//////////////////////////////////////////
-	if(init(argc, argv))
+  if(init(argc, argv))
 		return -1; 
 
 	//////////////////////////////////////////
@@ -82,20 +86,25 @@ int main(int argc, char** argv)
 
 void display()
 {
-	float color_buffer_clear[4];
-	memset(color_buffer_clear, 0.0f, sizeof(float)*4);
-	float depth_buffer_clear = 0.0f;
-	glClearBufferfv(GL_COLOR, 0, color_buffer_clear);
-	glClearBufferfv(GL_DEPTH, 0, &depth_buffer_clear);
+	/*float color_buffer_clear[4];
+	memset(color_buffer_clear, 1.0f, sizeof(float)*4);
+	float depth_buffer_clear = 0.0f;*/
+  
+  glClearColor(0,1,0,1);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
-  //Rasterize
+  //glClearBufferfv(GL_COLOR, 0, color_buffer_clear);
+	//glClearBufferfv(GL_DEPTH, 0, &depth_buffer_clear);
+
+    //Rasterize
 	g_buffer->begin();
 	scene->render();
 	g_buffer->end();
 	renderer->render();
 
-  //Raytrace
-  //raytracer->render(g_buffer, scene);
+    //Raytrace
+    //raytracer->render();
+
 
 	glutSwapBuffers();
 }
@@ -132,6 +141,11 @@ int init(int argc, char** argv)
 	g_buffer = std::make_shared<Render::GBuffer>(shader_loader, width, height);
 	renderer = std::make_shared<Render::DeferredRender>(g_buffer, shader_loader, width, height);
 
+    //////////////////////////////////////////
+	// DEFERRED RENDERER INITIALIZING
+	//////////////////////////////////////////
+    raytracer = std::make_shared<Raytracer::OptixRender>(g_buffer, width, height, base_dir + "optix\\");
+
 	//////////////////////////////////////////
 	// SCENE INITIALIZING
 	//////////////////////////////////////////
@@ -142,13 +156,15 @@ int init(int argc, char** argv)
 
 void loadScene()
 {
-    camera = std::make_shared<Scene::Camera>(width, height, M_PI/3.0f, 1.0f, 10000.0f);
+    camera = Scene::Camera::getSingleton();
+    camera->init(width, height, M_PI/3.0f, 1.0f, 1000.0f);
 
-	cube = std::make_shared<Scene::Cube>(2.0f);
+	cube = std::make_shared<Scene::Cube>(1.0f);
 	{
 		cube->setMVP(	g_buffer->getMVP());
 		cube->setMV(	g_buffer->getMV());
 		cube->setN_WRI(	g_buffer->getN_WRI());
 		scene->add(cube);
+    cube->setPosition( Eigen::Vector3f(0,0,5) );
 	}
 }

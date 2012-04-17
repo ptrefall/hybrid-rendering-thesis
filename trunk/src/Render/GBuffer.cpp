@@ -44,17 +44,11 @@ void GBuffer::begin()
 	shader->bind();
 	fbo->bind();
 
-	GLint nViewport[4];
+	/*GLint nViewport[4];
 	glGetIntegerv(GL_VIEWPORT, nViewport);
 	temp_w = nViewport[2];
 	temp_h = nViewport[3];
-	glViewportIndexedf(0,0,0,(float)w,(float)h);
-
-	float color_buffer_clear[4];
-	memset(color_buffer_clear, 0, sizeof(float)*4);
-	float depth_buffer_clear = 0.0f;
-	glClearBufferfv(GL_COLOR, 0, color_buffer_clear);
-	glClearBufferfv(GL_DEPTH, 0, &depth_buffer_clear);
+	glViewportIndexedf(0,0,0,(float)w,(float)h);*/
 
 	glActiveTexture(GL_TEXTURE0);
 
@@ -66,7 +60,7 @@ void GBuffer::end()
 {
 	shader->unbind();
 	fbo->unbind();
-	glViewportIndexedf(0,0,0,(float)temp_w,(float)temp_h);
+	//glViewportIndexedf(0,0,0,(float)temp_w,(float)temp_h);
 }
 
 void GBuffer::bind(unsigned int active_program)
