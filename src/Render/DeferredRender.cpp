@@ -1,6 +1,7 @@
 #include "DeferredRender.h"
 
 #include "GBuffer.h"
+#include "../Scene/Camera.h"
 
 using namespace Render;
 
@@ -16,6 +17,9 @@ void DeferredRender::render()
 {
 	shader->bind();
 	g_buffer->bind(shader->getFS());
+
+  camPos->bind(Scene::Camera::getSingleton()->getPosition());
+
 	quad->render();
 	g_buffer->unbind();
 }

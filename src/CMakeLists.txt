@@ -141,10 +141,15 @@ add_executable(HybridMethods ${Dependency_HDRS} ${Dependency_SRCS} ${HDRS} ${SRC
 
 find_package(OpenGL REQUIRED)
 find_package(Glut REQUIRED)
+find_package(CUDA REQUIRED)
+find_package(Optix REQUIRED)
 
-add_definitions(-DFREEGLUT_STATIC)
+add_definitions(-DFREEGLUT_STATIC -DEIGEN_DONT_VECTORIZE -DEIGEN_DISABLE_UNALIGNED_ARRAY_ASSERT)
 
 target_link_libraries(HybridMethods
 	OpenGL32
 	debug ${GLUT_STATIC_DEBUG_LIBRARY} optimized ${GLUT_STATIC_RELEASE_LIBRARY}
+	${CUDA_LIB}
+	${OPTIX_LIB}
+	${OPTIXU_LIB}
 )

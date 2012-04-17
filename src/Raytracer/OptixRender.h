@@ -2,8 +2,15 @@
 
 #include "../Scene/Quad.h"
 #include "../File/ShaderLoader.h"
+#include <Optix/optixu/optixpp_namespace.h>
 
 #include <memory>
+
+namespace Render
+{
+    class GBuffer;
+	typedef std::shared_ptr<GBuffer> GBufferPtr;
+}
 
 namespace Raytracer
 {
@@ -13,13 +20,25 @@ namespace Raytracer
 	class OptixRender
 	{
 	public:
-		OptixRender(unsigned int w, unsigned int h);
+		OptixRender(const Render::GBufferPtr &g_buffer, unsigned int w, unsigned int h, const std::string& baseDir);
 		void render();
 
 		void reshape(unsigned int w, unsigned int h);
 
 	private:
+        Render::GBufferPtr g_buffer;
 		unsigned int w;
 		unsigned int h;
+        optix::Context  context; 
+        optix::Geometry sphere;
+        optix::Material material;
+        std::string baseDir;
+
+    private:
+        optix::Context  createContext();
+        optix::Material createMaterial( optix::Context context );
+        optix::Geometry createGeometry( optix::Context context );
+        void     createInstance( optix::Context context, optix::Geometry sphere, optix::Material material );
+
 	};
 }

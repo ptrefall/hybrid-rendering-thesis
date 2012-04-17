@@ -4,11 +4,26 @@
 using namespace Scene;
 using namespace Eigen;
 
-Camera::Camera(unsigned int w, unsigned int h, float fov, float near, float far)
+CameraPtr Camera::singleton;
+
+CameraPtr Camera::getSingleton()
 {
-  updateProjection(w,h,fov,near,far);
-  view.setIdentity();
-  updateView();
+    if(singleton == nullptr)
+        singleton = std::make_shared<Scene::Camera>();
+    return singleton;
+}
+
+Camera::Camera()
+{
+}
+
+void Camera::init(unsigned int w, unsigned int h, float fov, float near, float far)
+{
+    position = Vector3f(0,0,0);
+    setDirection( Vector3f(0,0,1) );
+    updateProjection(w,h,fov,near,far);
+    view.setIdentity();
+    updateView();
 }
 
 const Eigen::Matrix4f &Camera::updateProjection(unsigned int w, unsigned int h, float fov, float near, float far)
@@ -44,7 +59,7 @@ void Camera::setDirection(const Eigen::Vector3f &direction)
   camAxes.col(2) = (-direction).normalized();
   camAxes.col(0) = up.cross( camAxes.col(2) ).normalized();
   camAxes.col(1) = camAxes.col(2).cross( camAxes.col(0) ).normalized();
-
+  orientation = camAxes;
 }
 
 void Camera::setTarget(const Eigen::Vector3f &position)

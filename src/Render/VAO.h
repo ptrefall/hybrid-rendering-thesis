@@ -1,6 +1,5 @@
 #pragma once
 
-#include <GL3/gl3w.h>
 
 #include <memory>
 #include <vector>

@@ -21,4 +21,5 @@ void main( void )
 	vec2 madd = vec2(0.5,0.5);
 	gl_Position = vec4(Position, 0.0, 1.0);
 	Vertex.t = (Position * madd) + madd; // Scale to 0-1 range
+
 }

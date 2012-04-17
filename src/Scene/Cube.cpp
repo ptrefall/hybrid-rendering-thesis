@@ -1,4 +1,5 @@
 #include "Cube.h"
+#include "Camera.h"
 
 #include "../Render/ATTRIB.h"
 #include "../Render/ShaderConstants.h"
@@ -152,10 +153,35 @@ Cube::Cube(const float &size)
 
 void Cube::render()
 {
-	Matrix4f model = Matrix4f::Identity();
-	model(12) = position.x();
-	model(13) = position.y();
-	model(14) = position.z();
+	Affine3f model = Affine3f::Identity();
+  model.matrix()(12) = position.x();
+	model.matrix()(13) = position.y();
+	model.matrix()(14) = position.z();
+
+  auto &proj = Camera::getSingleton()->getProjection();
+  auto &view = Camera::getSingleton()->getView();
+
+  auto modelView = view * model;
+  auto modelViewProj = proj * view * model;
+  auto mv_inv4x4 = modelView.inverse();
+  
+  Matrix3f mv_inv3x3;
+  Matrix3f model3x3;
+
+  for(int i=0; i<3; i++){
+    for(int j=0; j<3; j++){
+      mv_inv3x3(i,j) = mv_inv4x4(i,j);
+      model3x3(i,j) = model(i,j);
+    }
+  }
+
+  auto normal = mv_inv3x3.transpose();
+  auto worldRotationInverse = model3x3.transpose();
+  Matrix3f normalWorldRotationInverse = worldRotationInverse * normal;
+
+  mvp->bind(modelViewProj.matrix());
+  mv->bind(modelView.matrix());
+  n_wri->bind(normalWorldRotationInverse);
 
 	vao->bind();
 	glDrawElements(GL_TRIANGLES, ibo->size(), GL_UNSIGNED_INT, BUFFER_OFFSET(0));
