@@ -25,7 +25,7 @@ namespace
 	File::ShaderLoaderPtr shader_loader;
 	Scene::SceneManagerPtr scene;
   
-  Scene::CameraPtr camera;
+    Scene::CameraPtr camera;
 	Scene::CubePtr cube;
 
 	unsigned int width, height;
@@ -115,22 +115,10 @@ int init(int argc, char** argv)
 	//////////////////////////////////////////////
 	// SET UP SAFE RESOURCE BASE DIRECTORY LOOKUP
 	//////////////////////////////////////////////
-	std::string base_dir = argv[0];
-	auto pos = base_dir.find_last_of("/");
-	if(pos == base_dir.npos)
-		pos = base_dir.find_last_of("\\");
-	if(pos == base_dir.npos)
-		return -1;
-	base_dir = base_dir.substr(0, pos);
-	
-	pos = base_dir.find_last_of("/");
-	if(pos == base_dir.npos)
-		pos = base_dir.find_last_of("\\");
-	if(pos == base_dir.npos)
-		return -1;
-	base_dir = base_dir.substr(0, pos+1);
-
-	base_dir = base_dir + "resources\\";
+	std::string base_dir(argv[0]);
+	base_dir = base_dir.substr(0, base_dir.find_last_of("\\"));
+	base_dir = base_dir.substr(0, base_dir.find_last_of("\\"));
+	base_dir += "\\resources\\";
 
 	//////////////////////////////////////////
 	// FILE SYSTEM INITIALIZING
@@ -154,7 +142,7 @@ int init(int argc, char** argv)
 
 void loadScene()
 {
-  camera = std::make_shared<Scene::Camera>(width, height, M_PI/3.0f, 1.0f, 10000.0f);
+    camera = std::make_shared<Scene::Camera>(width, height, M_PI/3.0f, 1.0f, 10000.0f);
 
 	cube = std::make_shared<Scene::Cube>(2.0f);
 	{
