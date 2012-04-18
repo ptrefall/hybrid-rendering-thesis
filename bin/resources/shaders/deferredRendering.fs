@@ -24,7 +24,7 @@ void main( void )
 	vec3 position 	= texture( TEX_POS,  Vertex.t ).xyz;
 	vec3 normal 	= normalize(texture( TEX_NORM, Vertex.t ).xyz);
 	
-	vec3 light = vec3(50,100,50);
+	vec3 light = vec3(0,0,10);
 	vec3 lightDir = normalize(light - position);
 	
 	vec3 eyeDir = normalize(CamPos-position);

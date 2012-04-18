@@ -46,8 +46,8 @@ int main(int argc, char** argv)
 	glutInitContextFlags (GLUT_FORWARD_COMPATIBLE | GLUT_DEBUG);
 	glutInitContextProfile(GLUT_CORE_PROFILE);
 
-	width = 800;
-	height = 600;
+	width = 1280;
+	height = 800;
 
 	glutInitWindowSize (width, height); 
 	glutInitWindowPosition (100, 100);
@@ -97,9 +97,11 @@ void display()
 	//glClearBufferfv(GL_DEPTH, 0, &depth_buffer_clear);
 
     //Rasterize
+  //glEnable(GL_DEPTH_TEST);
 	g_buffer->begin();
 	scene->render();
 	g_buffer->end();
+  //glDisable(GL_DEPTH_TEST);
 	renderer->render();
 
     //Raytrace
@@ -165,6 +167,6 @@ void loadScene()
 		cube->setMV(	g_buffer->getMV());
 		cube->setN_WRI(	g_buffer->getN_WRI());
 		scene->add(cube);
-    cube->setPosition( Eigen::Vector3f(0,0,5) );
+    cube->setPosition( Eigen::Vector3f(10,-5,20) );
 	}
 }
