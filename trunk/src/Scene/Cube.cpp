@@ -158,6 +158,11 @@ void Cube::render()
 	model.matrix()(13) = position.y();
 	model.matrix()(14) = position.z();
 
+  static float var = 0.f;
+  var += 1e-2;
+  model.rotate( AngleAxisf(var,  Vector3f::UnitY()) );
+  
+
   auto &proj = Camera::getSingleton()->getProjection();
   auto &view = Camera::getSingleton()->getView();
 

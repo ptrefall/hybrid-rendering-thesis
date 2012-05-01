@@ -56,5 +56,6 @@ std::string ShaderLoader::loadContents(const std::string &filename)
     text[count] = '\0';
 	std::string return_text(text);
 	free(text);
+	fclose(fh);
 	return return_text;
 }

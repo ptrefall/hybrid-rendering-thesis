@@ -22,7 +22,8 @@ namespace Render
 		void render();
 
 		void reshape(unsigned int w, unsigned int h);
-
+		
+		void reloadShaders();
 	private:
 		unsigned int w;
 		unsigned int h;

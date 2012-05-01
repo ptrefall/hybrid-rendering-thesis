@@ -41,18 +41,25 @@ GBuffer::GBuffer(const File::ShaderLoaderPtr &shader_loader, unsigned int w, uns
 
 void GBuffer::begin()
 {
+    glClearColor(0.f,1.f,0.f,1.f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+
 	shader->bind();
 	fbo->bind();
 
-	/*GLint nViewport[4];
+    glClearColor(0.f,0.f,0.f,1.f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+
+	GLint nViewport[4];
 	glGetIntegerv(GL_VIEWPORT, nViewport);
 	temp_w = nViewport[2];
 	temp_h = nViewport[3];
-	glViewportIndexedf(0,0,0,(float)w,(float)h);*/
-
+	glViewportIndexedf(0,0,0,(float)w,(float)h);
+	//glViewport(0,0,w,h);
 	glActiveTexture(GL_TEXTURE0);
 
 	GLenum buffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
+
 	glDrawBuffers(3, buffers);
 }
 
@@ -60,7 +67,7 @@ void GBuffer::end()
 {
 	shader->unbind();
 	fbo->unbind();
-	//glViewportIndexedf(0,0,0,(float)temp_w,(float)temp_h);
+	glViewportIndexedf(0,0,0,(float)temp_w,(float)temp_h);
 }
 
 void GBuffer::bind(unsigned int active_program)

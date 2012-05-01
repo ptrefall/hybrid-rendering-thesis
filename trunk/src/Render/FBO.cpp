@@ -2,6 +2,7 @@
 
 using namespace Render;
 
+// TODO fbo doesn't actually use members w,h yet
 FBO::FBO(unsigned int w, unsigned int h)
 	: w(w), h(h)
 {
