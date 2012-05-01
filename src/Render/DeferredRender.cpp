@@ -29,3 +29,9 @@ void DeferredRender::reshape(unsigned int w, unsigned int h)
 	this->w = w;
 	this->h = h; 
 }
+
+void DeferredRender::reloadShaders()
+{
+	puts("reload");
+	shader = shader_loader->load("deferredRendering.vs", std::string(), "deferredRendering.fs");
+}

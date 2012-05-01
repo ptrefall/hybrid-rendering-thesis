@@ -30,7 +30,7 @@ namespace
 	Scene::SceneManagerPtr scene;
   
     Scene::CameraPtr camera;
-	Scene::CubePtr cube;
+	
 
 	unsigned int width, height;
 }
@@ -86,22 +86,20 @@ int main(int argc, char** argv)
 
 void display()
 {
-	/*float color_buffer_clear[4];
+	float color_buffer_clear[4];
 	memset(color_buffer_clear, 1.0f, sizeof(float)*4);
-	float depth_buffer_clear = 0.0f;*/
+	float depth_buffer_clear = 0.0f;
   
-  glClearColor(0,1,0,1);
+  glClearColor(0.f,0.f,0.f,1.f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
-  //glClearBufferfv(GL_COLOR, 0, color_buffer_clear);
-	//glClearBufferfv(GL_DEPTH, 0, &depth_buffer_clear);
 
     //Rasterize
-  //glEnable(GL_DEPTH_TEST);
+  glEnable(GL_DEPTH_TEST);
 	g_buffer->begin();
 	scene->render();
 	g_buffer->end();
-  //glDisable(GL_DEPTH_TEST);
+  glDisable(GL_DEPTH_TEST);
 	renderer->render();
 
     //Raytrace
@@ -119,6 +117,9 @@ void reshape(int w, int h)
 
 void keyboard(unsigned char key, int x, int y)
 {
+	if ( key=='R' ) {
+		renderer->reloadShaders();
+	}
 }
 
 int init(int argc, char** argv)
@@ -161,12 +162,22 @@ void loadScene()
     camera = Scene::Camera::getSingleton();
     camera->init(width, height, M_PI/3.0f, 1.0f, 1000.0f);
 
+	Scene::CubePtr cube;
 	cube = std::make_shared<Scene::Cube>(1.0f);
 	{
 		cube->setMVP(	g_buffer->getMVP());
 		cube->setMV(	g_buffer->getMV());
 		cube->setN_WRI(	g_buffer->getN_WRI());
 		scene->add(cube);
-    cube->setPosition( Eigen::Vector3f(10,-5,20) );
+		cube->setPosition( Eigen::Vector3f(10,-5,20) );
+	}
+
+	Scene::CubePtr cube2 = std::make_shared<Scene::Cube>(.5f);
+	{
+		cube2->setMVP(	g_buffer->getMVP());
+		cube2->setMV(	g_buffer->getMV());
+		cube2->setN_WRI(	g_buffer->getN_WRI());
+		scene->add(cube2);
+		cube2->setPosition( Eigen::Vector3f(10,0,20) );
 	}
 }
