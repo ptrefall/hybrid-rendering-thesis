@@ -117,7 +117,8 @@ void reshape(int w, int h)
 
 void keyboard(unsigned char key, int x, int y)
 {
-	if ( key=='R' ) {
+	if ( key=='R' || key=='r' ) {
+		system("cls");
 		renderer->reloadShaders();
 	}
 }
