@@ -2,10 +2,12 @@
 
 #include "../Scene/Quad.h"
 #include "../File/ShaderLoader.h"
+#include "Material.h"
 #include "Shader.h"
 #include "Uniform.h"
 
 #include <memory>
+#include <vector>
 
 namespace Render
 {
@@ -24,6 +26,8 @@ namespace Render
 		void reshape(unsigned int w, unsigned int h);
 		
 		void reloadShaders();
+
+		void addMaterial(const MaterialPtr &material) { materials.push_back(material); }
 	private:
 		unsigned int w;
 		unsigned int h;
@@ -34,5 +38,7 @@ namespace Render
 		UniformPtr camPos;
 
 		Scene::QuadPtr quad;
+
+		std::vector<MaterialPtr> materials;
 	};
 }

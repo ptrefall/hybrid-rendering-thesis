@@ -9,6 +9,11 @@ uniform sampler2D TEX_DIFF;
 uniform sampler2D TEX_POS;
 uniform sampler2D TEX_NORM;
 
+uniform vec3 ambient_mat; //[8];
+uniform vec3 diffuse_mat; //[8];
+uniform vec3 specular_mat; //[8];
+uniform vec3 pp_t_ior_mat; //[8];
+
 uniform vec3 CamPos;
 
 in block
@@ -18,19 +23,57 @@ in block
 
 layout(location = FRAG_COLOR, index = 0) out vec4 out_FragColor;
 
+float compute_phong_term(in vec3 N, in vec3 L, in vec3 V, in float NdotL, in float shininess)
+{
+	vec3 R = reflect(N, -L);
+	float term = max(clamp(dot(V,R), 0.0, 1.0), 0.0);
+	term = pow(term, shininess);
+	return term;
+}
+
+float compute_blinn_term(in vec3 N, in vec3 L, in vec3 V, in float NdotL, in float shininess)
+{
+	vec3 H = normalize(L + V);
+	float term = dot(N,H);
+	term = max(clamp(term, 0.0, 1.0), 0.0);
+	term = pow(term, shininess);
+	return term;
+}
+
+float compute_gauss_term(in vec3 N, in vec3 L, in vec3 V, in float NdotL, in float shininess)
+{
+	vec3 H = normalize(L+V);
+	float ANH = acos(dot(N,H));
+	float exponent = ANH / shininess;
+	exponent = -(exponent*exponent);
+	float term = max(exp(exponent), 0.0);
+	return term;
+}
+
 void main( void )
 {
-	vec4 diffuse 	= texture( TEX_DIFF, Vertex.t );
+	vec3 diffuse 	= texture( TEX_DIFF, Vertex.t ).xyz;
 	vec3 position 	= texture( TEX_POS,  Vertex.t ).xyz;
-	vec3 normal 	= normalize(texture( TEX_NORM, Vertex.t ).xyz);
+	vec4 normal_matid = texture( TEX_NORM, Vertex.t );
+	vec3 N = normalize(normal_matid.xyz);
+	//int material_id = normal_matid.a;
 	
-	vec3 light = vec3(0,0,10);
-	vec3 lightDir = normalize(light - position);
+	vec3 light_pos = vec3(0,0,10);
+	vec3 L = normalize(light_pos - position);
+	vec3 V = normalize(CamPos-position);
 	
-	vec3 eyeDir = normalize(CamPos-position);
-	vec3 vHalfVector = normalize(lightDir+eyeDir);
+	float NdotL = max(dot(N,L), 0.0);
+	float shininess = pp_t_ior_mat.r; //pp_t_ior_mat[material_id].r;
+	float term = compute_blinn_term(N, L, V, NdotL, shininess);
+	
+	out_FragColor = vec4( 
+		((diffuse * diffuse_mat * NdotL) +
+		(specular_mat * term) +
+		(diffuse * ambient_mat)), 
+		1.0
+		);
 	
 	
-	//out_FragColor = vec4(normal, 1.);
-	out_FragColor = max(dot(normal,lightDir),.0) * diffuse + pow(max(dot(normal,vHalfVector),.0), 100) * 1.5;
+	//out_FragColor = vec4(N, 1.);
+	//out_FragColor = max(dot(N,lightDir),.0) * diffuse + pow(max(dot(N,vHalfVector),.0), 100) * 1.5;
 }

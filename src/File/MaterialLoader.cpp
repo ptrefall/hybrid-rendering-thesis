@@ -12,13 +12,14 @@
 using namespace File;
 
 MaterialLoader::MaterialLoader(const std::string &base_dir)
-	: base_dir(base_dir)
+	: base_dir(base_dir), material_counter(0)
 {
 }
 
 Render::MaterialPtr MaterialLoader::load(const std::string &filename)
 {
 	Render::MaterialParams params;
+	params.id = material_counter++;
 	
 	ini::Parser parser(base_dir + filename);
 

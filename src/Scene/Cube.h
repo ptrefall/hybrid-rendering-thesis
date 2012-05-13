@@ -19,7 +19,7 @@ namespace Scene
 	public:
 		Cube(const float &size = 1.0f);
 
-		void render() override;
+		void render(const Render::ShaderPtr &active_program) override;
 
 	private:
 		struct AvgCubeNormalsData

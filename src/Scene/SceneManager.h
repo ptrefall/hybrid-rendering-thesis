@@ -15,7 +15,7 @@ namespace Scene
 	public:
 		SceneManager();
 
-		void render();
+		void render(const Render::ShaderPtr &active_program);
 
 		void add(const SceneNodePtr &node);
 

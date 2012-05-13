@@ -101,7 +101,7 @@ void display()
     //Rasterize
   glEnable(GL_DEPTH_TEST);
 	g_buffer->begin();
-	scene->render();
+	scene->render(g_buffer->getShader());
 	g_buffer->end();
   glDisable(GL_DEPTH_TEST);
 	renderer->render();
@@ -170,9 +170,10 @@ void loadScene()
     camera->init(width, height, M_PI/3.0f, 1.0f, 1000.0f);
 
 	auto cube_tex = tex_loader->load("cube.jpg");
-	auto tex_sampler = std::make_shared<Render::Uniform>(g_buffer->getShader()->getFS(), "diffuse");
+	auto tex_sampler = std::make_shared<Render::Uniform>(g_buffer->getShader()->getFS(), "diffuse_tex");
 
 	auto basic_cube_mat = mat_loader->load("basic_cube.mat");
+	renderer->addMaterial(basic_cube_mat);
 
 	Scene::CubePtr cube;
 	cube = std::make_shared<Scene::Cube>(1.0f);

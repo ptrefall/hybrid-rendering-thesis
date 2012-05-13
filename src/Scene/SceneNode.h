@@ -3,6 +3,7 @@
 #include "../Render/Uniform.h"
 #include "../Render/Tex2D.h"
 #include "../Render/Material.h"
+#include "../Render/Shader.h"
 
 #include <Eigen/Eigen>
 #include <Eigen/Geometry>
@@ -19,7 +20,7 @@ namespace Scene
 	public:
 		SceneNode();
 
-		virtual void render() = 0;
+		virtual void render(const Render::ShaderPtr &active_program) = 0;
 
 		void setMVP(const Render::UniformPtr &mvp) { this->mvp = mvp; }
 		void setMV(const Render::UniformPtr &mv) { this->mv = mv; }
