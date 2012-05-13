@@ -21,7 +21,10 @@ void DeferredRender::render()
 	camPos->bind(Scene::Camera::getSingleton()->getPosition());
 
 	if(materials.empty() == false)
-		materials[0]->bind_data(shader->getFS());
+	{
+		for(auto &material : materials)
+			material->bind_data(shader->getFS());
+	}
 
 	quad->render(0);
 	g_buffer->unbind();

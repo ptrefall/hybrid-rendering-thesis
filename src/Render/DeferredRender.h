@@ -27,7 +27,7 @@ namespace Render
 		
 		void reloadShaders();
 
-		void addMaterial(const MaterialPtr &material) { materials.push_back(material); }
+		MaterialPtr addMaterial(const MaterialPtr &material) { materials.push_back(material); return material; }
 	private:
 		unsigned int w;
 		unsigned int h;
