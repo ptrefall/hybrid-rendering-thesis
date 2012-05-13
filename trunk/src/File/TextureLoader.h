@@ -15,7 +15,7 @@ namespace File
 	public:
 		TextureLoader(const std::string &base_dir);
 
-		Render::Tex2DPtr load(const std::string &filename);
+		Render::Tex2DPtr load(const std::string &filename, unsigned int wrap_mode = GL_CLAMP_TO_EDGE);
 
 	private:
 		std::string base_dir;

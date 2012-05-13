@@ -18,7 +18,7 @@ TextureLoader::TextureLoader(const std::string &base_dir)
 	ilInit();
 }
 
-Render::Tex2DPtr TextureLoader::load(const std::string &filename)
+Render::Tex2DPtr TextureLoader::load(const std::string &filename, unsigned int wrap_mode)
 {
 	ILuint img_id;
     ilGenImages(1, &img_id);
@@ -49,7 +49,7 @@ Render::Tex2DPtr TextureLoader::load(const std::string &filename)
     int format = ilGetInteger(IL_IMAGE_FORMAT);
     unsigned char *data = ilGetData();
 
-	Render::T2DTexParams params(format, format, GL_UNSIGNED_BYTE, w, h, data);
+	Render::T2DTexParams params(format, format, GL_UNSIGNED_BYTE, w, h, wrap_mode, data);
 	auto tex = std::make_shared<Render::Tex2D>(params);
 
 	return tex;
