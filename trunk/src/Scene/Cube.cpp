@@ -181,8 +181,8 @@ void Cube::render()
   }
 
   auto normal = mv_inv3x3.transpose();
-  auto worldRotationInverse = model3x3.transpose();
-  Matrix3f normalWorldRotationInverse = worldRotationInverse * normal;
+  //auto worldRotationInverse = model3x3.transpose();
+  Matrix3f normalWorldRotationInverse = /*worldRotationInverse * */normal;
 
   mvp->bind(modelViewProj.matrix());
   mv->bind(modelView.matrix());

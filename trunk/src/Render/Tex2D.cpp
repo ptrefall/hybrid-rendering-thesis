@@ -3,7 +3,7 @@
 using namespace Render;
 
 Tex2D::Tex2D(const T2DTexParams &tex_params)
-	: internal_format(tex_params.internal_format), format(tex_params.format), type(tex_params.type), w(tex_params.w), h(tex_params.h)
+	: internal_format(tex_params.internal_format), format(tex_params.format), type(tex_params.type), w(tex_params.w), h(tex_params.h), data(tex_params.data)
 {
 	glGenTextures(1, &handle);
 	bind();

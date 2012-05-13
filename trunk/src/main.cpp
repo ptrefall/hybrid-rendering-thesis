@@ -6,6 +6,7 @@
 #include "Render\GBuffer.h"
 #include "Raytracer\OptixRender.h"
 #include "File\ShaderLoader.h"
+#include "File\TextureLoader.h"
 #include "Scene\SceneManager.h"
 #include "Scene\Cube.h"
 #include "Scene\Camera.h"
@@ -27,6 +28,7 @@ namespace
 	Render::DeferredRenderPtr renderer;
     Raytracer::OptixRenderRenderPtr raytracer;
 	File::ShaderLoaderPtr shader_loader;
+	File::TextureLoaderPtr tex_loader;
 	Scene::SceneManagerPtr scene;
   
     Scene::CameraPtr camera;
@@ -137,6 +139,7 @@ int init(int argc, char** argv)
 	// FILE SYSTEM INITIALIZING
 	//////////////////////////////////////////
 	shader_loader = std::make_shared<File::ShaderLoader>(base_dir+"shaders\\");
+	tex_loader = std::make_shared<File::TextureLoader>(base_dir+"textures\\");
 
 
 	//////////////////////////////////////////

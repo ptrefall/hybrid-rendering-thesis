@@ -31,5 +31,6 @@ void main( void )
 	vec3 vHalfVector = normalize(lightDir+eyeDir);
 	
 	
-	out_FragColor = max(dot(normal,lightDir),.0) * diffuse + pow(max(dot(normal,vHalfVector),.0), 100) * 1.5;
+	out_FragColor = vec4(normal, 1.);
+	//out_FragColor = max(dot(normal,lightDir),.0) * diffuse + pow(max(dot(normal,vHalfVector),.0), 100) * 1.5;
 }
