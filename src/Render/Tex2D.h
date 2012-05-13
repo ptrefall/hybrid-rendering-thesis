@@ -18,9 +18,10 @@ namespace Render
 		unsigned int type;
 		unsigned int w;
 		unsigned int h;
+		unsigned int wrap_mode;
 		unsigned char *data;
-		T2DTexParams(unsigned int internal_format, unsigned int format, unsigned int type, unsigned int w, unsigned int h, unsigned char *data = nullptr)
-		: internal_format(internal_format), format(format), type(type), w(w), h(h), data(data)
+		T2DTexParams(unsigned int internal_format, unsigned int format, unsigned int type, unsigned int w, unsigned int h, unsigned int wrap_mode = GL_CLAMP_TO_EDGE, unsigned char *data = nullptr)
+		: internal_format(internal_format), format(format), type(type), w(w), h(h), wrap_mode(wrap_mode), data(data)
 		{}
 	};
 
@@ -43,6 +44,8 @@ namespace Render
 
 		unsigned int w;
 		unsigned int h;
+
+		unsigned int wrap_mode;
 
 		unsigned char *data;
 	};

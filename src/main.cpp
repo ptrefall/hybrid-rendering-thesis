@@ -169,7 +169,7 @@ void loadScene()
     camera = Scene::Camera::getSingleton();
     camera->init(width, height, M_PI/3.0f, 1.0f, 1000.0f);
 
-	auto cube_tex = tex_loader->load("cube.jpg");
+	auto cube_tex = tex_loader->load("cube.jpg", GL_REPEAT);
 	auto tex_sampler = std::make_shared<Render::Uniform>(g_buffer->getShader()->getFS(), "diffuse_tex");
 
 	auto basic_cube_mat = renderer->addMaterial(mat_loader->load("basic_cube.mat"));
