@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <cctype> // isspace
 #include <functional>
+#include <glm/glm.hpp>
 
 namespace ini
 {
@@ -74,28 +75,19 @@ namespace ini
 		{
 			return getProperty<std::string>( section, property, defaultValue );
 		}
-		
+				
 		template <typename T> 
 		bool getProperty( const char* section, const char* property, bool defaultValue )
 		{
-			for(auto it=sections.begin(); it!=sections.end(); ++it)
+			std::string val = getValue(section, property);
+			if ( val != "" )
 			{
-				if ( (*it).sectionName == section ) {
-					
-					const PropertyValueMap &values = (*it).values;
-					
-					auto mapIt = values.find(property);
-					if ( mapIt != values.end() ) {
-						std::string str = mapIt->second;
-						std::transform( str.begin(), str.end(), str.begin(), tolower );
-						
-						if ( str == "true" ) {
-							return true;
-						} else {
-							return false;
-						}
-						
-					}					
+				std::transform( val.begin(), val.end(), val.begin(), tolower );
+				
+				if ( val == "true" ) {
+					return true;
+				} else {
+					return false;
 				}
 			}
 			return defaultValue;
@@ -104,23 +96,45 @@ namespace ini
 		template <typename T> 
 		T getProperty( const char* section, const char* property, T defaultValue )
 		{
-			for(auto it=sections.begin(); it!=sections.end(); ++it)
+			std::string val = getValue(section, property);
+			if ( val != "" )
 			{
-				if ( (*it).sectionName == section ) {
-					
-					const PropertyValueMap &values = (*it).values;
-					
-					auto mapIt = values.find(property);
-					if ( mapIt != values.end() ) {
-					
-						std::string val = mapIt->second;
-						std::stringstream sstream;
-						sstream << val;
-						T tmp;
-						sstream >> tmp;
-						return tmp;
-					}					
+				std::stringstream sstream;
+				sstream << val;
+				T tmp;
+				sstream >> tmp;
+				return tmp;
+			}
+			return defaultValue;
+		}
+				
+		glm::vec2 getVec2( const char* section, const char* property, glm::vec2 defaultValue )
+		{
+			return getVec<glm::vec2>( section, property, defaultValue );
+		}
+		glm::vec3 getVec3( const char* section, const char* property, glm::vec3 defaultValue )
+		{
+			return getVec<glm::vec3>( section, property, defaultValue );
+		}
+		glm::vec4 getVec4( const char* section, const char* property, glm::vec4 defaultValue )
+		{
+			glm::vec4 v;
+			return getVec<glm::vec4>( section, property, defaultValue );
+		}
+		
+		template <typename T>
+		T getVec( const char* section, const char* property, T defaultValue )
+		{
+			std::string val = getValue(section, property);
+			if ( val != "" ) {
+				T v(0);
+				size_t components = sizeof(T)/sizeof(float);
+				std::stringstream sstream;
+				sstream << val;
+				for(size_t i=0; i<components; i++){
+					sstream >> v[i];
 				}
+				return v;
 			}
 			return defaultValue;
 		}
@@ -140,6 +154,24 @@ namespace ini
 		}
 	
 		private:
+			
+		std::string getValue( const char* section, const char* property )
+		{
+			for(auto it=sections.begin(); it!=sections.end(); ++it)
+			{
+				if ( (*it).sectionName == section ) {
+					
+					const PropertyValueMap &values = (*it).values;
+					
+					auto mapIt = values.find(property);
+					if ( mapIt != values.end() ) {
+						return (*mapIt).second;
+					}
+						
+				}
+			}
+			return "";
+		}
 		
 		void createSection( std::ifstream& in, const std::string& sectionName )
 		{
