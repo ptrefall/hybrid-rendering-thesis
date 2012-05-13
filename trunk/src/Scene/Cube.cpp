@@ -189,6 +189,12 @@ void Cube::render()
   n_wri->bind(normalWorldRotationInverse);
 
 	vao->bind();
+	if(tex)
+	{
+		glActiveTexture(GL_TEXTURE0);
+		tex->bind();
+		tex_sampler->bind(0);
+	}
 	glDrawElements(GL_TRIANGLES, ibo->size(), GL_UNSIGNED_INT, BUFFER_OFFSET(0));
 }
 
