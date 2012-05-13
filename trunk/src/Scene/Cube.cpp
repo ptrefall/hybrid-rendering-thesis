@@ -196,6 +196,10 @@ void Cube::render()
 		tex_sampler->bind(0);
 	}
 	glDrawElements(GL_TRIANGLES, ibo->size(), GL_UNSIGNED_INT, BUFFER_OFFSET(0));
+	if(tex)
+	{
+		tex->unbind();
+	}
 }
 
 // Calculate average normals

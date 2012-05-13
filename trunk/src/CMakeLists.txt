@@ -58,6 +58,7 @@ set(Render_HDRS
   ./Render/Shader.h
   ./Render/ShaderConstants.h
   ./Render/Tex2D.h
+  ./Render/Material.h
   ./Render/Uniform.h
   ./Render/VAO.h
   ./Render/VBO.h
@@ -73,6 +74,7 @@ set(Render_SRCS
   ./Render/GBuffer.cpp
   ./Render/Shader.cpp
   ./Render/Tex2D.cpp
+  ./Render/Material.cpp
   ./Render/Uniform.cpp
   ./Render/VAO.cpp
   ./Render/VBO.cpp
@@ -113,12 +115,14 @@ SOURCE_GROUP("Source Files\\Scene" FILES ${Scene_SRCS})
 set(File_HDRS
   ./File/ShaderLoader.h
   ./File/TextureLoader.h
+  ./File/MaterialLoader.h
 )
 SOURCE_GROUP("Header Files\\File" FILES ${File_HDRS})
 
 set(File_SRCS
   ./File/ShaderLoader.cpp
   ./File/TextureLoader.cpp
+  ./File/MaterialLoader.cpp
 )
 SOURCE_GROUP("Source Files\\File" FILES ${File_SRCS})
 
