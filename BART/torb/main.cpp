@@ -19,9 +19,9 @@ int main()
 	}
 
 	ini::Parser config("config.ini");
-	std::string sceneMain = config.getString("load", "scenefile", "balls.nff");
-	BARTScene* scene = BARTScene::create(protoGfx, "kitchen", sceneMain);
-	// TODO. need a way to set current dir, so include files can be found relative to sceneMain.aff
+	std::string sceneDir = config.getString("load", "dir", "procedural");
+	std::string sceneMain = config.getString("load", "scene", "balls.nff");
+	BARTScene* scene = BARTScene::create(protoGfx, sceneDir, sceneMain);
 
 	scene->init();
 

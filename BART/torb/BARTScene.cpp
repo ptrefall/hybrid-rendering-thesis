@@ -1,6 +1,7 @@
 #include "BARTScene.h"
 
 #include <glm/glm.hpp>
+#include "glm/gtc/matrix_transform.hpp"
 #define _USE_MATH_DEFINES 
 #include <math.h>
 #include <cstdio>
@@ -36,6 +37,7 @@ struct cone_t
 struct mesh_t
 {
 	protowizard::MeshPtr mesh;
+	glm::mat4 xform;
 	material_t mat;
 };
 
@@ -46,6 +48,8 @@ class BARTSceneImplementation : public BARTScene
 private:
 	int gDetailLevel;
 	protowizard::ProtoGraphicsPtr proto;
+	std::string sceneFolder;
+
 	struct camera_t
 	{
 		glm::vec3 camFrom, camTarget, camUp;
@@ -54,15 +58,19 @@ private:
 
 	glm::vec3 bgcolor;
 	material_t activeMaterial;
+	glm::mat4 activeTransform;
 
 	std::vector<sphere_t> sphereList;
 	std::vector<cone_t> coneList;
 	std::vector<mesh_t> meshList;
 
+	AnimationList* mAnimations; // TODO. verify correctness
+
 public:
-BARTSceneImplementation( protowizard::ProtoGraphicsPtr proto, const std::string& sceneFolder, const std::string& mainSceneFile ) : gDetailLevel(0), proto(proto)
+BARTSceneImplementation( protowizard::ProtoGraphicsPtr proto, const std::string& sceneFolder, const std::string& mainSceneFile ) : 
+	  gDetailLevel(0), proto(proto), sceneFolder(sceneFolder)
 {
-	FILE* f = fopen(mainSceneFile.c_str(), "r");
+	FILE* f = fopen( (sceneFolder+"//"+mainSceneFile).c_str(), "r");
 		
 	if ( f == nullptr ) {
 		printf("could not open .aff file\n");
@@ -283,63 +291,70 @@ void parseBackground(FILE* f)
 ----------------------------------------------------------------------*/
 void parseFill(FILE *fp)
 {
-    float kd, ks, phong_pow, t, ior;
-    glm::vec3 col;
-    int moreparams;
+	float kd, ks, phong_pow, t, ior;
+	glm::vec3 col;
+	int moreparams;
 
-    moreparams = getc(fp);
-    if(moreparams != 'm')
-    {
-       ungetc(moreparams, fp);
-       moreparams = 0;
-    }
+	moreparams = getc(fp);
+	if(moreparams != 'm')
+	{
+		ungetc(moreparams, fp);
+		moreparams = 0;
+	}
 
-    if(moreparams)  /* parse the extended material description */
-    {
-       glm::vec3 amb,dif,spc;
-       if(fscanf(fp,"%f %f %f",&amb.x, &amb.y, &amb.z) != 3)
-       {
-	  printf("fill material ambient syntax error");
-	  exit(1);
-       }
-       if(fscanf(fp,"%f %f %f",&dif.x, &dif.y, &dif.z) != 3)
-       {
-	  printf("fill material diffuse syntax error");
-	  exit(1);
-       }
-       if(fscanf(fp,"%f %f %f",&spc.x, &spc.y, &spc.z) != 3)
-       {
-	  printf("fill material specular syntax error");
-	  exit(1);
-       }
-       if (fscanf(fp, "%f %f %f", &phong_pow, &t, &ior) != 3)
-       {
-	  printf("fill material (phong, transp, IOR) syntax error");
-	  exit(1);
-       }
-       /* add your extended material here
-	* e.g., viAddExtendedMaterial(amb,dif,spc,4.0*phong_pow,t,ior);
-        */
-    }
-    else   /* parse the old NFF description of a material */
-    {
-       if (fscanf(fp, "%f %f %f",&col.x, &col.y, &col.z) != 3)
-       {
-	  printf("fill color syntax error");
-	  exit(1);
-       }
+	if(moreparams)  /* parse the extended material description */
+	{
+		glm::vec3 amb,dif,spc;
+		if(fscanf(fp,"%f %f %f",&amb.x, &amb.y, &amb.z) != 3)
+		{
+			printf("fill material ambient syntax error");
+			exit(1);
+		}
+		if(fscanf(fp,"%f %f %f",&dif.x, &dif.y, &dif.z) != 3)
+		{
+			printf("fill material diffuse syntax error");
+			exit(1);
+		}
+		if(fscanf(fp,"%f %f %f",&spc.x, &spc.y, &spc.z) != 3)
+		{
+			printf("fill material specular syntax error");
+			exit(1);
+		}
+		if (fscanf(fp, "%f %f %f", &phong_pow, &t, &ior) != 3)
+		{
+			printf("fill material (phong, transp, IOR) syntax error");
+			exit(1);
+		}
+		/* add your extended material here
+		* e.g., viAddExtendedMaterial(amb,dif,spc,4.0*phong_pow,t,ior);
+		*/
+		activeMaterial.col = dif;
+		//activeMaterial.amb = amb;
+		//activeMaterial.dif = dif;
+		//activeMaterial.spc = spc;
+		//activeMaterial.phong = phong;
+		//activeMaterial.transp = transp;
+		//activeMaterial.ior = ior;
+	}
+	else   /* parse the old NFF description of a material */
+	{
+		if (fscanf(fp, "%f %f %f",&col.x, &col.y, &col.z) != 3)
+		{
+			printf("fill color syntax error");
+			exit(1);
+		}
        
-       if (fscanf(fp, "%f %f %f %f %f", &kd, &ks, &phong_pow, &t, &ior) != 5)
-       {
-	  printf("fill material syntax error");
-	  exit(1);
-       }
+		if (fscanf(fp, "%f %f %f %f %f", &kd, &ks, &phong_pow, &t, &ior) != 5)
+		{
+			printf("fill material syntax error");
+			exit(1);
+		}
        
-       /* add the normal NFF material here 
-	* e.g., viAddMaterial(col,kd,ks,4.0*phong_pow,t,ior);
-        */
-	   activeMaterial.col = col;
-    }
+		/* add the normal NFF material here 
+		* e.g., viAddMaterial(col,kd,ks,4.0*phong_pow,t,ior);
+		*/
+		activeMaterial.col = col;
+	}
 }
 
 
@@ -477,7 +492,6 @@ void parsePoly(FILE *fp)
    int nverts;
    int q;
    
-   
    std::vector< protowizard::Vertex_VNT > vertices;
 
    ispatch = getc(fp);
@@ -512,7 +526,7 @@ void parsePoly(FILE *fp)
 		//add a polygon patch here
 		//e.g.,  viAddPolyPatch(nverts,verts,norms);	
 		protowizard::MeshPtr m = std::make_shared<protowizard::Mesh>( vertices );
-		mesh_t mesh_and_mat = {m, activeMaterial};
+		mesh_t mesh_and_mat = {m, activeTransform, activeMaterial};
 		meshList.push_back( mesh_and_mat );
     }
     else
@@ -530,7 +544,7 @@ void parsePoly(FILE *fp)
 		calcNormals( vertices );
 		protowizard::MeshPtr m = std::make_shared<protowizard::Mesh>( vertices );
 
-		mesh_t mesh_and_mat = {m, activeMaterial};
+		mesh_t mesh_and_mat = {m, activeTransform, activeMaterial};
 		meshList.push_back( mesh_and_mat );
     }
 	
@@ -557,32 +571,32 @@ Format:
 ----------------------------------------------------------------------*/
 void parseInclude(FILE *fp)
 {
-   char filename[100];
-   FILE *ifp;
-   int detail_level;
-   if(fscanf(fp,"%d %s",&detail_level,filename)!=2)
-   {
-      printf("Error: could not parse include.\n");
-      exit(0);
-   }
+	char filename[100];
+	FILE *ifp;
+	int detail_level;
+	if(fscanf(fp,"%d %s",&detail_level,filename)!=2)
+	{
+		printf("Error: could not parse include.\n");
+		exit(0);
+	}
 
-   if(detail_level<=gDetailLevel) /* skip file if our detail is less than the global detail */
-   {
-      if(ifp=fopen(filename,"r"))
-      {
-	 viParseFile(ifp);  /* parse the file recursively */
-	 fclose(ifp);
-      }
-      else
-      {
-	 printf("Error: could not open include file: <%s>.\n",filename);
-	 exit(1);
-      }
-   }
-   else
-   {
-      printf("Skipping include file: %s\n",filename);
-   }
+	if(detail_level<=gDetailLevel) /* skip file if our detail is less than the global detail */
+	{
+		if(ifp=fopen( (sceneFolder+"//"+filename).c_str() ,"r"))
+		{
+			viParseFile(ifp);  /* parse the file recursively */
+			fclose(ifp);
+		}
+		else
+		{
+			printf("Error: could not open include file: <%s>.\n",filename);
+			exit(1);
+		}
+	}
+	else
+	{
+		printf("Skipping include file: %s\n",filename);
+	}
 }
 
 /*----------------------------------------------------------------------
@@ -946,8 +960,8 @@ void parseKeyFrames(FILE *fp)
    
    /* insert a new animation in the AnimationList */
    animationlist= 
-      (struct AnimationList*) malloc(sizeof(struct AnimationList)); // TODO was calloc( 1, size...)
-
+      (struct AnimationList*) calloc( 1, sizeof(struct AnimationList)); // TODO was calloc( 1, sizeof(struct blah...)
+   
    /* put the newly allocated a list somewhere,
     * e.g., 
     * animationlist->next = gScene.mAnimations;
@@ -955,9 +969,8 @@ void parseKeyFrames(FILE *fp)
     * animation = &(animationlist->animation);
     * gScene.mAnimations was our global list of animations
     */
-   animation = (Animation*)malloc(sizeof(Animation));  // TODO. just keeping compiler happy
-   throw "needs work...";
-   //animation = &(animationlist->animation)
+   mAnimations = animationlist;
+   animation = &(animationlist->animation);
 
    animation->translations=NULL;
    animation->rotations=NULL;
@@ -1145,6 +1158,9 @@ void parseXform(FILE *f)
       /* add a static transform here
        * e.g.,viAddStaticXform(scale,rot,deg,trans);
        */
+	  activeTransform = glm::translate( glm::mat4(1.0f), trans );
+	  activeTransform = glm::rotate( activeTransform, deg, rot );
+	  activeTransform = glm::scale( activeTransform, scale );
       
    }
    else   /* keyframe animated transform */
@@ -1165,6 +1181,7 @@ void parseXform(FILE *f)
       /* add an animated transform here
        * e.g., viAddXform(name);
        */
+
    }
 }
 
@@ -1187,7 +1204,6 @@ void parseComment(FILE* f)
 {
 	char str[1000];
 	fgets(str, 1000, f);
-	puts( str );
 }
 
 /*----------------------------------------------------------------------
@@ -1265,7 +1281,7 @@ void parseA(FILE *f)
 
 void getVectors(FILE *fp,char *type,int *num_vecs,glm::vec3 **vecs)
 {
-   int num,q;
+   int num;
    glm::vec3 *v=NULL;
 
    if(fscanf(fp,"%d",&num)!=1)
@@ -1274,7 +1290,6 @@ void getVectors(FILE *fp,char *type,int *num_vecs,glm::vec3 **vecs)
       exit(1);
    }
 
-
    v=(glm::vec3*)malloc(sizeof(glm::vec3)*num);
    if(v==NULL)
    {
@@ -1282,7 +1297,7 @@ void getVectors(FILE *fp,char *type,int *num_vecs,glm::vec3 **vecs)
       exit(1); 
    }
    
-   for(q=0;q<num;q++)
+   for(int q=0;q<num;q++)
    {
       if(fscanf(fp,"%f %f %f ",&v[q].x,&v[q].y,&v[q].z)!=3)
       {
@@ -1323,67 +1338,81 @@ void getTextureCoords(FILE *fp,char *texturename,int *num,glm::vec2 **vecs)
    *vecs=txts;
 }
 
+// reads indices for TexCoords, Normals and Vertices. Doesnt load actual coordinates.
 void getTriangles(FILE *fp,int *num_tris,unsigned short **indices,
 			 glm::vec3 *verts,glm::vec3 *norms,glm::vec2 *txts)
 {
-   int num;
-   int q,w;
-   int allocsize;
-   unsigned short *idx;
-   int i,v[3],n[3],t[3];
+	int num;
+	int allocsize;
+	unsigned short *idx;
+	int v[3],n[3],t[3];
    
-   allocsize=3;
-   if(norms) allocsize+=3;
-   if(txts) allocsize+=3;
+	allocsize=3;
+	if(norms) allocsize+=3;
+	if(txts) allocsize+=3; // can texcoords have 3 coords? or is this just to simplify code?
    
-   if(fscanf(fp,"%d",&num)!=1)
-   {
-      printf("Error: could not parse mesh (expected 'num_triangles').\n");   
-      exit(1);      
-   }
+	if(fscanf(fp,"%d",&num)!=1)
+	{
+		printf("Error: could not parse mesh (expected 'num_triangles').\n");   
+		exit(1);      
+	}
 
-   idx=(unsigned short *)malloc(num*allocsize*sizeof(unsigned short));
-   if(idx==NULL)
-   {
-      printf("Error: could not allocate memory for indices of mesh.\n");
-      exit(1); 
-   }
-   i=0;
-   for(q=0;q<num;q++)
-   {
-      if(fscanf(fp,"%d %d %d",&v[0],&v[1],&v[2])!=3)
-      {
-	 printf("Error: could not read %d vertex indices of mesh.\n",num);
-	 exit(1);   
-      }
+	idx=(unsigned short *)malloc(num*allocsize*sizeof(unsigned short));
+	if(idx==NULL)
+	{
+		printf("Error: could not allocate memory for indices of mesh.\n");
+		exit(1); 
+	}
 
-      if(norms)
-      {
-	 if(fscanf(fp,"%d %d %d",&n[0],&n[1],&n[2])!=3)
-	 {
-	    printf("Error: could not read %d set of normal indices of mesh.\n",num);
-	    exit(1);   
-	 }
-      }
+	int i=0;
+	for(int q=0;q<num;q++)
+	{
+		if(fscanf(fp,"%d %d %d",&v[0],&v[1],&v[2])!=3)
+		{
+			printf("Error: could not read %d vertex indices of mesh.\n",num);
+			exit(1);   
+		}
+	
+		if(norms)
+		{
+			if(fscanf(fp,"%d %d %d",&n[0],&n[1],&n[2])!=3)
+			{
+				printf("Error: could not read %d set of normal indices of mesh.\n",num);
+				exit(1);   
+			}
+		}
       
-      if(txts)
-      {
-	 if(fscanf(fp,"%d %d %d",&t[0],&t[1],&t[2])!=3)
-	 {
-	    printf("Error: could not read %d texturecoord indices of mesh.\n",num);
-	    exit(1);   
-	 }
-      }
+		if(txts)
+		{
+			if(fscanf(fp,"%d %d %d",&t[0],&t[1],&t[2])!=3)
+			{
+				printf("Error: could not read %d texturecoord indices of mesh.\n",num);
+				exit(1);   
+			}
+		}
       
-      /* indices appear in this order: [texture] [normals] vertices. []=optional */
+		/* indices appear in this order: [texture] [normals] vertices. []=optional */
 
-      for(w=0;w<3;w++)
-      {
-	 if(txts) idx[i++]=t[w];
-	 if(norms) idx[i++]=n[w];
-	 idx[i++]=v[w];
-/*	 printf("vv: %d\n",v[w]); */
-      }
+		/*
+		struct triangle{
+			tx,ty,tz
+			nx,ny,nz
+			vx,vy,vz
+		};
+		*/
+
+		// place indices in order per vertex
+		// [t0 n0] v0
+		// [t1 n1] v1
+		// [2 n2] v2
+		for(int w=0;w<3;w++)
+		{
+			if(txts) idx[i++]=t[w];
+			if(norms) idx[i++]=n[w];
+			idx[i++]=v[w];
+		}
+		//printf("vv: %d\n",v[w]);
+
    }
    *indices=idx;
    *num_tris=num;
@@ -1392,10 +1421,13 @@ void getTriangles(FILE *fp,int *num_tris,unsigned short **indices,
 void parseMesh(FILE *fp)
 {
    char str[200];
-   int num_verts,num_norms,num_txts,num_tris;
+   int num_verts = 0;
+   int num_norms = 0;
+   int num_txts = 0;
+   int num_tris = 0;
    glm::vec3 *verts=NULL,*norms=NULL;
    glm::vec2 *txts=NULL;
-   unsigned short *indices;
+   unsigned short *indices; // contains indices into txts, norms, verts arrays.
    char texturename[200];
 
    if(fscanf(fp,"%s",str)!=1)
@@ -1420,7 +1452,10 @@ void parseMesh(FILE *fp)
    {
       getTextureCoords(fp,texturename,&num_txts,&txts);
       fscanf(fp,"%s",str);
+	  printf(" texture: ");
+	  puts(texturename);
    }
+   
    if(!strcmp(str,"triangles"))
    {
       getTriangles(fp,&num_tris,&indices,verts,norms,txts);
@@ -1433,6 +1468,27 @@ void parseMesh(FILE *fp)
    /* add a mesh here
     * e.g.,viAddMesh(verts,num_verts,norms,num_norms,txts,num_txts,texturename,indices,num_tris);
     */
+	size_t coordIdx = 0;
+	std::vector<protowizard::Vertex_VNT> vertices;
+	for (size_t i=0; i<num_tris*3; i++){
+		glm::vec3 n0;
+		glm::vec2 t0;
+
+		// incrementing base index if optional data exists [tex] [norm] vert []-means optional
+		if ( num_txts > 0 ) {
+			t0 = txts[ indices[coordIdx++] ]; 
+		}
+		if ( num_norms > 0 ) {
+			n0 = norms[ indices[coordIdx++] ]; 
+		}
+		glm::vec3 v0 = verts[ indices[coordIdx++] ];
+		protowizard::Vertex_VNT vtx( v0, n0, t0 );
+		vertices.push_back(vtx);
+	}
+
+   	protowizard::MeshPtr m = std::make_shared<protowizard::Mesh>( vertices );
+	mesh_t mesh_and_mat = {m, activeTransform, activeMaterial};
+	meshList.push_back( mesh_and_mat );
 }
 
 
@@ -1517,7 +1573,7 @@ virtual void init()
 	proto->getCamera()->lookAt( Camera.camFrom, Camera.camTarget, Camera.camUp );
 	proto->getCamera()->setFov( Camera.fov );
 	proto->getCamera()->setNearDist(0.1f);
-	proto->getCamera()->setFarDist(50.f);
+	proto->getCamera()->setFarDist(100.f);
 }
 
 virtual void draw()
@@ -1536,8 +1592,15 @@ virtual void draw()
 	}
 	for(size_t i=0; i<meshList.size(); i++){
 		proto->setColor( meshList[i].mat.col );
-		proto->drawMesh( glm::vec3(0.f), meshList[i].mesh );
+		
+		glm::mat4 &xform = meshList[i].xform;
+		proto->setOrientation( xform );
+		proto->drawMesh( glm::vec3(0.f) , meshList[i].mesh ); //glm::vec3(xform[3].x, xform[3].y, xform[3].z)
 	}
+	proto->setOrientation( glm::mat4(1.0f) );
+
+	float speed = 0.25f;
+	proto->getCamera()->update( proto->keystatus(protowizard::KEY::LEFT), proto->keystatus(protowizard::KEY::RIGHT), proto->keystatus(protowizard::KEY::UP), proto->keystatus(protowizard::KEY::DOWN), (float)proto->getMouseX(), (float)proto->getMouseY(), proto->mouseDownLeft(), speed * proto->getMSPF() );
 
 }
 
