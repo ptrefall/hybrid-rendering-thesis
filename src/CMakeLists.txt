@@ -58,6 +58,7 @@ set(Render_HDRS
   ./Render/Shader.h
   ./Render/ShaderConstants.h
   ./Render/Tex2D.h
+  ./Render/Tex2DArray.h
   ./Render/Material.h
   ./Render/Uniform.h
   ./Render/VAO.h
@@ -74,6 +75,7 @@ set(Render_SRCS
   ./Render/GBuffer.cpp
   ./Render/Shader.cpp
   ./Render/Tex2D.cpp
+  ./Render/Tex2DArray.cpp
   ./Render/Material.cpp
   ./Render/Uniform.cpp
   ./Render/VAO.cpp
