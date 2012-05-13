@@ -20,6 +20,14 @@ struct material_t
 	glm::vec3 col;
 };
 
+struct material_ext_t
+{
+	glm::vec3 amb,dif,spc;
+	float phong_pow;
+	float transp;
+	float ior;
+};
+
 struct sphere_t
 {
 	glm::vec3 pos;
@@ -39,6 +47,7 @@ struct mesh_t
 	protowizard::MeshPtr mesh;
 	glm::mat4 xform;
 	material_t mat;
+	std::string texture;
 };
 
 
@@ -50,21 +59,22 @@ private:
 	protowizard::ProtoGraphicsPtr proto;
 	std::string sceneFolder;
 
-	struct camera_t
-	{
-		glm::vec3 camFrom, camTarget, camUp;
-		float fov;
-	} Camera;
-
 	glm::vec3 bgcolor;
 	material_t activeMaterial;
 	glm::mat4 activeTransform;
+	std::string activeTexture;
 
 	std::vector<sphere_t> sphereList;
 	std::vector<cone_t> coneList;
 	std::vector<mesh_t> meshList;
 
 	AnimationList* mAnimations; // TODO. verify correctness
+
+	struct camera_t
+	{
+		glm::vec3 camFrom, camTarget, camUp;
+		float fov;
+	} Camera;
 
 public:
 BARTSceneImplementation( protowizard::ProtoGraphicsPtr proto, const std::string& sceneFolder, const std::string& mainSceneFile ) : 
@@ -329,12 +339,12 @@ void parseFill(FILE *fp)
 		* e.g., viAddExtendedMaterial(amb,dif,spc,4.0*phong_pow,t,ior);
 		*/
 		activeMaterial.col = dif;
-		//activeMaterial.amb = amb;
-		//activeMaterial.dif = dif;
-		//activeMaterial.spc = spc;
-		//activeMaterial.phong = phong;
-		//activeMaterial.transp = transp;
-		//activeMaterial.ior = ior;
+		//activeExtendedMaterial.amb = amb;
+		//activeExtendedMaterial.dif = dif;
+		//activeExtendedMaterial.spc = spc;
+		//activeExtendedMaterial.phong = phong;
+		//activeExtendedMaterial.transp = transp;
+		//activeExtendedMaterial.ior = ior;
 	}
 	else   /* parse the old NFF description of a material */
 	{
@@ -526,7 +536,7 @@ void parsePoly(FILE *fp)
 		//add a polygon patch here
 		//e.g.,  viAddPolyPatch(nverts,verts,norms);	
 		protowizard::MeshPtr m = std::make_shared<protowizard::Mesh>( vertices );
-		mesh_t mesh_and_mat = {m, activeTransform, activeMaterial};
+		mesh_t mesh_and_mat = {m, activeTransform, activeMaterial, activeTexture};
 		meshList.push_back( mesh_and_mat );
     }
     else
@@ -544,7 +554,7 @@ void parsePoly(FILE *fp)
 		calcNormals( vertices );
 		protowizard::MeshPtr m = std::make_shared<protowizard::Mesh>( vertices );
 
-		mesh_t mesh_and_mat = {m, activeTransform, activeMaterial};
+		mesh_t mesh_and_mat = {m, activeTransform, activeMaterial, activeTexture};
 		meshList.push_back( mesh_and_mat );
     }
 	
@@ -1392,19 +1402,9 @@ void getTriangles(FILE *fp,int *num_tris,unsigned short **indices,
 		}
       
 		/* indices appear in this order: [texture] [normals] vertices. []=optional */
-
-		/*
-		struct triangle{
-			tx,ty,tz
-			nx,ny,nz
-			vx,vy,vz
-		};
-		*/
-
-		// place indices in order per vertex
 		// [t0 n0] v0
 		// [t1 n1] v1
-		// [2 n2] v2
+		// [t2 n2] v2
 		for(int w=0;w<3;w++)
 		{
 			if(txts) idx[i++]=t[w];
@@ -1452,8 +1452,10 @@ void parseMesh(FILE *fp)
    {
       getTextureCoords(fp,texturename,&num_txts,&txts);
       fscanf(fp,"%s",str);
-	  printf(" texture: ");
-	  puts(texturename);
+	  activeTexture = std::string(texturename);
+	  activeTexture = sceneFolder + "//"+ activeTexture.substr(0,activeTexture.size()-3) + "dds";
+   } else {
+	   activeTexture = "";
    }
    
    if(!strcmp(str,"triangles"))
@@ -1487,7 +1489,7 @@ void parseMesh(FILE *fp)
 	}
 
    	protowizard::MeshPtr m = std::make_shared<protowizard::Mesh>( vertices );
-	mesh_t mesh_and_mat = {m, activeTransform, activeMaterial};
+	mesh_t mesh_and_mat = {m, activeTransform, activeMaterial, activeTexture};
 	meshList.push_back( mesh_and_mat );
 }
 
@@ -1591,8 +1593,14 @@ virtual void draw()
 		proto->drawCone( coneList[i].a, coneList[i].b, coneList[i].r1 );
 	}
 	for(size_t i=0; i<meshList.size(); i++){
-		proto->setColor( meshList[i].mat.col );
+		proto->setColor( meshList[i].mat.col*2.f );
 		
+		proto->setBlend(false);
+
+		if ( meshList[i].texture != "" )
+		{
+			proto->setTexture(meshList[i].texture);
+		}
 		glm::mat4 &xform = meshList[i].xform;
 		proto->setOrientation( xform );
 		proto->drawMesh( glm::vec3(0.f) , meshList[i].mesh ); //glm::vec3(xform[3].x, xform[3].y, xform[3].z)
