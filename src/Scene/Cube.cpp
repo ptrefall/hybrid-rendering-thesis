@@ -188,18 +188,21 @@ void Cube::render()
   mv->bind(modelView.matrix());
   n_wri->bind(normalWorldRotationInverse);
 
-	vao->bind();
 	if(tex)
 	{
 		glActiveTexture(GL_TEXTURE0);
 		tex->bind();
 		tex_sampler->bind(0);
 	}
+	if(material)
+		material->bind();
+
+	vao->bind();
+
 	glDrawElements(GL_TRIANGLES, ibo->size(), GL_UNSIGNED_INT, BUFFER_OFFSET(0));
+	
 	if(tex)
-	{
 		tex->unbind();
-	}
 }
 
 // Calculate average normals
