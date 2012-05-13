@@ -43,11 +43,19 @@ struct cone_t
 	material_t mat;
 };
 
-struct mesh_t
+struct poly_t
 {
 	protowizard::MeshPtr mesh;
 	glm::mat4 xform;
 	material_t mat;
+	std::string texture;
+};
+
+struct mesh_t
+{
+	protowizard::MeshPtr mesh;
+	glm::mat4 xform;
+	material_ext_t mat;
 	std::string texture;
 };
 
@@ -63,32 +71,8 @@ private:
 	protowizard::ProtoGraphicsPtr proto;
 	std::string sceneFolder;
 
-	//struct active_def
-	//{
-	//	struct tform_def
-	//	{
-	//		std::string name;
-	//		glm::mat4 matrix;
-	//	} tform;
-
-	//	material_t activeMaterial;
-	//	std::string activeTexture;
-	//} active;
-
+	// Global scene parameters
 	glm::vec3 bgcolor;
-	
-	std::string activeTransformName;
-	std::stack<glm::mat4> activeTransformStack;
-	std::stack<tformtype::eTransformType> typeStack;
-	
-	glm::mat4 activeTransform;
-	material_t activeMaterial;
-	std::string activeTexture;
-
-	std::vector<sphere_t> sphereList;
-	std::vector<cone_t> coneList;
-	std::vector<mesh_t> meshList;
-
 	AnimationList* mAnimations; // TODO. verify correctness
 
 	struct camera_t
@@ -97,12 +81,31 @@ private:
 		float fov;
 	} Camera;
 
+	// Loader temporaries. Stored into scene objects
+	struct active_def
+	{
+		std::string tformName;
+		glm::mat4 tformMatrix;
+		std::stack<glm::mat4> tformStack;
+		std::stack<tformtype::eTransformType> tformTypeStack;
+
+		material_t material;
+		material_ext_t extMaterial;
+		std::string texture;
+	} active;
+
+	// Scene objects
+	std::vector<sphere_t> sphereList;
+	std::vector<cone_t> coneList;
+	std::vector<poly_t> polyList;
+	std::vector<mesh_t> meshList;
+
 public:
 BARTSceneImplementation( protowizard::ProtoGraphicsPtr proto, const std::string& sceneFolder, const std::string& mainSceneFile ) : 
 	  gDetailLevel(0), proto(proto), sceneFolder(sceneFolder)
 {
-	//activeTransform = glm::mat4(1.0f);
-	//activeTransformStack.push(activeTransform);
+	//active.tformMatrix = glm::mat4(1.0f);
+	//activetformStack.push(activeTransform);
 
 	FILE* f = fopen( (sceneFolder+"//"+mainSceneFile).c_str(), "r");
 		
@@ -117,6 +120,20 @@ BARTSceneImplementation( protowizard::ProtoGraphicsPtr proto, const std::string&
 	}
 }
 
+
+void addPoly( std::vector<protowizard::Vertex_VNT>& vertices )
+{
+	protowizard::MeshPtr m = std::make_shared<protowizard::Mesh>( vertices );
+	poly_t p = {m, active.tformMatrix, active.material, active.texture};
+	polyList.push_back(p);
+}
+
+void addMesh( std::vector<protowizard::Vertex_VNT>& vertices )
+{
+	protowizard::MeshPtr m = std::make_shared<protowizard::Mesh>( vertices );
+	mesh_t mesh_and_mat = {m, active.tformMatrix, active.extMaterial, active.texture};
+	meshList.push_back( mesh_and_mat );
+}
 
 /*----------------------------------------------------------------------
   parseViewpoint()
@@ -362,13 +379,12 @@ void parseFill(FILE *fp)
 		/* add your extended material here
 		* e.g., viAddExtendedMaterial(amb,dif,spc,4.0*phong_pow,t,ior);
 		*/
-		activeMaterial.col = dif;
-		//activeExtendedMaterial.amb = amb;
-		//activeExtendedMaterial.dif = dif;
-		//activeExtendedMaterial.spc = spc;
-		//activeExtendedMaterial.phong = phong;
-		//activeExtendedMaterial.transp = transp;
-		//activeExtendedMaterial.ior = ior;
+		active.extMaterial.amb = amb;
+		active.extMaterial.dif = dif;
+		active.extMaterial.spc = spc;
+		active.extMaterial.phong_pow = phong_pow;
+		active.extMaterial.transp = t;
+		active.extMaterial.ior = ior;
 	}
 	else   /* parse the old NFF description of a material */
 	{
@@ -387,7 +403,7 @@ void parseFill(FILE *fp)
 		/* add the normal NFF material here 
 		* e.g., viAddMaterial(col,kd,ks,4.0*phong_pow,t,ior);
 		*/
-		activeMaterial.col = col;
+		active.material.col = col;
 	}
 }
 
@@ -433,7 +449,7 @@ void parseCone(FILE *fp)
        r1 = -r1;
     }
 
-    cone_t cone = {base_pt, apex_pt, r0, r1, activeMaterial};
+    cone_t cone = {base_pt, apex_pt, r0, r1, active.material};
 	coneList.push_back( cone );
 }
 
@@ -461,7 +477,7 @@ void parseSphere(FILE *fp)
        exit(1);
     }
 
-	sphere_t sph = {center, radius, activeMaterial};
+	sphere_t sph = {center, radius, active.material};
 	sphereList.push_back( sph );
 }	
 
@@ -559,9 +575,7 @@ void parsePoly(FILE *fp)
     {
 		//add a polygon patch here
 		//e.g.,  viAddPolyPatch(nverts,verts,norms);	
-		protowizard::MeshPtr m = std::make_shared<protowizard::Mesh>( vertices );
-		mesh_t mesh_and_mat = {m, activeTransform, activeMaterial, activeTexture};
-		meshList.push_back( mesh_and_mat );
+		addPoly( vertices );
     }
     else
     {
@@ -576,10 +590,7 @@ void parsePoly(FILE *fp)
 		if ( vertices.size() % 3 != 0 ) return;
 		
 		calcNormals( vertices );
-		protowizard::MeshPtr m = std::make_shared<protowizard::Mesh>( vertices );
-
-		mesh_t mesh_and_mat = {m, activeTransform, activeMaterial, activeTexture};
-		meshList.push_back( mesh_and_mat );
+		addPoly( vertices );
     }
 	
     return;
@@ -1194,7 +1205,7 @@ void parseXform(FILE *f)
 		/* add a static transform here
 		* e.g.,viAddStaticXform(scale,rot,deg,trans);
 		*/
-		activeTransformName = std::string("static");
+		active.tformName = std::string("static");
 
 		// T*R*S
 		glm::mat4 thisTransform = glm::mat4(1.0f);
@@ -1202,10 +1213,10 @@ void parseXform(FILE *f)
 		thisTransform = glm::rotate( thisTransform, deg, rot );
 		thisTransform = glm::scale( thisTransform, scale );
 
-		activeTransformStack.push( activeTransform );
-		activeTransform *= thisTransform;
+		active.tformStack.push( active.tformMatrix );
+		active.tformMatrix *= thisTransform;
 
-		typeStack.push( tformtype::STATIC_TRANSFORM );
+		active.tformTypeStack.push( tformtype::STATIC_TRANSFORM );
 	}
 	else   /* keyframe animated transform */
 	{
@@ -1225,26 +1236,25 @@ void parseXform(FILE *f)
 		* e.g., viAddXform(name);
 		*/
 		printf("begin anim xform %s\n", name);
-		activeTransformName = std::string(name);
-		typeStack.push( tformtype::ANIMATED_TRANSFORM );
+		active.tformName = std::string(name);
+		active.tformTypeStack.push( tformtype::ANIMATED_TRANSFORM );
 	}
 
 }
 
 void viEndXform()
 {
-	if ( typeStack.top() == tformtype::STATIC_TRANSFORM )
+	if ( active.tformTypeStack.top() == tformtype::STATIC_TRANSFORM )
 	{
-		if ( activeTransformStack.size() == 0 ) 
+		if ( active.tformStack.size() == 0 ) 
 		{
 			puts("no more to pop from matrix stack... will underflow...");
 			exit(0);
 		}
-		activeTransform = activeTransformStack.top();
-		activeTransformStack.pop();
+		active.tformMatrix = active.tformStack.top();
+		active.tformStack.pop();
 	}
-	typeStack.pop();
-
+	active.tformTypeStack.pop();
 }
 
 /*----------------------------------------------------------------------
@@ -1505,10 +1515,10 @@ void parseMesh(FILE *fp)
    {
       getTextureCoords(fp,texturename,&num_txts,&txts);
       fscanf(fp,"%s",str);
-	  activeTexture = std::string(texturename);
-	  activeTexture = sceneFolder + "//"+ activeTexture.substr(0,activeTexture.size()-3) + "dds";
+	  active.texture = std::string(texturename);
+	  active.texture = sceneFolder + "//"+ active.texture.substr(0,active.texture.size()-3) + "dds";
    } else {
-	   activeTexture = "";
+	   active.texture = "";
    }
    
    if(!strcmp(str,"triangles"))
@@ -1523,6 +1533,8 @@ void parseMesh(FILE *fp)
    /* add a mesh here
     * e.g.,viAddMesh(verts,num_verts,norms,num_norms,txts,num_txts,texturename,indices,num_tris);
     */
+
+   // TODO use opengl indexed
 	size_t coordIdx = 0;
 	std::vector<protowizard::Vertex_VNT> vertices;
 	for (size_t i=0; i<num_tris*3; i++){
@@ -1541,9 +1553,7 @@ void parseMesh(FILE *fp)
 		vertices.push_back(vtx);
 	}
 
-   	protowizard::MeshPtr m = std::make_shared<protowizard::Mesh>( vertices );
-	mesh_t mesh_and_mat = {m, activeTransform, activeMaterial, activeTexture};
-	meshList.push_back( mesh_and_mat );
+   	addMesh(vertices);
 }
 
 
@@ -1625,10 +1635,18 @@ bool viParseFile(FILE *f)
 
 virtual void init()
 {
+	glm::vec3 eyeUp = Camera.camUp;
+
+	glm::vec3 eyeFwd = glm::normalize( Camera.camTarget - Camera.camFrom );
+	glm::vec3 eyeStrafe = glm::normalize( glm::cross(eyeUp,eyeFwd) );
+	eyeFwd = glm::normalize( glm::cross(eyeUp, eyeStrafe) ); // straighten
+	
+
+	//proto->getCamera()->setCameraBasis( eyeStrafe, eyeUp, eyeFwd );
 	proto->getCamera()->lookAt( Camera.camFrom, Camera.camTarget, Camera.camUp );
 	proto->getCamera()->setFov( Camera.fov );
-	proto->getCamera()->setNearDist(0.1f);
-	proto->getCamera()->setFarDist(100.f);
+	proto->getCamera()->setNearDist(0.01f);
+	proto->getCamera()->setFarDist(500.f);
 }
 
 virtual void draw()
@@ -1645,10 +1663,19 @@ virtual void draw()
 		proto->setColor( coneList[i].mat.col );
 		proto->drawCone( coneList[i].a, coneList[i].b, coneList[i].r1 );
 	}
+	for(size_t i=0; i<polyList.size(); i++){
+		proto->setColor( polyList[i].mat.col * 3.f );
+		glm::mat4 &xform = polyList[i].xform;
+		proto->setOrientation( xform );
+		proto->drawMesh( glm::vec3(0.f) , polyList[i].mesh );
+	}
 	for(size_t i=0; i<meshList.size(); i++){
-		proto->setColor( meshList[i].mat.col*4.f );
+		proto->setColor( meshList[i].mat.dif * 3.f );
 		
-		proto->setBlend(false);
+		if ( meshList[i].mat.transp > .5f ) {
+			proto->setBlend(true);
+			proto->setAlpha( 1.f - meshList[i].mat.transp );
+		}
 
 		if ( meshList[i].texture != "" )
 		{
@@ -1659,8 +1686,11 @@ virtual void draw()
 		proto->drawMesh( glm::vec3(0.f) , meshList[i].mesh ); //glm::vec3(xform[3].x, xform[3].y, xform[3].z)
 	}
 	proto->setOrientation( glm::mat4(1.0f) );
+	proto->setBlend(false);
 
 	float speed = 0.25f;
+	speed += proto->getMouseWheel() * 0.5f;
+
 	proto->getCamera()->update( proto->keystatus(protowizard::KEY::LEFT), proto->keystatus(protowizard::KEY::RIGHT), proto->keystatus(protowizard::KEY::UP), proto->keystatus(protowizard::KEY::DOWN), (float)proto->getMouseX(), (float)proto->getMouseY(), proto->mouseDownLeft(), speed * proto->getMSPF() );
 
 }
