@@ -18,9 +18,12 @@ void DeferredRender::render()
 	shader->bind();
 	g_buffer->bind(shader->getFS());
 
-  camPos->bind(Scene::Camera::getSingleton()->getPosition());
+	camPos->bind(Scene::Camera::getSingleton()->getPosition());
 
-	quad->render();
+	if(materials.empty() == false)
+		materials[0]->bind_data(shader->getFS());
+
+	quad->render(0);
 	g_buffer->unbind();
 }
 

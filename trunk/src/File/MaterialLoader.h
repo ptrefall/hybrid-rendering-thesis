@@ -19,5 +19,6 @@ namespace File
 
 	private:
 		std::string base_dir;
+		unsigned int material_counter;
 	};
 }

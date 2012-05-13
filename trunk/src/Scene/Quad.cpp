@@ -27,7 +27,7 @@ Quad::Quad(unsigned int w, unsigned int h)
 	ibo->unbind();
 }
 
-void Quad::render()
+void Quad::render(const Render::ShaderPtr &active_program)
 {
 	vao->bind();
 	glDrawElements(GL_TRIANGLES, ibo->size(), GL_UNSIGNED_INT, BUFFER_OFFSET(0));

@@ -4,6 +4,8 @@
 #include "../Render/VBO.h"
 #include "../Render/IBO.h"
 
+#include "../Render/Shader.h"
+
 #include <memory>
 
 namespace Scene
@@ -16,7 +18,7 @@ namespace Scene
 	public:
 		Quad(unsigned int w, unsigned int h);
 
-		void render();
+		void render(const Render::ShaderPtr &active_program);
 
 	private:
 		Render::VAOPtr vao;

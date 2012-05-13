@@ -151,7 +151,7 @@ Cube::Cube(const float &size)
 	ibo->unbind();
 }
 
-void Cube::render()
+void Cube::render(const Render::ShaderPtr &active_program)
 {
 	Affine3f model = Affine3f::Identity();
   model.matrix()(12) = position.x();
@@ -195,7 +195,7 @@ void Cube::render()
 		tex_sampler->bind(0);
 	}
 	if(material)
-		material->bind();
+		material->bind_id(active_program->getFS());
 
 	vao->bind();
 

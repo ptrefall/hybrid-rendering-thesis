@@ -68,20 +68,32 @@ void Uniform::bind(float data, unsigned int program)
 
 void Uniform::bind(const Eigen::Vector2f &data, unsigned int program)
 {
+	if(location < 0)
+		location = glGetUniformLocation(program, name.c_str());
+
 	glProgramUniform2fv(program, location, 1, &data[0]);
 }
 
 void Uniform::bind(const Eigen::Vector3f &data, unsigned int program)
 {
+	if(location < 0)
+		location = glGetUniformLocation(program, name.c_str());
+
 	glProgramUniform3fv(program, location, 1, &data[0]);
 }
 
 void Uniform::bind(const Eigen::Matrix3f &data, unsigned int program)
 {
+	if(location < 0)
+		location = glGetUniformLocation(program, name.c_str());
+
 	glProgramUniformMatrix3fv(program, location, 1, GL_FALSE, &data(0));
 }
 
 void Uniform::bind(const Eigen::Matrix4f &data, unsigned int program)
 {
+	if(location < 0)
+		location = glGetUniformLocation(program, name.c_str());
+
 	glProgramUniformMatrix4fv(program, location, 1, GL_FALSE, &data(0));
 }
