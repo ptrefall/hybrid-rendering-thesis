@@ -15,6 +15,7 @@ using namespace File;
 TextureLoader::TextureLoader(const std::string &base_dir)
 	: base_dir(base_dir)
 {
+	ilInit();
 }
 
 Render::Tex2DPtr TextureLoader::load(const std::string &filename)
@@ -23,7 +24,7 @@ Render::Tex2DPtr TextureLoader::load(const std::string &filename)
     ilGenImages(1, &img_id);
 
     ilBindImage(img_id);
-    int success = ilLoadImage(filename.c_str());
+    int success = ilLoadImage((base_dir+filename).c_str());
     if(!success)
     {
             ILenum err = ilGetError();
@@ -48,18 +49,8 @@ Render::Tex2DPtr TextureLoader::load(const std::string &filename)
     int format = ilGetInteger(IL_IMAGE_FORMAT);
     unsigned char *data = ilGetData();
 
-	Render::T2DTexParams params(format, format, bpp, w, h, data);
+	Render::T2DTexParams params(format, format, GL_UNSIGNED_BYTE, w, h, data);
 	auto tex = std::make_shared<Render::Tex2D>(params);
-
-    glTexImage2D(GL_TEXTURE_2D,
-                0,
-                format,
-                w,
-                h,
-                0,
-                format,
-                GL_UNSIGNED_BYTE,
-                data);
 
 	return tex;
 }

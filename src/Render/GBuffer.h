@@ -29,6 +29,8 @@ namespace Render
 		UniformPtr getMV() const { return mv; }
 		UniformPtr getN_WRI() const { return n_wri; }
 
+		ShaderPtr getShader() const { return shader; }
+
 	private:
 		unsigned int w;
 		unsigned int h;

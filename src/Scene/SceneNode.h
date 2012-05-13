@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../Render/Uniform.h"
+#include "../Render/Tex2D.h"
 
 #include <Eigen/Eigen>
 #include <Eigen/Geometry>
@@ -25,10 +26,15 @@ namespace Scene
 
 		void setPosition(const Eigen::Vector3f &position) { this->position = position; }
 
+		void setTexture(const Render::Tex2DPtr &tex, const Render::UniformPtr &sampler);
+
 	protected:
 		Render::UniformPtr mvp;
 		Render::UniformPtr mv;
 		Render::UniformPtr n_wri;
+
+		Render::Tex2DPtr tex;
+		Render::UniformPtr tex_sampler;
 
 		Eigen::Vector3f position;
 		//Eigen::Transform< model;
