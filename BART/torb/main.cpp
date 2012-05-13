@@ -10,10 +10,12 @@ protowizard::ProtoGraphicsPtr protoGfx;
 
 int main()
 {
-	const char* argv[] = {"F:\\repos\\github\\protoWizard\\bin\\MinSizeRes\\teit.exe"};
-
 	protoGfx = protowizard::ProtoGraphics::create();
-	if ( !protoGfx->init(640,480, argv) ) 
+
+	ini::Parser protoIni("proto.ini");
+	std::string protoAssets = protoIni.getString("init", "assetsdir", "F:\\repos\\github\\ProtoWizard\\bin\\assets\\");
+
+	if ( !protoGfx->init(640,480, protoAssets) ) 
 	{
 		return 1;
 	}

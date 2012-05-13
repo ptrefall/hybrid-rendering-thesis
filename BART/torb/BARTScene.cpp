@@ -7,6 +7,7 @@
 #include <cstdio>
 #include <string>
 #include <vector>
+#include <stack>
 
 #include "../src/animation.h"
 #include "../src/texture.h"
@@ -50,7 +51,10 @@ struct mesh_t
 	std::string texture;
 };
 
-
+namespace tformtype
+{
+	enum eTransformType{ STATIC_TRANSFORM, ANIMATED_TRANSFORM };
+}
 
 class BARTSceneImplementation : public BARTScene
 {
@@ -59,9 +63,26 @@ private:
 	protowizard::ProtoGraphicsPtr proto;
 	std::string sceneFolder;
 
+	//struct active_def
+	//{
+	//	struct tform_def
+	//	{
+	//		std::string name;
+	//		glm::mat4 matrix;
+	//	} tform;
+
+	//	material_t activeMaterial;
+	//	std::string activeTexture;
+	//} active;
+
 	glm::vec3 bgcolor;
-	material_t activeMaterial;
+	
+	std::string activeTransformName;
+	std::stack<glm::mat4> activeTransformStack;
+	std::stack<tformtype::eTransformType> typeStack;
+	
 	glm::mat4 activeTransform;
+	material_t activeMaterial;
 	std::string activeTexture;
 
 	std::vector<sphere_t> sphereList;
@@ -80,6 +101,9 @@ public:
 BARTSceneImplementation( protowizard::ProtoGraphicsPtr proto, const std::string& sceneFolder, const std::string& mainSceneFile ) : 
 	  gDetailLevel(0), proto(proto), sceneFolder(sceneFolder)
 {
+	//activeTransform = glm::mat4(1.0f);
+	//activeTransformStack.push(activeTransform);
+
 	FILE* f = fopen( (sceneFolder+"//"+mainSceneFile).c_str(), "r");
 		
 	if ( f == nullptr ) {
@@ -816,26 +840,26 @@ void parseAnimatedTriangle(FILE *fp)
 ----------------------------------------------------------------------*/
 void parseTextureStuff(FILE *fp)
 {
-   int is_triangle;
+	int is_triangle;
 
-   is_triangle=getc(fp);
-   if(is_triangle=='t')
-   {
-      parseTexturedTriangle(fp);
-   }
-   else if(is_triangle=='p')
-   {
-      is_triangle=getc(fp);
-      if(is_triangle=='a')    /*tpa = triangle, patch, animated */
-      {
-	 parseAnimatedTriangle(fp);
-      }
-   }
-   else
-   {
-      printf("Error: tt and ttp are valid codes (not t%c).\n",(char)is_triangle);
-      exit(1);
-   }
+	is_triangle=getc(fp);
+	if(is_triangle=='t')
+	{
+		parseTexturedTriangle(fp);
+	}
+	else if(is_triangle=='p')
+	{
+		is_triangle=getc(fp);
+		if(is_triangle=='a')    /*tpa = triangle, patch, animated */
+		{
+			parseAnimatedTriangle(fp);
+		}
+	}
+	else
+	{
+		printf("Error: tt and ttp are valid codes (not t%c).\n",(char)is_triangle);
+		exit(1);
+	}
 }
 
 static void eatWhitespace(FILE *f)
@@ -943,166 +967,168 @@ static void eatWhitespace(FILE *f)
 
 void parseKeyFrames(FILE *fp)
 {   
-   char name[200];
-   char motion[200];
-   char ch;
-   int  c;
-   int visibility;
-   int  ret, i, nKeyFrames;
-   float time, x, y, z, angle, te, co, bi;
-   PositionKey* PKeys;
-   RotationKey* RKeys;
-   Animation* animation;
-   struct AnimationList* animationlist;
+	char name[200];
+	char motion[200];
+	char ch;
+	int  c;
+	int visibility;
+	int  ret, i, nKeyFrames;
+	float time, x, y, z, angle, te, co, bi;
+	PositionKey* PKeys;
+	RotationKey* RKeys;
+	Animation* animation;
+	struct AnimationList* animationlist;
 
-   if(fscanf(fp,"%s",name)!=1)
-   {
-      printf("Error: could not read name of animation.\n");
-      exit(1);
-   }
-   eatWhitespace(fp);
-   ch=getc(fp);
-   if(ch!='{')
-   {
-      printf("Error: could not find a { in animation %s.\n",name);
-      exit(1);
-   }
+	if(fscanf(fp,"%s",name)!=1)
+	{
+		printf("Error: could not read name of animation.\n");
+		exit(1);
+	}
+	eatWhitespace(fp);
+	ch=getc(fp);
+	if(ch!='{')
+	{
+		printf("Error: could not find a { in animation %s.\n",name);
+		exit(1);
+	}
    
-   /* insert a new animation in the AnimationList */
-   animationlist= 
-      (struct AnimationList*) calloc( 1, sizeof(struct AnimationList)); // TODO was calloc( 1, sizeof(struct blah...)
+	/* insert a new animation in the AnimationList */
+	animationlist= 
+	(struct AnimationList*) calloc( 1, sizeof(struct AnimationList)); // TODO was calloc( 1, sizeof(struct blah...)
    
-   /* put the newly allocated a list somewhere,
-    * e.g., 
-    * animationlist->next = gScene.mAnimations;
-    * gScene.mAnimations = animationlist;
-    * animation = &(animationlist->animation);
-    * gScene.mAnimations was our global list of animations
-    */
-   mAnimations = animationlist;
-   animation = &(animationlist->animation);
+	/* put the newly allocated a list somewhere,
+		* e.g., 
+		* animationlist->next = gScene.mAnimations;
+		* gScene.mAnimations = animationlist;
+		* animation = &(animationlist->animation);
+		* gScene.mAnimations was our global list of animations
+	*/
+	mAnimations = animationlist;
+	animation = &(animationlist->animation);
 
-   animation->translations=NULL;
-   animation->rotations=NULL;
-   animation->scales=NULL;
-   animation->name=(char *)malloc(sizeof(name)); 
-   strcpy(animation->name,name);
+	animation->translations=NULL;
+	animation->rotations=NULL;
+	animation->scales=NULL;
+	animation->name=(char *)malloc(sizeof(name)); 
+	strcpy(animation->name,name);
 
-   eatWhitespace(fp);
-   while( (c = getc(fp)) != '}' )
-   {
-      ungetc(c, fp);
-      if(fscanf(fp, "%s %d", motion, &nKeyFrames)!=2)
-      {
-	 printf("Error: could not read name of motion or number of keyframes for animation.\n");
-	 exit(1);
-      }
+	eatWhitespace(fp);
+	while( (c = getc(fp)) != '}' )
+	{
+		ungetc(c, fp);
+		if(fscanf(fp, "%s %d", motion, &nKeyFrames)!=2)
+		{
+			printf("Error: could not read name of motion or number of keyframes for animation.\n");
+			exit(1);
+		}
       
-      if(nKeyFrames<4 && strcmp("visibility",motion))
-      { 
-	 printf("Error: there must be at least 4 keyframes for %s.\n",name);
-	 exit(1);
-      }
+		if(nKeyFrames<4 && strcmp("visibility",motion))
+		{ 
+			printf("Error: there must be at least 4 keyframes for %s.\n",name);
+			exit(1);
+		}
 
-      /* check whether the motion is a "transl" or a "rot" or a "scale" */
-      if(strcmp(motion, "transl")==0)
-      {
-	 PKeys = (PositionKey*) calloc(nKeyFrames, sizeof(PositionKey));
-	 for( i=0; i<nKeyFrames; i++ )
-	 {
-	    ret = fscanf(fp, " %f %f %f %f %f %f %f", &time, &x, &y, &z, 
-			 &te, &co, &bi);
-	    if(ret != 7)
-	    {
-	       printf("error in parsing translation keyframes for %s\n",
-		      animation->name);
-	       exit(1);
-	    }
-	    PKeys[i].t = time;
-	    PKeys[i].P.x = x;
-	    PKeys[i].P.y = y;
-	    PKeys[i].P.z = z;
-	    PKeys[i].tension = te;
-	    PKeys[i].continuity = co;
-	    PKeys[i].bias = bi;
-	 }
-	 animation->translations = KB_PosInitialize(nKeyFrames, PKeys);
-	 free(PKeys);
-      }
-      else if(strcmp(motion, "rot")==0)
-      {
-	 RKeys = (RotationKey*) calloc(nKeyFrames, sizeof(RotationKey));
-	 for( i=0; i<nKeyFrames; i++ )
-	 {
-	    ret = fscanf(fp," %f %f %f %f %f %f %f %f", &time, &x, &y, &z, 
-			 &angle, &te, &co, &bi);
-	    if(ret != 8)
-	    {
-	       printf("error in parsing rotation keyframes for %s\n",
-		      animation->name);
-	       exit(1);
-	    }
-	    RKeys[i].t = time;
-	    RKeys[i].Rot.x = x;
-	    RKeys[i].Rot.y = y;
-	    RKeys[i].Rot.z = z;
-	    RKeys[i].Rot.angle = angle*M_PI/180.0;
-	    RKeys[i].tension = te;
-	    RKeys[i].continuity = co;
-	    RKeys[i].bias = bi;
-	 }
-	 animation->rotations = KB_RotInitialize(nKeyFrames, RKeys);
-	 free(RKeys);
-      }
-      else if(strcmp(motion, "scale")==0)
-      {
-	 PKeys = (PositionKey*) calloc(nKeyFrames, sizeof(PositionKey));
-	 for( i=0; i<nKeyFrames; i++ )
-	 {
-	    ret = fscanf(fp, " %f %f %f %f %f %f %f", &time, &x, &y, &z, 
-			 &te, &co, &bi);
-	    if(ret != 7)
-	    {
-	       printf("error in parsing scale keyframes for %s\n",
-		      animation->name);
-	       exit(1);
-	    }
-	    PKeys[i].t = time;
-	    PKeys[i].P.x = x;
-	    PKeys[i].P.y = y;
-	    PKeys[i].P.z = z;
-	    PKeys[i].tension = te;
-	    PKeys[i].continuity = co;
-	    PKeys[i].bias = bi;
-	 }
-	 animation->scales = KB_PosInitialize(nKeyFrames, PKeys);
-	 free(PKeys);
-      }
-      else if(strcmp(motion, "visibility")==0)
-      {
-	 VisKey *viskeys=(VisKey*)  calloc(nKeyFrames, sizeof(VisKey));
-	 for( i=0; i<nKeyFrames; i++ )
-	 { 	    
-	    ret = fscanf(fp, " %f %d", &time, &visibility);
-	    if(ret != 2)
-	    {
-	       printf("error in parsing visibility keyframes for %s\n",
-		      animation->name);
-	       exit(1);
-	    }
-	    viskeys[i].time=time;
-	    viskeys[i].visibility=visibility;	    
-	 }
-	 animation->visibilities=viskeys;
-	 animation->numVisibilities+=nKeyFrames;
-      }
-      else
-      {
-	 printf("Error: unknown keyframe type (%s). Must be transl, rot, or scale.\n",motion);
-	 exit(1);
-      }
-      eatWhitespace(fp);
-   }   
+		/* check whether the motion is a "transl" or a "rot" or a "scale" */
+		if(strcmp(motion, "transl")==0)
+		{
+			PKeys = (PositionKey*) calloc(nKeyFrames, sizeof(PositionKey));
+			for( i=0; i<nKeyFrames; i++ )
+			{
+				ret = fscanf(fp, " %f %f %f %f %f %f %f", &time, &x, &y, &z, 
+				&te, &co, &bi);
+				if(ret != 7)
+				{
+				printf("error in parsing translation keyframes for %s\n",
+				animation->name);
+				exit(1);
+				}
+				PKeys[i].t = time;
+				PKeys[i].P.x = x;
+				PKeys[i].P.y = y;
+				PKeys[i].P.z = z;
+				PKeys[i].tension = te;
+				PKeys[i].continuity = co;
+				PKeys[i].bias = bi;
+			}
+			animation->translations = KB_PosInitialize(nKeyFrames, PKeys);
+			free(PKeys);
+			}
+			else if(strcmp(motion, "rot")==0)
+			{
+				RKeys = (RotationKey*) calloc(nKeyFrames, sizeof(RotationKey));
+				for( i=0; i<nKeyFrames; i++ )
+				{
+					ret = fscanf(fp," %f %f %f %f %f %f %f %f", &time, &x, &y, &z, 
+					&angle, &te, &co, &bi);
+					if(ret != 8)
+					{
+						printf("error in parsing rotation keyframes for %s\n",
+						animation->name);
+						exit(1);
+					}
+				RKeys[i].t = time;
+				RKeys[i].Rot.x = x;
+				RKeys[i].Rot.y = y;
+				RKeys[i].Rot.z = z;
+				RKeys[i].Rot.angle = angle*M_PI/180.0;
+				RKeys[i].tension = te;
+				RKeys[i].continuity = co;
+				RKeys[i].bias = bi;
+			}
+			animation->rotations = KB_RotInitialize(nKeyFrames, RKeys);
+			free(RKeys);
+		}
+		else if(strcmp(motion, "scale")==0)
+		{
+			PKeys = (PositionKey*) calloc(nKeyFrames, sizeof(PositionKey));
+			for( i=0; i<nKeyFrames; i++ )
+			{
+				ret = fscanf(fp, " %f %f %f %f %f %f %f", &time, &x, &y, &z, 
+				&te, &co, &bi);
+				if(ret != 7)
+				{
+					printf("error in parsing scale keyframes for %s\n",
+					animation->name);
+					exit(1);
+				}
+				PKeys[i].t = time;
+				PKeys[i].P.x = x;
+				PKeys[i].P.y = y;
+				PKeys[i].P.z = z;
+				PKeys[i].tension = te;
+				PKeys[i].continuity = co;
+				PKeys[i].bias = bi;
+			}
+			animation->scales = KB_PosInitialize(nKeyFrames, PKeys);
+			free(PKeys);
+		}
+		else if(strcmp(motion, "visibility")==0)
+		{
+			VisKey *viskeys=(VisKey*)  calloc(nKeyFrames, sizeof(VisKey));
+			for( i=0; i<nKeyFrames; i++ )
+			{ 	    
+				ret = fscanf(fp, " %f %d", &time, &visibility);
+				if(ret != 2)
+				{
+				printf("error in parsing visibility keyframes for %s\n",
+				animation->name);
+				exit(1);
+				}
+				viskeys[i].time=time;
+				viskeys[i].visibility=visibility;	    
+			}
+
+			animation->visibilities=viskeys;
+			animation->numVisibilities+=nKeyFrames;
+		}
+		else
+		{
+			printf("Error: unknown keyframe type (%s). Must be transl, rot, or scale.\n",motion);
+			exit(1);
+		}
+		eatWhitespace(fp);
+	}   
+	printf("finished parsing anim %s\n", name);
 }
 
 
@@ -1134,65 +1160,91 @@ void parseKeyFrames(FILE *fp)
 ----------------------------------------------------------------------*/
 void parseXform(FILE *f)
 {
-   char name[100];
-   char ch;
-   int is_static;
+	char name[100];
+	char ch;
+	int is_static;
 
-   is_static = getc(f);
-   if(is_static != 's')
-   {
-      ungetc(is_static, f);
-      is_static=0;
-   }
+	is_static = getc(f);
+	if(is_static != 's')
+	{
+		ungetc(is_static, f);
+		is_static=0;
+	}
 
-   if(is_static)  /* is the transform a static one ? */
-   {
-      glm::vec3 scale, trans, rot;
-      float deg;
+	if(is_static)  /* is the transform a static one ? */
+	{
+		glm::vec3 scale, trans, rot;
+		float deg;
       
-      if(fscanf(f," %f %f %f %f %f %f %f %f %f %f", &scale[0], &scale[1], &scale[2],
+		if(fscanf(f," %f %f %f %f %f %f %f %f %f %f", &scale[0], &scale[1], &scale[2],
 		&rot[0], &rot[1], &rot[2], &deg,
 		&trans[0], &trans[1], &trans[2])!=10)
-      {
-	 printf("Error: could not read static transform.\n");
-	 exit(1);
-      }
-      eatWhitespace(f);
-      ch=getc(f);
-      if(ch!='{')
-      {
-	 printf("Error: { expected.\n");
-	 exit(1);
-      } 
+		{
+			printf("Error: could not read static transform.\n");
+			exit(1);
+		}
+		eatWhitespace(f);
+		ch=getc(f);
+		if(ch!='{')
+		{
+			printf("Error: { expected.\n");
+			exit(1);
+		} 
 
-      /* add a static transform here
-       * e.g.,viAddStaticXform(scale,rot,deg,trans);
-       */
-	  activeTransform = glm::translate( glm::mat4(1.0f), trans );
-	  activeTransform = glm::rotate( activeTransform, deg, rot );
-	  activeTransform = glm::scale( activeTransform, scale );
-      
-   }
-   else   /* keyframe animated transform */
-   {
-      if(fscanf(f,"%s",name)!=1)
-      {
-	 printf("Error: could not read transform name.\n");
-	 exit(1);
-      }
-      eatWhitespace(f);
-      ch=getc(f);
-      if(ch!='{')
-      {
-	 printf("Error: { expected.\n");
-	 exit(1);
-      }
-      
-      /* add an animated transform here
-       * e.g., viAddXform(name);
-       */
+		/* add a static transform here
+		* e.g.,viAddStaticXform(scale,rot,deg,trans);
+		*/
+		activeTransformName = std::string("static");
 
-   }
+		// T*R*S
+		glm::mat4 thisTransform = glm::mat4(1.0f);
+		thisTransform = glm::translate( thisTransform, trans );
+		thisTransform = glm::rotate( thisTransform, deg, rot );
+		thisTransform = glm::scale( thisTransform, scale );
+
+		activeTransformStack.push( activeTransform );
+		activeTransform *= thisTransform;
+
+		typeStack.push( tformtype::STATIC_TRANSFORM );
+	}
+	else   /* keyframe animated transform */
+	{
+		if(fscanf(f,"%s",name)!=1)
+		{
+			printf("Error: could not read transform name.\n");
+			exit(1);
+		}
+		eatWhitespace(f);
+		ch=getc(f);
+		if(ch!='{')
+		{
+			printf("Error: { expected.\n");
+			exit(1);
+		}
+		/* add an animated transform here
+		* e.g., viAddXform(name);
+		*/
+		printf("begin anim xform %s\n", name);
+		activeTransformName = std::string(name);
+		typeStack.push( tformtype::ANIMATED_TRANSFORM );
+	}
+
+}
+
+void viEndXform()
+{
+	if ( typeStack.top() == tformtype::STATIC_TRANSFORM )
+	{
+		if ( activeTransformStack.size() == 0 ) 
+		{
+			puts("no more to pop from matrix stack... will underflow...");
+			exit(0);
+		}
+		activeTransform = activeTransformStack.top();
+		activeTransformStack.pop();
+	}
+	typeStack.pop();
+
 }
 
 /*----------------------------------------------------------------------
@@ -1243,6 +1295,7 @@ static void parseAnimParams(FILE *fp)
    /* add animations parameters here
     * e.g., viSetupAnimParams(start,end,num_frames);
     */
+   printf("AnimParams: %f %f %d\n", start, end, num_frames);
 }
 
 /*----------------------------------------------------------------------
@@ -1261,32 +1314,32 @@ Format:
 ----------------------------------------------------------------------*/
 void parseA(FILE *f)
 {
-   char name[100];
-   char ch;
-   int is_ambient;
+	char name[100];
+	char ch;
+	int is_ambient;
 
-   is_ambient = getc(f);
-   if(is_ambient != 'm')
-   {
-      ungetc(is_ambient, f);
-      is_ambient=0;
-   }
+	is_ambient = getc(f);
+	if(is_ambient != 'm')
+	{
+		ungetc(is_ambient, f);
+		is_ambient=0;
+	}
 
-   if(is_ambient)  /* we got "am" = global ambient light */
-   {
-      glm::vec3 amb;
-      if(fscanf(f,"%f %f %f",&amb.r,&amb.g,&amb.b)!=3)
-      {
-	 printf("Error: could not parse ambient light (am).\n");
-	 exit(1);
-      }
+	if(is_ambient)  /* we got "am" = global ambient light */
+	{
+		glm::vec3 amb;
+		if(fscanf(f,"%f %f %f",&amb.r,&amb.g,&amb.b)!=3)
+		{
+			printf("Error: could not parse ambient light (am).\n");
+			exit(1);
+		}
 
-      /* set up your globabl ambient light here using amb */
-   }
-   else
-   {
-      parseAnimParams(f);
-   }
+		/* set up your global ambient light here using amb */
+	}
+	else
+	{
+		parseAnimParams(f);
+	}
 }
 
 void getVectors(FILE *fp,char *type,int *num_vecs,glm::vec3 **vecs)
@@ -1551,9 +1604,9 @@ bool viParseFile(FILE *f)
 	 parseXform(f);
 	 break;
       case '}':
-	 //viEndXform();
+	 viEndXform();
 	 break;
-      case 'a':  /* animation parameters */
+      case 'a':  /* global amb light or animation parameters */
 	 parseA(f);
 	 break;
       case 'k':  /* key frames for transform (or the camera) */
@@ -1593,7 +1646,7 @@ virtual void draw()
 		proto->drawCone( coneList[i].a, coneList[i].b, coneList[i].r1 );
 	}
 	for(size_t i=0; i<meshList.size(); i++){
-		proto->setColor( meshList[i].mat.col*2.f );
+		proto->setColor( meshList[i].mat.col*4.f );
 		
 		proto->setBlend(false);
 
