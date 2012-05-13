@@ -172,8 +172,8 @@ void loadScene()
 	auto cube_tex = tex_loader->load("cube.jpg");
 	auto tex_sampler = std::make_shared<Render::Uniform>(g_buffer->getShader()->getFS(), "diffuse_tex");
 
-	auto basic_cube_mat = mat_loader->load("basic_cube.mat");
-	renderer->addMaterial(basic_cube_mat);
+	auto basic_cube_mat = renderer->addMaterial(mat_loader->load("basic_cube.mat"));
+	auto red_cube_mat = renderer->addMaterial(mat_loader->load("red_cube.mat"));
 
 	Scene::CubePtr cube;
 	cube = std::make_shared<Scene::Cube>(1.0f);
@@ -184,7 +184,7 @@ void loadScene()
 		cube->setTexture(cube_tex, tex_sampler);
 		cube->setMaterial(basic_cube_mat);
 		scene->add(cube);
-		cube->setPosition( Eigen::Vector3f(10,-5,20) );
+		cube->setPosition( Eigen::Vector3f(10,-8,20) );
 	}
 
 	Scene::CubePtr cube2 = std::make_shared<Scene::Cube>(.5f);
@@ -193,8 +193,8 @@ void loadScene()
 		cube2->setMV(	g_buffer->getMV());
 		cube2->setN_WRI(	g_buffer->getN_WRI());
 		cube2->setTexture(cube_tex, tex_sampler);
-		cube2->setMaterial(basic_cube_mat);
+		cube2->setMaterial(red_cube_mat);
 		scene->add(cube2);
-		cube2->setPosition( Eigen::Vector3f(10,0,20) );
+		cube2->setPosition( Eigen::Vector3f(10,-4,20) );
 	}
 }
