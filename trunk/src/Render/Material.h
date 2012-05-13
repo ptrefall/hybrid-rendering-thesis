@@ -19,6 +19,7 @@ namespace Render
 		float phong_pow;
 		float transparency;
 		float index_of_refraction;
+		MaterialParams() {}
 		MaterialParams(Eigen::Vector3f ambient, Eigen::Vector3f diffuse, Eigen::Vector3f specular, float phong_pow, float transparency, float index_of_refraction)
 			: ambient(ambient), diffuse(diffuse), specular(specular), phong_pow(phong_pow), transparency(transparency), index_of_refraction(index_of_refraction)
 		{}

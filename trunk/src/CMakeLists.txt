@@ -126,11 +126,21 @@ set(File_SRCS
 )
 SOURCE_GROUP("Source Files\\File" FILES ${File_SRCS})
 
+set(Parser_HDRS
+  ./Parser/INIParser.h
+)
+SOURCE_GROUP("Header Files\\Parser" FILES ${Parser_HDRS})
+
+set(Parser_SRCS
+)
+SOURCE_GROUP("Source Files\\Parser" FILES ${Parser_SRCS})
+
 set(HDRS
   ${Render_HDRS}
   ${Raytracer_HDRS}
   ${Scene_HDRS}
   ${File_HDRS}
+  ${Parser_HDRS}
 )
 
 set(SRCS
@@ -138,6 +148,7 @@ set(SRCS
   ${Raytracer_SRCS}
   ${Scene_SRCS}
   ${File_SRCS}
+  ${Parser_SRCS}
   main.cpp
 )
  

@@ -7,6 +7,7 @@
 #include "Raytracer\OptixRender.h"
 #include "File\ShaderLoader.h"
 #include "File\TextureLoader.h"
+#include "File\MaterialLoader.h"
 #include "Scene\SceneManager.h"
 #include "Scene\Cube.h"
 #include "Scene\Camera.h"
@@ -29,6 +30,7 @@ namespace
     Raytracer::OptixRenderRenderPtr raytracer;
 	File::ShaderLoaderPtr shader_loader;
 	File::TextureLoaderPtr tex_loader;
+	File::MaterialLoaderPtr mat_loader;
 	Scene::SceneManagerPtr scene;
   
     Scene::CameraPtr camera;
@@ -140,6 +142,7 @@ int init(int argc, char** argv)
 	//////////////////////////////////////////
 	shader_loader = std::make_shared<File::ShaderLoader>(base_dir+"shaders\\");
 	tex_loader = std::make_shared<File::TextureLoader>(base_dir+"textures\\");
+	mat_loader = std::make_shared<File::MaterialLoader>(base_dir+"materials\\");
 
 
 	//////////////////////////////////////////
@@ -169,6 +172,8 @@ void loadScene()
 	auto cube_tex = tex_loader->load("cube.jpg");
 	auto tex_sampler = std::make_shared<Render::Uniform>(g_buffer->getShader()->getFS(), "diffuse");
 
+	auto basic_cube_mat = mat_loader->load("basic_cube.mat");
+
 	Scene::CubePtr cube;
 	cube = std::make_shared<Scene::Cube>(1.0f);
 	{
@@ -176,6 +181,7 @@ void loadScene()
 		cube->setMV(	g_buffer->getMV());
 		cube->setN_WRI(	g_buffer->getN_WRI());
 		cube->setTexture(cube_tex, tex_sampler);
+		cube->setMaterial(basic_cube_mat);
 		scene->add(cube);
 		cube->setPosition( Eigen::Vector3f(10,-5,20) );
 	}
@@ -185,7 +191,8 @@ void loadScene()
 		cube2->setMVP(	g_buffer->getMVP());
 		cube2->setMV(	g_buffer->getMV());
 		cube2->setN_WRI(	g_buffer->getN_WRI());
-		cube->setTexture(cube_tex, tex_sampler);
+		cube2->setTexture(cube_tex, tex_sampler);
+		cube2->setMaterial(basic_cube_mat);
 		scene->add(cube2);
 		cube2->setPosition( Eigen::Vector3f(10,0,20) );
 	}
