@@ -143,6 +143,7 @@ find_package(OpenGL REQUIRED)
 find_package(Glut REQUIRED)
 find_package(CUDA REQUIRED)
 find_package(Optix REQUIRED)
+find_package(DevIL REQUIRED)
 
 add_definitions(-DFREEGLUT_STATIC -DEIGEN_DONT_VECTORIZE -DEIGEN_DISABLE_UNALIGNED_ARRAY_ASSERT)
 
@@ -152,4 +153,7 @@ target_link_libraries(HybridMethods
 	${CUDA_LIB}
 	${OPTIX_LIB}
 	${OPTIXU_LIB}
+	${IL_LIBRARY}
+	${ILU_LIBRARY}
+	${ILUT_LIBRARY}
 )
