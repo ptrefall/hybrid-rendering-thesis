@@ -25,7 +25,7 @@ struct material_ext_t
 {
 	glm::vec3 amb,dif,spc;
 	float phong_pow;
-	float transp;
+	float transmittance;
 	float ior;
 };
 
@@ -70,28 +70,32 @@ private:
 	int gDetailLevel;
 	protowizard::ProtoGraphicsPtr proto;
 	std::string sceneFolder;
+	std::string mainSceneFile;
 
 	// Global scene parameters
 	glm::vec3 bgcolor;
 	AnimationList* mAnimations; // TODO. verify correctness
 
-	struct camera_t
+	struct camera_def
 	{
-		glm::vec3 camFrom, camTarget, camUp;
+		glm::vec3 from, target, up;
 		float fov;
-	} Camera;
+	} cam;
 
-	// Loader temporaries. Stored into scene objects
+	// Loader/parser temporaries. Become stored into scene objects
 	struct active_def
 	{
 		std::string tformName;
 		glm::mat4 tformMatrix;
 		std::stack<glm::mat4> tformStack;
+		// Keep track of transform hiearchy so we know when to pop a static tform
 		std::stack<tformtype::eTransformType> tformTypeStack;
 
-		material_t material;
-		material_ext_t extMaterial;
+		material_t material; // found in .nff-s
+		material_ext_t extMaterial; // found in .aff-s
 		std::string texture;
+
+		std::vector<protowizard::Vertex_VNT> triangleVerts;
 	} active;
 
 	// Scene objects
@@ -102,32 +106,40 @@ private:
 
 public:
 BARTSceneImplementation( protowizard::ProtoGraphicsPtr proto, const std::string& sceneFolder, const std::string& mainSceneFile ) : 
-	  gDetailLevel(0), proto(proto), sceneFolder(sceneFolder)
+	  gDetailLevel(0), proto(proto), sceneFolder(sceneFolder), mainSceneFile(mainSceneFile)
 {
-	//active.tformMatrix = glm::mat4(1.0f);
-	//activetformStack.push(activeTransform);
-
-	FILE* f = fopen( (sceneFolder+"//"+mainSceneFile).c_str(), "r");
-		
-	if ( f == nullptr ) {
-		printf("could not open .aff file\n");
-		exit(1);
-	}
-
-	if( !viParseFile(f) ) {
-		printf("could not parse file\n");
-		exit(1);
-	}
+	// Root. needed for addPoly when no prior tform spec'd
+	active.tformMatrix = glm::mat4(1.0f);
+	//active.tformStack.push(active.tformMatrix);
 }
 
 
+virtual ~BARTSceneImplementation() {}
+
+	
+void addTexturedTrianglePatch( const std::string& texturename, glm::vec3* verts, glm::vec3* norms, glm::vec2* uv )
+{
+	active.texture = std::string(texturename);
+	using protowizard::Vertex_VNT;
+	active.triangleVerts.push_back(Vertex_VNT( verts[0], norms[0], uv[0]) );
+	active.triangleVerts.push_back(Vertex_VNT( verts[1], norms[1], uv[1]) );
+	active.triangleVerts.push_back(Vertex_VNT( verts[2], norms[2], uv[2]) );
+}
+void addTexturedTriangle( const std::string& texturename, glm::vec3* verts, glm::vec2* uv )
+{
+	active.texture = std::string(texturename);
+	using protowizard::Vertex_VNT;
+	glm::vec3 n = glm::normalize( glm::cross( verts[1]-verts[0], verts[2]-verts[0] ) );
+	active.triangleVerts.push_back(Vertex_VNT( verts[0], n, uv[0]) );
+	active.triangleVerts.push_back(Vertex_VNT( verts[1], n, uv[1]) );
+	active.triangleVerts.push_back(Vertex_VNT( verts[2], n, uv[2]) );
+}
 void addPoly( std::vector<protowizard::Vertex_VNT>& vertices )
 {
 	protowizard::MeshPtr m = std::make_shared<protowizard::Mesh>( vertices );
 	poly_t p = {m, active.tformMatrix, active.material, active.texture};
 	polyList.push_back(p);
 }
-
 void addMesh( std::vector<protowizard::Vertex_VNT>& vertices )
 {
 	protowizard::MeshPtr m = std::make_shared<protowizard::Mesh>( vertices );
@@ -182,24 +194,20 @@ void addMesh( std::vector<protowizard::Vertex_VNT>& vertices )
 ----------------------------------------------------------------------*/
 void parseViewpoint(FILE *fp)
 {
-   glm::vec3 from;
-   glm::vec3 at;
-   glm::vec3 up;
-   float fov_angle;
    float hither;
    int resx;
    int resy;
 	
-   if(fscanf(fp, " from %f %f %f", &from.x, &from.y, &from.z) != 3)
+   if(fscanf(fp, " from %f %f %f", &cam.from.x, &cam.from.y, &cam.from.z) != 3)
       goto fmterr;
    
-   if(fscanf(fp, " at %f %f %f", &at.x, &at.y, &at.z) != 3)
+   if(fscanf(fp, " at %f %f %f", &cam.target.x, &cam.target.y, &cam.target.z) != 3)
       goto fmterr;
    
-   if(fscanf(fp, " up %f %f %f", &up.x, &up.y, &up.z) != 3)
+   if(fscanf(fp, " up %f %f %f", &cam.up.x, &cam.up.y, &cam.up.z) != 3)
       goto fmterr;
    
-   if(fscanf(fp, " angle %f", &fov_angle) != 1)
+   if(fscanf(fp, " angle %f", &cam.fov) != 1)
       goto fmterr;
    
    if(fscanf(fp, " hither %f", &hither) !=1)
@@ -212,11 +220,6 @@ void parseViewpoint(FILE *fp)
    /* init your view point here: 
     * e.g, viInitViewpoint(from, at, up, fov_angle, hither, resx, resy);
     */
-   Camera.camFrom = from;
-   Camera.camTarget = at;
-   Camera.camUp = up;
-   Camera.fov = fov_angle;
- 
   return;
 
  fmterr:
@@ -373,7 +376,7 @@ void parseFill(FILE *fp)
 		}
 		if (fscanf(fp, "%f %f %f", &phong_pow, &t, &ior) != 3)
 		{
-			printf("fill material (phong, transp, IOR) syntax error");
+			printf("fill material (phong, transmittance, IOR) syntax error");
 			exit(1);
 		}
 		/* add your extended material here
@@ -383,7 +386,7 @@ void parseFill(FILE *fp)
 		active.extMaterial.dif = dif;
 		active.extMaterial.spc = spc;
 		active.extMaterial.phong_pow = phong_pow;
-		active.extMaterial.transp = t;
+		active.extMaterial.transmittance = t;
 		active.extMaterial.ior = ior;
 	}
 	else   /* parse the old NFF description of a material */
@@ -538,26 +541,23 @@ Format:
 ----------------------------------------------------------------------*/
 void parsePoly(FILE *fp)
 {
-   int ispatch;
-   int nverts;
-   int q;
-   
    std::vector< protowizard::Vertex_VNT > vertices;
 
-   ispatch = getc(fp);
+   int ispatch = getc(fp);
    if(ispatch != 'p')
    {
       ungetc(ispatch, fp);
       ispatch = 0;
    }
    
+   int nverts;
    if(fscanf(fp, "%d", &nverts) != 1)
 		goto fmterr;
 	   
    vertices.resize( nverts );
 
     /* read all the vertices */
-    for(q=0; q<nverts; q++)
+    for(int q=0; q<nverts; q++)
     {
 		glm::vec3 &vertPos = vertices[q].v;
 		if(fscanf(fp, " %f %f %f",&vertPos.x, &vertPos.y, &vertPos.z) != 3)
@@ -702,60 +702,59 @@ Format:
     The texture name may not include any white spaces.
     Note that the texturing works like OpenGL REPEAT mode.
 ----------------------------------------------------------------------*/
-static void parseTexturedTriangle(FILE *fp)
+void parseTexturedTriangle(FILE *fp)
 {
-   int is_patch;
-   int q;
-   glm::vec3 verts[3];
-   glm::vec3 norms[3];
-   float tu[3],tv[3];
-   char texturename[100];
+	glm::vec3 verts[3];
+	glm::vec3 norms[3];
+	glm::vec2 uv[3];
+	char texturename[100];
 
-   is_patch=getc(fp);
-   if(is_patch!='p')
-   {
-      ungetc(is_patch,fp);
-      is_patch=0;
-   }
+	int is_patch=getc(fp);
+	if(is_patch!='p')
+	{
+		ungetc(is_patch,fp);
+		is_patch=0;
+	}
    
-   fscanf(fp,"%s",texturename);
+	fscanf(fp,"%s",texturename);
+	std::string texName = std::string(texturename);
+	texName = sceneFolder + "//"+ texName.substr(0,texName.size()-3) + "dds";
 
-   for(q=0;q<3;q++)
-   {
-      if(fscanf(fp," %f %f %f",&verts[q].x,&verts[q].y,&verts[q].z)!=3)
-	 goto parseErr;
+	if ( texName != active.texture && active.triangleVerts.size() > 0 ) {
+		addMesh( active.triangleVerts );
+		active.triangleVerts.clear();
+	}
 
-      if(is_patch)
-      {
-	 if(fscanf(fp," %f %f %f",&norms[q].x,&norms[q].y,&norms[q].z)!=3)
-	    goto parseErr;
-      }
+	for(int q=0;q<3;q++)
+	{
+		if(fscanf(fp," %f %f %f",&verts[q].x,&verts[q].y,&verts[q].z)!=3)
+			goto parseErr;
 
-      if(fscanf(fp," %f %f ",&tu[q],&tv[q])!=2)
-	 goto parseErr;
-   }
+		if(is_patch)
+		{
+			if(fscanf(fp," %f %f %f",&norms[q].x,&norms[q].y,&norms[q].z)!=3)
+			goto parseErr;
+		}
 
+		if(fscanf(fp," %f %f ",&uv[q].x,&uv[q].y)!=2)
+			goto parseErr;
+	}
 
-   if(is_patch)
-   {
-      /* add a textured triangle patch here
-       * e.g., viAddTexturedTriPatch(texturename,verts,norms,tu,tv);
-       */
-   }
-   else
-   {
-      /* add a textured triangle here
-       * e.g.,  viAddTexturedTriangle(texturename,verts,tu,tv);
-       */
-   }
-   return;
+	if(is_patch) {
+		//add a textured triangle patch here e.g., viAddTexturedTriPatch(texturename,verts,norms,tu,tv);
+		addTexturedTrianglePatch( texName, verts, norms, uv );
+	}
+	else {
+		// add a textured triangle here e.g.,  viAddTexturedTriangle(texturename,verts,tu,tv);
+		addTexturedTriangle( texName, verts, uv );
+	}
+
+	return;
    
- parseErr:
-   printf("Error: could not parse textured triangle\n");
-   exit(1);
-
+	parseErr:
+	printf("Error: could not parse textured triangle\n");
+	exit(1);
 }
-
 
 /*----------------------------------------------------------------------
   parseAnimatedTriangle()
@@ -805,23 +804,21 @@ Format:
 
 void parseAnimatedTriangle(FILE *fp)
 {
-   int q,w;
    int num_times;
    glm::vec3 *verts;
    glm::vec3 *norms;
-   float *times;
    
    fscanf(fp,"%d",&num_times);
-   times=(float*)malloc(sizeof(float)*num_times);
+   float* times=(float*)malloc(sizeof(float)*num_times);
    verts=(glm::vec3*)malloc(sizeof(glm::vec3)*3*num_times);
    norms=(glm::vec3*)malloc(sizeof(glm::vec3)*3*num_times);
 
-   for(q=0;q<num_times;q++)
+   for(int q=0;q<num_times;q++)
    {
       if(fscanf(fp," %f",&times[q])!=1)
 	 goto parseErr;
 
-      for(w=0;w<3;w++)
+      for(int w=0;w<3;w++)
       {
 	 if(fscanf(fp," %f %f %f",&verts[q*3+w].x,&verts[q*3+w].y,&verts[q*3+w].z)!=3)
 	    goto parseErr;
@@ -851,9 +848,7 @@ void parseAnimatedTriangle(FILE *fp)
 ----------------------------------------------------------------------*/
 void parseTextureStuff(FILE *fp)
 {
-	int is_triangle;
-
-	is_triangle=getc(fp);
+	int is_triangle=getc(fp);
 	if(is_triangle=='t')
 	{
 		parseTexturedTriangle(fp);
@@ -1633,20 +1628,33 @@ bool viParseFile(FILE *f)
    return true;
 }
 
-virtual void init()
+virtual void loadScene()
 {
-	glm::vec3 eyeUp = Camera.camUp;
+	FILE* f = fopen( (sceneFolder+"//"+mainSceneFile).c_str(), "r");
+		
+	if ( f == nullptr ) {
+		printf("could not open .aff file\n");
+		exit(1);
+	}
+	
 
-	glm::vec3 eyeFwd = glm::normalize( Camera.camTarget - Camera.camFrom );
-	glm::vec3 eyeStrafe = glm::normalize( glm::cross(eyeUp,eyeFwd) );
-	eyeFwd = glm::normalize( glm::cross(eyeUp, eyeStrafe) ); // straighten
+	if( !viParseFile(f) ) {
+		printf("could not parse file\n");
+		exit(1);
+	}
+	fclose(f);
+
+	glm::vec3 eyeUp = glm::normalize(cam.up);
+	glm::vec3 eyeFwd = glm::normalize( cam.target - cam.from );
+	glm::vec3 eyeStrafe = glm::cross(eyeFwd,eyeUp);
+	eyeFwd = glm::cross(eyeStrafe,eyeUp); // straighten
 	
 
 	//proto->getCamera()->setCameraBasis( eyeStrafe, eyeUp, eyeFwd );
-	proto->getCamera()->lookAt( Camera.camFrom, Camera.camTarget, Camera.camUp );
-	proto->getCamera()->setFov( Camera.fov );
+	proto->getCamera()->lookAt( cam.from, cam.target, cam.up );
+	proto->getCamera()->setFov( cam.fov );
 	proto->getCamera()->setNearDist(0.01f);
-	proto->getCamera()->setFarDist(500.f);
+	proto->getCamera()->setFarDist(100.f);
 }
 
 virtual void draw()
@@ -1667,29 +1675,37 @@ virtual void draw()
 		proto->setColor( polyList[i].mat.col * 3.f );
 		glm::mat4 &xform = polyList[i].xform;
 		proto->setOrientation( xform );
-		proto->drawMesh( glm::vec3(0.f) , polyList[i].mesh );
+		proto->drawMesh( polyList[i].mesh, false );
 	}
-	for(size_t i=0; i<meshList.size(); i++){
-		proto->setColor( meshList[i].mat.dif * 3.f );
+	for(size_t i=0; i<meshList.size(); ++i){
+		mesh_t& m = meshList[i];
+		material_ext_t& mat = m.mat;
+		//proto->setMaterial( mat.amb, mat.dif, mat.spc, mat.phong_pow );
+		proto->setColor( (mat.amb+mat.dif+mat.spc) );
 		
-		if ( meshList[i].mat.transp > .5f ) {
+		bool isTwoSided = mat.transmittance > 0.f;
+		if ( isTwoSided ) {
 			proto->setBlend(true);
-			proto->setAlpha( 1.f - meshList[i].mat.transp );
+			proto->setColor( glm::vec3(0.75f) );
+			proto->setAlpha( 1.0f - 0.5f*mat.transmittance );
+		} else {
+			proto->setBlend(false);
 		}
 
-		if ( meshList[i].texture != "" )
+		if ( m.texture != "" )
 		{
-			proto->setTexture(meshList[i].texture);
+			proto->setTexture(m.texture);
 		}
-		glm::mat4 &xform = meshList[i].xform;
+		glm::mat4 &xform = m.xform;
 		proto->setOrientation( xform );
-		proto->drawMesh( glm::vec3(0.f) , meshList[i].mesh ); //glm::vec3(xform[3].x, xform[3].y, xform[3].z)
+		proto->drawMesh( m.mesh, isTwoSided );
 	}
 	proto->setOrientation( glm::mat4(1.0f) );
 	proto->setBlend(false);
 
 	float speed = 0.25f;
-	speed += proto->getMouseWheel() * 0.5f;
+	speed += proto->getMouseWheel() * 0.25f;
+	if ( speed < 0.01f ) speed = 0.1f;
 
 	proto->getCamera()->update( proto->keystatus(protowizard::KEY::LEFT), proto->keystatus(protowizard::KEY::RIGHT), proto->keystatus(protowizard::KEY::UP), proto->keystatus(protowizard::KEY::DOWN), (float)proto->getMouseX(), (float)proto->getMouseY(), proto->mouseDownLeft(), speed * proto->getMSPF() );
 
