@@ -25,7 +25,7 @@ int main()
 	std::string sceneMain = config.getString("load", "scene", "balls.nff");
 	BARTScene* scene = BARTScene::create(protoGfx, sceneDir, sceneMain);
 
-	scene->init();
+	scene->loadScene();
 
 	while( protoGfx->isWindowOpen() ) {
 
