@@ -1,7 +1,9 @@
 #pragma once
 
 #include "../Render/Uniform.h"
+#include "../Render/Sampler.h"
 #include "../Render/Tex2D.h"
+#include "../Render/Tex2DArray.h"
 #include "../Render/Material.h"
 #include "../Render/Shader.h"
 
@@ -28,7 +30,8 @@ namespace Scene
 
 		void setPosition(const Eigen::Vector3f &position) { this->position = position; }
 
-		void setTexture(const Render::Tex2DPtr &tex, const Render::UniformPtr &sampler);
+		void setTexture(const Render::Tex2DPtr &tex, const Render::SamplerPtr &sampler);
+		void setTexture(const Render::Tex2DArrayPtr &tex_array, const Render::SamplerPtr &sampler);
 		void setMaterial(const Render::MaterialPtr &material) { this->material = material; }
 
 	protected:
@@ -37,7 +40,8 @@ namespace Scene
 		Render::UniformPtr n_wri;
 
 		Render::Tex2DPtr tex;
-		Render::UniformPtr tex_sampler;
+		Render::Tex2DArrayPtr tex_array;
+		Render::SamplerPtr tex_sampler;
 
 		Render::MaterialPtr material;
 

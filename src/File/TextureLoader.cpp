@@ -28,34 +28,63 @@ Render::Tex2DPtr TextureLoader::load(const std::string &filename, unsigned int w
 	return tex;
 }
 
-Render::Tex2DArrayPtr TextureLoader::load_array(const std::string &filename, unsigned int width, unsigned int height, unsigned int slice_count, unsigned int wrap_mode)
+Render::Tex2DArrayPtr TextureLoader::load_array(const std::string &filename, unsigned int width, unsigned int height, unsigned int slice_count_width, unsigned int slice_count_height, unsigned int wrap_mode)
 {
 	internal_tex_data data = internal_load(filename);
-	unsigned int w = data.w / slice_count;
-	unsigned int h = data.h / slice_count;
+	unsigned int w = width;
+	unsigned int h = height;
+	unsigned int tile_size = w*h;
 
-	std::vector<unsigned char> data_array;
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-	for(unsigned int i = 0; i < slice_count; i++)
-	{
-		for(unsigned int x = 0; x < w; x++)
-		{
-			for(unsigned int y = 0; y < h; y++)
-			{
+	unsigned int slice_count = slice_count_width*slice_count_height;
 
-				data_array.push_back(data.data[(slice_count * (x+y*w))*data.bpp + 0]); //Red color
-				data_array.push_back(data.data[(slice_count * (x+y*w))*data.bpp + 1]); //Green color
-				data_array.push_back(data.data[(slice_count * (x+y*w))*data.bpp + 2]); //Blue color
-				if(data.bpp == 4)
-					data_array.push_back(data.data[(slice_count * (x+y*w))*data.bpp + 3]); //Alpha color
-			}
-		}
-	}
-
-	Render::Tex2DArrayParams params(data.format, data.format, GL_UNSIGNED_BYTE, w,h,slice_count,wrap_mode,&data_array[0]);
+	Render::Tex2DArrayParams params(data.format, data.format, GL_UNSIGNED_BYTE, w,h,slice_count,wrap_mode,data.data);
 	auto tex = std::make_shared<Render::Tex2DArray>(params);
+
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+
 	return tex;
 }
+
+/*Render::Tex2DArrayPtr TextureLoader::load_array(const std::string &filename, unsigned int width, unsigned int height, unsigned int slice_count_width, unsigned int slice_count_height, unsigned int wrap_mode)
+{
+	internal_tex_data data = internal_load(filename);
+	unsigned int w = width;
+	unsigned int h = height;
+	unsigned int tile_size = w*h;
+
+	//glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+	unsigned int slice_count = slice_count_width*slice_count_height;
+	Render::Tex2DArrayParams params(data.format, data.format, GL_UNSIGNED_BYTE, w,h,slice_count,wrap_mode,nullptr);
+	auto tex = std::make_shared<Render::Tex2DArray>(params);
+
+	std::vector<unsigned char> texels; //((slice_count*tile_size*data.bpp));
+	for(unsigned int s_y = 0; s_y < slice_count_height; s_y++)
+	for(unsigned int s_x = 0; s_x < slice_count_width; s_x++)
+	{
+		unsigned int z = s_x + (s_y*slice_count_width);
+
+		texels.resize(w*h*data.bpp);
+		for(unsigned int y = 0; y < h; y++)
+		for(unsigned int x = 0; x < w; x++)
+		{
+			for(unsigned int p = 0; p < data.bpp; p++)
+			{
+				auto texel_index = (x + (y*w))*data.bpp + p;
+				int data_index = (z*tile_size*data.bpp) + texel_index;
+				texels[texel_index] = data.data[data_index];
+			}
+		}
+		
+		glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, z, w, h, 1, data.format, GL_UNSIGNED_BYTE, &texels[0]);
+		texels.clear();
+	}
+	//glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+
+	return tex;
+}*/
 
 TextureLoader::internal_tex_data TextureLoader::internal_load(const std::string &filename)
 {

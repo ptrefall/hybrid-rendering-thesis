@@ -61,6 +61,7 @@ set(Render_HDRS
   ./Render/Tex2DArray.h
   ./Render/Material.h
   ./Render/Uniform.h
+  ./Render/Sampler.h
   ./Render/VAO.h
   ./Render/VBO.h
   ./Render/IBO.h
@@ -78,6 +79,7 @@ set(Render_SRCS
   ./Render/Tex2DArray.cpp
   ./Render/Material.cpp
   ./Render/Uniform.cpp
+  ./Render/Sampler.cpp
   ./Render/VAO.cpp
   ./Render/VBO.cpp
   ./Render/IBO.cpp
