@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 #include <stack>
+#include <unordered_map>
 
 #include "../src/animation.h"
 #include "../src/texture.h"
@@ -96,6 +97,8 @@ private:
 		std::string texture;
 
 		std::vector<protowizard::Vertex_VNT> triangleVerts;
+		std::unordered_map<std::string, protowizard::MeshPtr> meshHashmap;
+		std::string meshName;
 	} active;
 
 	// Scene objects
@@ -111,6 +114,7 @@ BARTSceneImplementation( protowizard::ProtoGraphicsPtr proto, const std::string&
 	// Root. needed for addPoly when no prior tform spec'd
 	active.tformMatrix = glm::mat4(1.0f);
 	//active.tformStack.push(active.tformMatrix);
+	loadScene();
 }
 
 
@@ -145,6 +149,8 @@ void addMesh( std::vector<protowizard::Vertex_VNT>& vertices )
 	protowizard::MeshPtr m = std::make_shared<protowizard::Mesh>( vertices );
 	mesh_t mesh_and_mat = {m, active.tformMatrix, active.extMaterial, active.texture};
 	meshList.push_back( mesh_and_mat );
+
+	active.meshHashmap.insert( active.meshName, m );
 }
 
 /*----------------------------------------------------------------------
@@ -1347,89 +1353,60 @@ void parseA(FILE *f)
 	}
 }
 
-void getVectors(FILE *fp,char *type,int *num_vecs,glm::vec3 **vecs)
+void getVectors(FILE *fp,char *type, std::vector<glm::vec3>& vecs)
 {
-   int num;
-   glm::vec3 *v=NULL;
-
-   if(fscanf(fp,"%d",&num)!=1)
-   {
-      printf("Error: could not parse mesh (expected 'num_%s').\n",type);   
-      exit(1);
-   }
-
-   v=(glm::vec3*)malloc(sizeof(glm::vec3)*num);
-   if(v==NULL)
-   {
-      printf("Error: could not allocate memory for vertices of mesh.\n");
-      exit(1); 
-   }
+	int num;
+	if(fscanf(fp,"%d",&num)!=1)
+	{
+		printf("Error: could not parse mesh (expected 'num_%s').\n",type);   
+		exit(1);
+	}
    
-   for(int q=0;q<num;q++)
-   {
-      if(fscanf(fp,"%f %f %f ",&v[q].x,&v[q].y,&v[q].z)!=3)
-      {
-	 printf("Error: could not read %d %s of mesh.\n",num,type);
-	 exit(1);      
-      }
-   }
-   *vecs=v;
-   *num_vecs=num;
+	for(int i=0;i<num;i++)
+	{
+		glm::vec3 v;
+		if(fscanf(fp,"%f %f %f ",&v.x,&v.y,&v.z)!=3)
+		{
+			printf("Error: could not read %d %s of mesh.\n",num,type);
+			exit(1);      
+		}
+		vecs.push_back(v);
+	}
 }
 
-void getTextureCoords(FILE *fp,char *texturename,int *num,glm::vec2 **vecs)
+void getTextureCoords(FILE *fp,char *texturename,std::vector<glm::vec2>& txts)
 {
-   int q;
-   int num_txts;
-   glm::vec2 *txts;
-   if(fscanf(fp,"%d",&num_txts)!=1)
-   {
-      printf("Error: could not parse mesh (expected 'num_txts').\n");   
-      exit(1);
-   }
-   txts=(glm::vec2*)malloc(sizeof(glm::vec2)*num_txts);
-   if(txts==NULL)
-   {
-      printf("Error: could not allocate memory for texturecoords of mesh.\n");
-      exit(1); 
-   }
-   fscanf(fp,"%s",texturename);
-   for(q=0;q<num_txts;q++)
-   {
-      if(fscanf(fp,"%f %f",&txts[q].x,&txts[q].y)!=2)
-      {
-	 printf("Error: could not read %d texturecoords of mesh.\n",num_txts);
-	 exit(1);      
-      }	 
-   }      
-   *num=num_txts;
-   *vecs=txts;
+	int num_txts;
+	if(fscanf(fp,"%d",&num_txts)!=1)
+	{
+		printf("Error: could not parse mesh (expected 'num_txts').\n");   
+		exit(1);
+	}
+
+	fscanf(fp,"%s",texturename);
+	for(int i=0;i<num_txts;i++)
+	{
+		glm::vec2 tex;
+		if(fscanf(fp,"%f %f",&tex.x,&tex.y)!=2)
+		{
+			printf("Error: could not read %d texturecoords of mesh.\n",num_txts);
+			exit(1);      
+		}	 
+		txts.push_back( tex );
+	}      
 }
 
 // reads indices for TexCoords, Normals and Vertices. Doesnt load actual coordinates.
-void getTriangles(FILE *fp,int *num_tris,unsigned short **indices,
-			 glm::vec3 *verts,glm::vec3 *norms,glm::vec2 *txts)
+void getTriangles(FILE *fp,int *num_tris,std::vector<unsigned short>& indices, bool hasNorms, bool hasTexCoords)
 {
 	int num;
 	int allocsize;
-	unsigned short *idx;
 	int v[3],n[3],t[3];
-   
-	allocsize=3;
-	if(norms) allocsize+=3;
-	if(txts) allocsize+=3; // can texcoords have 3 coords? or is this just to simplify code?
    
 	if(fscanf(fp,"%d",&num)!=1)
 	{
 		printf("Error: could not parse mesh (expected 'num_triangles').\n");   
 		exit(1);      
-	}
-
-	idx=(unsigned short *)malloc(num*allocsize*sizeof(unsigned short));
-	if(idx==NULL)
-	{
-		printf("Error: could not allocate memory for indices of mesh.\n");
-		exit(1); 
 	}
 
 	int i=0;
@@ -1441,7 +1418,7 @@ void getTriangles(FILE *fp,int *num_tris,unsigned short **indices,
 			exit(1);   
 		}
 	
-		if(norms)
+		if(hasNorms)
 		{
 			if(fscanf(fp,"%d %d %d",&n[0],&n[1],&n[2])!=3)
 			{
@@ -1450,7 +1427,7 @@ void getTriangles(FILE *fp,int *num_tris,unsigned short **indices,
 			}
 		}
       
-		if(txts)
+		if(hasTexCoords)
 		{
 			if(fscanf(fp,"%d %d %d",&t[0],&t[1],&t[2])!=3)
 			{
@@ -1465,27 +1442,23 @@ void getTriangles(FILE *fp,int *num_tris,unsigned short **indices,
 		// [t2 n2] v2
 		for(int w=0;w<3;w++)
 		{
-			if(txts) idx[i++]=t[w];
-			if(norms) idx[i++]=n[w];
-			idx[i++]=v[w];
+			if(hasTexCoords) indices.push_back( t[w] );
+			if(hasNorms) indices.push_back( n[w] );
+			indices.push_back( v[w] );
 		}
 		//printf("vv: %d\n",v[w]);
-
    }
-   *indices=idx;
    *num_tris=num;
 }
 
 void parseMesh(FILE *fp)
 {
    char str[200];
-   int num_verts = 0;
-   int num_norms = 0;
-   int num_txts = 0;
    int num_tris = 0;
-   glm::vec3 *verts=NULL,*norms=NULL;
-   glm::vec2 *txts=NULL;
-   unsigned short *indices; // contains indices into txts, norms, verts arrays.
+   std::vector<glm::vec3> verts;
+   std::vector<glm::vec3> norms;
+   std::vector<glm::vec2> txts;
+   std::vector<unsigned short> indices; // contains indices into txts, norms, verts arrays.
    char texturename[200];
 
    if(fscanf(fp,"%s",str)!=1)
@@ -1498,17 +1471,17 @@ void parseMesh(FILE *fp)
       printf("Error: could not parse mesh (expected 'vertices').\n");
       exit(1);
    }
-   getVectors(fp,"vertices",&num_verts,&verts);
+   getVectors(fp,"vertices",verts);
 
    fscanf(fp,"%s",str);
    if(!strcmp(str, "normals"))
    {
-      getVectors(fp,"normals",&num_norms,&norms);
+      getVectors(fp,"normals",norms);
       fscanf(fp,"%s",str);
    }
    if(!strcmp(str, "texturecoords"))
    {
-      getTextureCoords(fp,texturename,&num_txts,&txts);
+      getTextureCoords(fp,texturename,txts);
       fscanf(fp,"%s",str);
 	  active.texture = std::string(texturename);
 	  active.texture = sceneFolder + "//"+ active.texture.substr(0,active.texture.size()-3) + "dds";
@@ -1518,7 +1491,7 @@ void parseMesh(FILE *fp)
    
    if(!strcmp(str,"triangles"))
    {
-      getTriangles(fp,&num_tris,&indices,verts,norms,txts);
+      getTriangles(fp,&num_tris,indices,norms.size() > 0,txts.size() > 0);
    }
    else
    {
@@ -1537,10 +1510,10 @@ void parseMesh(FILE *fp)
 		glm::vec2 t0;
 
 		// incrementing base index if optional data exists [tex] [norm] vert []-means optional
-		if ( num_txts > 0 ) {
+		if ( txts.size() > 0 ) {
 			t0 = txts[ indices[coordIdx++] ]; 
 		}
-		if ( num_norms > 0 ) {
+		if ( norms.size() > 0 ) {
 			n0 = norms[ indices[coordIdx++] ]; 
 		}
 		glm::vec3 v0 = verts[ indices[coordIdx++] ];
