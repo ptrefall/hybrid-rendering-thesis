@@ -22,7 +22,7 @@ layout(location = NORMAL, 	index = 0) 	out vec4 out_Normal;
 void main( void )
 {
 	//out_Diffuse		= vec4(1.0, 0.0, 0.0, 1.0);
-	out_Diffuse		= texture(diffuse_tex, Vertex.t/0.5);
+	out_Diffuse		= texture(diffuse_tex, Vertex.t);
 	out_Position	= vec4(Vertex.v.xyz,0);
 	out_Normal		= vec4(Vertex.n.xyz,material_id);
 }

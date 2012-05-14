@@ -72,4 +72,6 @@ void main( void )
 		(diffuse * ambient_mat[material_id])), 
 		1.0
 		);
+		
+	//out_FragColor = vec4(diffuse, 1.0);
 }
