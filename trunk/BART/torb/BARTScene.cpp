@@ -54,6 +54,13 @@ struct poly_t
 	std::string texture;
 };
 
+struct mesh_t
+{
+	protowizard::MeshPtr mesh;
+	material_ext_t mat;
+	std::string texture;
+};
+
 class SceneNode;
 typedef std::shared_ptr<SceneNode> SceneNodePtr;
 struct SceneNode
@@ -61,17 +68,19 @@ struct SceneNode
 	std::string name, fileScope;
 	std::vector<SceneNodePtr> children;
 
-	protowizard::MeshPtr mesh;
+	std::vector<mesh_t> meshes;
 	glm::mat4 tform;
-	material_ext_t mat;
-	std::string texture;
 
-	SceneNode(const std::string& name) : name(name), mesh(nullptr), texture("")
+	SceneNode(const std::string& name) : name(name)
 	{
 	}
 
 	void add( SceneNodePtr child ) {
 		children.push_back(child);
+	}
+
+	void addMesh( mesh_t& bartMesh ) {
+		meshes.push_back( bartMesh );
 	}
 
 	void visit(int spaces) {
@@ -86,9 +95,7 @@ struct SceneNode
 			printf("visit %s", name.c_str() );
 		}
 
-		if ( mesh != nullptr ) printf(" has geo ");
-		if ( texture != "" ) printf(" has tex ");
-		//if ( mat != nullptr ) printf(" has mat ");
+		if ( meshes.size() ) printf(" has geo ");
 		printf("\n");
 
 		for (auto it=children.begin(); it!=children.end(); ++it) {
@@ -105,27 +112,33 @@ struct SceneNode
 		}
 
 		if ( name == "root" ) return;
-		if ( mesh == nullptr ) return;
-		// name = null can have meshes
+		
+		for(auto it=meshes.begin(); it!=meshes.end(); ++it){
+			const mesh_t &bartMesh = *it; // TODO make better name
+			const protowizard::MeshPtr &protoMesh = bartMesh.mesh;
+			const material_ext_t &mat = bartMesh.mat;
+			const std::string &texture = bartMesh.texture;
 
-		//// Draw self
-		////proto->setMaterial( mat.amb, mat.dif, mat.spc, mat.phong_pow );
-		global::proto->setColor( (mat.amb+mat.dif+mat.spc) );
+			//// Draw self
+			////proto->setMaterial( mat.amb, mat.dif, mat.spc, mat.phong_pow );
+			global::proto->setColor( (mat.amb+mat.dif+mat.spc) );
 
-		bool isTwoSided = mat.transmittance > 0.f;
-		if ( isTwoSided ) {
-			global::proto->setBlend(true);
-			global::proto->setAlpha( 1.0f - 0.5f*mat.transmittance );
-		} else {
+			bool isTwoSided = mat.transmittance > 0.f;
+			/*if ( isTwoSided ) {
+				global::proto->setBlend(true);
+				global::proto->setAlpha( 1.0f - 0.5f*mat.transmittance );
+			} else {
+				global::proto->setBlend(false);
+			}*/
 			global::proto->setBlend(false);
-		}
 
-		if ( texture != "" )
-		{
-			global::proto->setTexture(texture);
+			if ( texture != "" )
+			{
+				global::proto->setTexture(texture);
+			}
+			global::proto->setOrientation( concatTransform );
+			global::proto->drawMesh( protoMesh, isTwoSided );
 		}
-		global::proto->setOrientation( concatTransform );
-		global::proto->drawMesh( mesh, isTwoSided );
 	}
 };
 
@@ -170,6 +183,8 @@ private:
 		std::stack<std::string> fileScopeStack;
 		std::stack<SceneNodePtr> nodeStack;
 		SceneNodePtr sceneNode;
+		int nodeCount;
+		int meshCount;
 	} active;
 
 	// Scene objects
@@ -186,10 +201,14 @@ BARTSceneImplementation( protowizard::ProtoGraphicsPtr proto, const std::string&
 	global::proto = proto;
 	// Root. needed for addPoly when no prior tform spec'd ? TODO
 	active.tformMatrix = glm::mat4(1.0f);
+
+	active.meshCount = 0;
 	
 	pushNode("root");
 	
 	loadScene();
+	printf("num scene nodes: %d \n", active.nodeCount );
+	printf("num meshes: %d \n", active.meshCount );
 }
 
 
@@ -224,9 +243,9 @@ void addMesh( std::vector<protowizard::Vertex_VNT>& vertices )
 	assert( active.sceneNode->name != "root" );
 
 	protowizard::MeshPtr mesh = std::make_shared<protowizard::Mesh>( vertices );
-	active.sceneNode->mesh = mesh;
-	active.sceneNode->mat = active.extMaterial;
-	active.sceneNode->texture = active.texture;
+	mesh_t bartMesh = {mesh, active.extMaterial, active.texture};
+	active.sceneNode->addMesh( bartMesh );
+	active.meshCount++;
 }
 
 /*----------------------------------------------------------------------
@@ -1372,6 +1391,7 @@ void pushNode(const std::string& name, const glm::mat4& localTransform = glm::ma
 	if ( name == "root" ) {
 		active.sceneNode = newNode;
 		sceneRoot = newNode;
+		active.nodeCount = 0;
 	} 
 	else if (name == "null") { // TODO. seems like a stupid solution. could make a distinct container/namespace type for .aff's?
 		active.sceneNode->add( newNode );
@@ -1383,10 +1403,11 @@ void pushNode(const std::string& name, const glm::mat4& localTransform = glm::ma
 		active.sceneNode->add( newNode );
 		active.sceneNode = newNode;
 	}
-	active.sceneNode->mesh = nullptr;
 	active.sceneNode->tform = localTransform;
 	active.sceneNode->fileScope = includeName;
 	active.nodeStack.push( active.sceneNode );
+
+	active.nodeCount++;
 }
 
 void popNode()
@@ -1799,7 +1820,7 @@ virtual void draw()
 		} else {
 			proto->setColor( mat.dif );
 		}
-		//proto->drawCone( coneList[i].a, coneList[i].b, coneList[i].r1 );
+		proto->drawCone( coneList[i].a, coneList[i].b, coneList[i].r1 );
 	}
 	for(size_t i=0; i<polyList.size(); i++){
 		const poly_t &poly = polyList[i];
@@ -1810,6 +1831,7 @@ virtual void draw()
 		} else {
 			proto->setColor( mat.dif );
 		}
+		proto->setColor( glm::vec3(0.75f) );
 		//glm::mat4 &xform = polyList[i].tform;
 		//assert( poly.tform == glm::mat4(1.f) ); // could have tforms in some .aff-s TODO
 		proto->setOrientation( glm::mat4(1.f) );
@@ -1819,7 +1841,9 @@ virtual void draw()
 	}
 
 	assert( sceneRoot.get() != nullptr );
+	
 	sceneRoot->draw();
+	
 	proto->setOrientation( glm::mat4(1.0f) );
 	proto->setBlend(false);
 
@@ -1828,7 +1852,6 @@ virtual void draw()
 	if ( speed < 0.01f ) speed = 0.01f;
 
 	proto->getCamera()->update( proto->keystatus(protowizard::KEY::LEFT), proto->keystatus(protowizard::KEY::RIGHT), proto->keystatus(protowizard::KEY::UP), proto->keystatus(protowizard::KEY::DOWN), (float)proto->getMouseX(), (float)proto->getMouseY(), proto->mouseDownLeft(), speed * proto->getMSPF() );
-
 }
 
 }; // end of class Implementation
