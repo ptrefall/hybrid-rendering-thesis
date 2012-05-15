@@ -17,6 +17,11 @@
 #include <proto/shapes/mesh.h>
 #include <proto/vertex_types.h>
 
+namespace global
+{
+	protowizard::ProtoGraphicsPtr proto;
+}
+
 struct material_t
 {
 	glm::vec3 col;
@@ -47,7 +52,7 @@ struct cone_t
 struct poly_t
 {
 	protowizard::MeshPtr mesh;
-	glm::mat4 xform;
+	glm::mat4 tform;
 	material_t mat;
 	std::string texture;
 };
@@ -55,9 +60,88 @@ struct poly_t
 struct mesh_t
 {
 	protowizard::MeshPtr mesh;
-	glm::mat4 xform;
+	glm::mat4 tform;
 	material_ext_t mat;
 	std::string texture;
+};
+
+class SceneNode;
+typedef std::shared_ptr<SceneNode> SceneNodePtr;
+struct SceneNode
+{
+	std::string name, fileScope;
+	protowizard::MeshPtr mesh;
+	glm::mat4 tform;
+	material_ext_t mat;
+	std::string texture;
+	std::vector<SceneNodePtr> children;
+
+	SceneNode() : name("noname"), mesh(nullptr), texture("")
+	{
+	}
+
+	SceneNode(const std::string& name) : name(name), mesh(nullptr), texture("")
+	{
+	}
+
+	void add( SceneNodePtr child ) {
+		children.push_back(child);
+	}
+
+	void visit(int spaces) {
+		for(int i=0; i<spaces; i++){
+			printf(" ");
+		}
+
+		if ( name == "null" ) {
+			printf("scope %s\n", fileScope.c_str() );
+			spaces +=3;
+		}else {
+			printf("visit %s", name.c_str() );
+		}
+
+		if ( mesh != nullptr ) printf(" has geo ");
+		if ( texture != "" ) printf(" has tex ");
+		//if ( mat != nullptr ) printf(" has mat ");
+		printf("\n");
+
+		for (auto it=children.begin(); it!=children.end(); ++it) {
+			(*it)->visit(spaces+1);
+		}
+	}
+
+	void draw( const glm::mat4& parentTransform = glm::mat4(1.f) ) {
+
+		glm::mat4 concatTransform = parentTransform * tform;
+
+		for (auto it=children.begin(); it!=children.end(); ++it) {
+			(*it)->draw( concatTransform );
+		}
+
+		if ( name == "root" ) return;
+		if ( mesh == nullptr ) return;
+		// name = null can have meshes
+
+		//// Draw self
+		////proto->setMaterial( mat.amb, mat.dif, mat.spc, mat.phong_pow );
+		global::proto->setColor( (mat.amb+mat.dif+mat.spc) );
+
+		bool isTwoSided = mat.transmittance > 0.f;
+		if ( isTwoSided ) {
+			global::proto->setBlend(true);
+			global::proto->setColor( glm::vec3(0.75f) );
+			global::proto->setAlpha( 1.0f - 0.5f*mat.transmittance );
+		} else {
+			global::proto->setBlend(false);
+		}
+
+		if ( texture != "" )
+		{
+			global::proto->setTexture(texture);
+		}
+		global::proto->setOrientation( concatTransform );
+		global::proto->drawMesh( mesh, isTwoSided );
+	}
 };
 
 namespace tformtype
@@ -91,14 +175,18 @@ private:
 		std::stack<glm::mat4> tformStack;
 		// Keep track of transform hiearchy so we know when to pop a static tform
 		std::stack<tformtype::eTransformType> tformTypeStack;
+		
 
 		material_t material; // found in .nff-s
 		material_ext_t extMaterial; // found in .aff-s
 		std::string texture;
 
 		std::vector<protowizard::Vertex_VNT> triangleVerts;
-		std::unordered_map<std::string, protowizard::MeshPtr> meshHashmap;
-		std::string meshName;
+		std::unordered_map<std::string, SceneNodePtr> includefileToNodeMap;
+
+		std::stack<std::string> fileScopeStack;
+		std::stack<SceneNodePtr> nodeStack;
+		SceneNodePtr sceneNode;
 	} active;
 
 	// Scene objects
@@ -107,13 +195,18 @@ private:
 	std::vector<poly_t> polyList;
 	std::vector<mesh_t> meshList;
 
+	SceneNodePtr sceneRoot;
+
 public:
 BARTSceneImplementation( protowizard::ProtoGraphicsPtr proto, const std::string& sceneFolder, const std::string& mainSceneFile ) : 
 	  gDetailLevel(0), proto(proto), sceneFolder(sceneFolder), mainSceneFile(mainSceneFile)
 {
-	// Root. needed for addPoly when no prior tform spec'd
+	global::proto = proto;
+	// Root. needed for addPoly when no prior tform spec'd ? TODO
 	active.tformMatrix = glm::mat4(1.0f);
-	//active.tformStack.push(active.tformMatrix);
+	
+	pushNode("root");
+	
 	loadScene();
 }
 
@@ -146,11 +239,16 @@ void addPoly( std::vector<protowizard::Vertex_VNT>& vertices )
 }
 void addMesh( std::vector<protowizard::Vertex_VNT>& vertices )
 {
-	protowizard::MeshPtr m = std::make_shared<protowizard::Mesh>( vertices );
-	mesh_t mesh_and_mat = {m, active.tformMatrix, active.extMaterial, active.texture};
+	protowizard::MeshPtr mesh = std::make_shared<protowizard::Mesh>( vertices );
+	mesh_t mesh_and_mat = {mesh, active.tformMatrix, active.extMaterial, active.texture};
 	meshList.push_back( mesh_and_mat );
 
-	active.meshHashmap.insert( active.meshName, m );
+	assert( active.sceneNode->name != "root" );
+
+	active.sceneNode->mat = active.extMaterial;
+	active.sceneNode->texture = active.texture;
+	active.sceneNode->mesh = mesh;
+	//active.sceneNode->tform = active.tformMatrix; // NO!
 }
 
 /*----------------------------------------------------------------------
@@ -630,23 +728,51 @@ void parseInclude(FILE *fp)
 		printf("Error: could not parse include.\n");
 		exit(0);
 	}
-
-	if(detail_level<=gDetailLevel) /* skip file if our detail is less than the global detail */
+	
+	auto includeName = std::string(filename);
+	auto sceneNodeIt = active.includefileToNodeMap.find( includeName ); 
+	
+	auto it = active.includefileToNodeMap.find( includeName );
+	if ( it != active.includefileToNodeMap.end() ) // seen before
 	{
-		if(ifp=fopen( (sceneFolder+"//"+filename).c_str() ,"r"))
-		{
-			viParseFile(ifp);  /* parse the file recursively */
-			fclose(ifp);
-		}
-		else
-		{
-			printf("Error: could not open include file: <%s>.\n",filename);
-			exit(1);
-		}
+		SceneNodePtr subtreeAtInc = (*sceneNodeIt).second;
+		assert( subtreeAtInc->name == "null" );
+		active.sceneNode->add( subtreeAtInc );
+		printf("attaching subtree to %s::%s\n", active.sceneNode->fileScope.c_str(), active.sceneNode->name.c_str() );
+		subtreeAtInc->visit(0);
 	}
 	else
 	{
-		printf("Skipping include file: %s\n",filename);
+		
+		if(detail_level<=gDetailLevel) /* skip file if our detail is less than the global detail */
+		{
+			active.fileScopeStack.push(includeName);
+			pushNode("null");
+
+			if(ifp=fopen( (sceneFolder+"//"+filename).c_str() ,"r"))
+			{
+				parseFile(ifp);  /* parse the file recursively */
+				fclose(ifp);
+			}
+			else
+			{
+				printf("Error: could not open include file: <%s>.\n",filename);
+				exit(1);
+			}
+			popNode();
+			// TODO remove
+			std::string lastInc = active.fileScopeStack.top();
+			if ( lastInc == "root" ) {
+				printf("we have a problem\n"); exit(1);
+			}
+			active.fileScopeStack.pop();
+		}
+		else
+		{
+			printf("Skipping include file: %s\n",filename);
+		}
+	
+
 	}
 }
 
@@ -1140,7 +1266,7 @@ void parseKeyFrames(FILE *fp)
 		}
 		eatWhitespace(fp);
 	}   
-	printf("finished parsing anim %s\n", name);
+	//printf("finished parsing anim %s\n", name);
 }
 
 
@@ -1174,17 +1300,14 @@ void parseXform(FILE *f)
 {
 	char name[100];
 	char ch;
-	int is_static;
 
-	is_static = getc(f);
-	if(is_static != 's')
-	{
+	int is_static = getc(f);
+	if(is_static != 's') {
 		ungetc(is_static, f);
 		is_static=0;
 	}
 
-	if(is_static)  /* is the transform a static one ? */
-	{
+	if(is_static) {
 		glm::vec3 scale, trans, rot;
 		float deg;
       
@@ -1203,9 +1326,7 @@ void parseXform(FILE *f)
 			exit(1);
 		} 
 
-		/* add a static transform here
-		* e.g.,viAddStaticXform(scale,rot,deg,trans);
-		*/
+		/* add a static transform here e.g.,viAddStaticXform(scale,rot,deg,trans); */
 		active.tformName = std::string("static");
 
 		// T*R*S
@@ -1214,10 +1335,11 @@ void parseXform(FILE *f)
 		thisTransform = glm::rotate( thisTransform, deg, rot );
 		thisTransform = glm::scale( thisTransform, scale );
 
+		active.tformTypeStack.push( tformtype::STATIC_TRANSFORM );
 		active.tformStack.push( active.tformMatrix );
 		active.tformMatrix *= thisTransform;
 
-		active.tformTypeStack.push( tformtype::STATIC_TRANSFORM );
+		pushNode( active.tformName, thisTransform);	
 	}
 	else   /* keyframe animated transform */
 	{
@@ -1236,11 +1358,12 @@ void parseXform(FILE *f)
 		/* add an animated transform here
 		* e.g., viAddXform(name);
 		*/
-		printf("begin anim xform %s\n", name);
 		active.tformName = std::string(name);
 		active.tformTypeStack.push( tformtype::ANIMATED_TRANSFORM );
-	}
 
+		pushNode( active.tformName );	
+	}
+	
 }
 
 void viEndXform()
@@ -1255,7 +1378,43 @@ void viEndXform()
 		active.tformMatrix = active.tformStack.top();
 		active.tformStack.pop();
 	}
+
+	popNode();
+
 	active.tformTypeStack.pop();
+}
+
+void pushNode(const std::string& name, const glm::mat4& localTransform = glm::mat4(1.f) ) 
+{
+	SceneNodePtr newNode = SceneNodePtr( new SceneNode(name) );
+
+	if ( name == "root" ) active.fileScopeStack.push("root");
+	std::string includeName = active.fileScopeStack.top();
+
+	if ( name == "root" ) {
+		active.sceneNode = newNode;
+		sceneRoot = newNode;
+	} 
+	else if (name == "null") { // TODO. seems like a stupid solution. could make a distinct container/namespace type for .aff's?
+		active.sceneNode->add( newNode );
+		newNode->tform = glm::mat4(1.f);
+		active.sceneNode = newNode;
+		active.includefileToNodeMap[includeName] = active.sceneNode;
+	}
+	else {
+		active.sceneNode->add( newNode );
+		active.sceneNode = newNode;
+	}
+	active.sceneNode->mesh = nullptr;
+	active.sceneNode->tform = localTransform;
+	active.sceneNode->fileScope = includeName;
+	active.nodeStack.push( active.sceneNode );
+}
+
+void popNode()
+{
+	active.nodeStack.pop();
+	active.sceneNode = active.nodeStack.top();
 }
 
 /*----------------------------------------------------------------------
@@ -1530,7 +1689,7 @@ void parseMesh(FILE *fp)
   Description:
     parses the animation file
 ----------------------------------------------------------------------*/
-bool viParseFile(FILE *f)
+bool parseFile(FILE *f)
 {
    char ch;
 
@@ -1610,11 +1769,7 @@ virtual void loadScene()
 		exit(1);
 	}
 	
-
-	if( !viParseFile(f) ) {
-		printf("could not parse file\n");
-		exit(1);
-	}
+	parseFile(f);
 	fclose(f);
 
 	glm::vec3 eyeUp = glm::normalize(cam.up);
@@ -1628,6 +1783,50 @@ virtual void loadScene()
 	proto->getCamera()->setFov( cam.fov );
 	proto->getCamera()->setNearDist(0.01f);
 	proto->getCamera()->setFarDist(100.f);
+}
+
+void traverseScene()
+{
+	if ( sceneRoot.get() != nullptr ) {
+		//sceneRoot->visit(0);
+	} else {
+		puts("scene has no root!?");
+	}
+}
+
+void drawSceneRec( const SceneNodePtr& node, glm::mat4 tform )
+{
+	//drawMesh( node->mesh );
+}
+
+void drawScene()
+{
+	assert( sceneRoot.get() != nullptr );
+
+	sceneRoot->draw();
+}
+
+void drawMesh( mesh_t& m ) {
+	material_ext_t& mat = m.mat;
+	//proto->setMaterial( mat.amb, mat.dif, mat.spc, mat.phong_pow );
+	proto->setColor( (mat.amb+mat.dif+mat.spc) );
+		
+	bool isTwoSided = mat.transmittance > 0.f;
+	if ( isTwoSided ) {
+		proto->setBlend(true);
+		proto->setColor( glm::vec3(0.75f) );
+		proto->setAlpha( 1.0f - 0.5f*mat.transmittance );
+	} else {
+		proto->setBlend(false);
+	}
+
+	if ( m.texture != "" )
+	{
+		proto->setTexture(m.texture);
+	}
+	glm::mat4 &tform = m.tform;
+	proto->setOrientation( tform );
+	proto->drawMesh( m.mesh, isTwoSided );
 }
 
 virtual void draw()
@@ -1646,33 +1845,14 @@ virtual void draw()
 	}
 	for(size_t i=0; i<polyList.size(); i++){
 		proto->setColor( polyList[i].mat.col * 3.f );
-		glm::mat4 &xform = polyList[i].xform;
+		glm::mat4 &xform = polyList[i].tform;
 		proto->setOrientation( xform );
 		proto->drawMesh( polyList[i].mesh, false );
 	}
-	for(size_t i=0; i<meshList.size(); ++i){
-		mesh_t& m = meshList[i];
-		material_ext_t& mat = m.mat;
-		//proto->setMaterial( mat.amb, mat.dif, mat.spc, mat.phong_pow );
-		proto->setColor( (mat.amb+mat.dif+mat.spc) );
-		
-		bool isTwoSided = mat.transmittance > 0.f;
-		if ( isTwoSided ) {
-			proto->setBlend(true);
-			proto->setColor( glm::vec3(0.75f) );
-			proto->setAlpha( 1.0f - 0.5f*mat.transmittance );
-		} else {
-			proto->setBlend(false);
-		}
-
-		if ( m.texture != "" )
-		{
-			proto->setTexture(m.texture);
-		}
-		glm::mat4 &xform = m.xform;
-		proto->setOrientation( xform );
-		proto->drawMesh( m.mesh, isTwoSided );
-	}
+	sceneRoot->draw();
+	/*for(auto it=meshList.begin(); it!=meshList.end(); ++it) {
+		drawMesh( *it );
+	}*/
 	proto->setOrientation( glm::mat4(1.0f) );
 	proto->setBlend(false);
 
@@ -1683,7 +1863,6 @@ virtual void draw()
 	proto->getCamera()->update( proto->keystatus(protowizard::KEY::LEFT), proto->keystatus(protowizard::KEY::RIGHT), proto->keystatus(protowizard::KEY::UP), proto->keystatus(protowizard::KEY::DOWN), (float)proto->getMouseX(), (float)proto->getMouseY(), proto->mouseDownLeft(), speed * proto->getMSPF() );
 
 }
-
 
 }; // end of class Implementation
 
