@@ -8,7 +8,6 @@
 #include "../Render/Shader.h"
 
 #include <glm/glm.hpp>
-#include <Eigen/Geometry>
 
 #include <memory>
 
@@ -46,6 +45,5 @@ namespace Scene
 		Render::MaterialPtr material;
 
 		glm::vec3 position;
-		//Eigen::Transform< model;
 	};
 }
