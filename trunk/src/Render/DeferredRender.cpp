@@ -1,7 +1,7 @@
 #include "DeferredRender.h"
 
 #include "GBuffer.h"
-#include "../Scene/Camera.h"
+#include "../Scene/proto_camera.h"
 
 using namespace Render;
 
@@ -18,7 +18,7 @@ void DeferredRender::render()
 	shader->bind();
 	g_buffer->bind(shader->getFS());
 
-	camPos->bind(Scene::Camera::getSingleton()->getPosition());
+	camPos->bind(Scene::FirstPersonCamera::getSingleton()->getPos());
 
 	if(materials.empty() == false)
 	{

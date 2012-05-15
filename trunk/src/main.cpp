@@ -1,6 +1,7 @@
 #include <GL3\gl3.h>
 #include <GL3\gl3w.h>
 #include <GL/freeglut.h>
+#include <glm/glm.hpp>
 
 #include "Render\DeferredRender.h"
 #include "Render\GBuffer.h"
@@ -10,7 +11,7 @@
 #include "File\MaterialLoader.h"
 #include "Scene\SceneManager.h"
 #include "Scene\Cube.h"
-#include "Scene\Camera.h"
+#include "Scene\proto_camera.h"
 
 #include "Render\Shader.h"
 
@@ -19,6 +20,7 @@
 void display();
 void reshape(int w, int h);
 void keyboard(unsigned char key, int x, int y);
+void motion(int x, int y);
 int init(int argc, char** argv);
 void loadScene();
 
@@ -33,8 +35,8 @@ namespace
 	File::MaterialLoaderPtr mat_loader;
 	Scene::SceneManagerPtr scene;
   
-    Scene::CameraPtr camera;
-	
+    Scene::FirstPersonCameraPtr camera;
+	glm::ivec2 mouse;
 
 	unsigned int width, height;
 }
@@ -79,6 +81,7 @@ int main(int argc, char** argv)
 	glutDisplayFunc(display); 
 	glutReshapeFunc(reshape);
 	glutKeyboardFunc(keyboard);
+	glutMotionFunc(motion);
 
 	//////////////////////////////////////////
 	// HEARTBEAT
@@ -89,11 +92,8 @@ int main(int argc, char** argv)
 }
 
 void display()
-{
-	float color_buffer_clear[4];
-	memset(color_buffer_clear, 1.0f, sizeof(float)*4);
-	float depth_buffer_clear = 0.0f;
-  
+{  
+	camera->update(false, false, false, false, (float)mouse.x/(float)width, (float)mouse.y/(float)height, true, 1.0f);
   glClearColor(0.f,0.f,0.f,1.f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
@@ -125,6 +125,18 @@ void keyboard(unsigned char key, int x, int y)
 		system("cls");
 		renderer->reloadShaders();
 	}
+	/*auto cam = Scene::Camera::getSingleton();
+	if(key=='a'){
+		cam->getOrientation() = glm::rotate(cam->getOrientation(), 0.1f, glm::vec3(0.0, 1.0, 0.0));
+	}else if(key == 'd'){
+		cam->getOrientation() = glm::rotate(cam->getOrientation(), -0.1f, glm::vec3(0.0, 1.0, 0.0));
+	}*/
+}
+
+void motion(int x, int y)
+{
+	mouse.x = x;
+	mouse.y = y;
 }
 
 int init(int argc, char** argv)
@@ -154,7 +166,7 @@ int init(int argc, char** argv)
     //////////////////////////////////////////
 	// DEFERRED RENDERER INITIALIZING
 	//////////////////////////////////////////
-    raytracer = std::make_shared<Raytracer::OptixRender>(g_buffer, width, height, base_dir + "optix\\");
+    //raytracer = std::make_shared<Raytracer::OptixRender>(g_buffer, width, height, base_dir + "optix\\");
 
 	//////////////////////////////////////////
 	// SCENE INITIALIZING
@@ -166,8 +178,10 @@ int init(int argc, char** argv)
 
 void loadScene()
 {
-    camera = Scene::Camera::getSingleton();
-    camera->init(width, height, M_PI/3.0f, 1.0f, 1000.0f);
+    camera = Scene::FirstPersonCamera::getSingleton();
+	camera->updateProjection(width, height, 90, 1.0f, 1000.0f);
+    //camera->init(width, height, 60.0f, 1.0f, 1000.0f);
+	//camera->setTarget(glm::vec3(10,-8,20));
 
 	//auto cube_tex = tex_loader->load("cube.jpg", GL_REPEAT);
 	//auto tex_sampler = std::make_shared<Render::Uniform>(g_buffer->getShader()->getFS(), "diffuse_tex");

@@ -1,5 +1,5 @@
 #include "Cube.h"
-#include "Camera.h"
+#include "proto_camera.h"
 
 #include "../Render/ATTRIB.h"
 #include "../Render/ShaderConstants.h"
@@ -163,8 +163,8 @@ void Cube::render(const Render::ShaderPtr &active_program)
   model.rotate( AngleAxisf(var,  vec3::UnitY()) );*/
   
 
-  auto &proj = Camera::getSingleton()->getProjection();
-  auto &view = Camera::getSingleton()->getView();
+  auto &proj = FirstPersonCamera::getSingleton()->getProjection();
+  auto &view = FirstPersonCamera::getSingleton()->getViewMatrix();
 
   auto modelView = view * model;
   auto modelViewProj = proj * view * model;
