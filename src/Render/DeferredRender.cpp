@@ -22,8 +22,8 @@ void DeferredRender::render()
 
 	if(materials.empty() == false)
 	{
-		for(auto &material : materials)
-			material->bind_data(shader->getFS());
+		for(auto it=materials.begin(); it!=materials.end(); ++it) //for(auto &material : materials)
+			(*it)->bind_data(shader->getFS());
 	}
 
 	quad->render(0);
