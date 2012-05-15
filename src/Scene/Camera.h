@@ -27,6 +27,7 @@ namespace Scene
 
     const glm::vec3 &getPosition() const { return position; }
 
+	glm::quat &getOrientation() { return orientation; }
     void setDirection(const glm::vec3 &direction);
     void setTarget(const glm::vec3 &position);
 

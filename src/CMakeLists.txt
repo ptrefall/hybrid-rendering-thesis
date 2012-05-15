@@ -102,6 +102,7 @@ set(Scene_HDRS
   ./Scene/SceneManager.h
   ./Scene/SceneNode.h
   ./Scene/Camera.h
+  ./Scene/proto_camera.h
   ./Scene/Quad.h
   ./Scene/Cube.h
 )
@@ -111,6 +112,7 @@ set(Scene_SRCS
   ./Scene/SceneManager.cpp
   ./Scene/SceneNode.cpp
   ./Scene/Camera.cpp
+  ./Scene/proto_camera.cpp
   ./Scene/Quad.cpp
   ./Scene/Cube.cpp
 )

@@ -1,6 +1,7 @@
 #include "Uniform.h"
 #include <GL3\gl3w.h>
 #include <iostream>
+#include <glm/ext.hpp>
 
 using namespace Render;
 
@@ -24,22 +25,22 @@ void Uniform::bind(float data)
 
 void Uniform::bind(const glm::vec2 &data)
 {
-	glProgramUniform2fv(program, location, 1, &data[0]);
+	glProgramUniform2fv(program, location, 1, glm::value_ptr(data));
 }
 
 void Uniform::bind(const glm::vec3 &data)
 {
-	glProgramUniform3fv(program, location, 1, &data[0]);
+	glProgramUniform3fv(program, location, 1, glm::value_ptr(data));
 }
 
 void Uniform::bind(const glm::mat3 &data)
 {
-	glProgramUniformMatrix3fv(program, location, 1, GL_FALSE, &data[0][0]);
+	glProgramUniformMatrix3fv(program, location, 1, GL_FALSE, glm::value_ptr(data));
 }
 
 void Uniform::bind(const glm::mat4 &data)
 {
-	glProgramUniformMatrix4fv(program, location, 1, GL_FALSE, &data[0][0]);
+	glProgramUniformMatrix4fv(program, location, 1, GL_FALSE, glm::value_ptr(data));
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -71,7 +72,7 @@ void Uniform::bind(const glm::vec2 &data, unsigned int program)
 	if(location < 0)
 		location = glGetUniformLocation(program, name.c_str());
 
-	glProgramUniform2fv(program, location, 1, &data[0]);
+	glProgramUniform2fv(program, location, 1, glm::value_ptr(data));
 }
 
 void Uniform::bind(const glm::vec3 &data, unsigned int program)
@@ -79,7 +80,7 @@ void Uniform::bind(const glm::vec3 &data, unsigned int program)
 	if(location < 0)
 		location = glGetUniformLocation(program, name.c_str());
 
-	glProgramUniform3fv(program, location, 1, &data[0]);
+	glProgramUniform3fv(program, location, 1, glm::value_ptr(data));
 }
 
 void Uniform::bind(const glm::mat3 &data, unsigned int program)
@@ -87,7 +88,7 @@ void Uniform::bind(const glm::mat3 &data, unsigned int program)
 	if(location < 0)
 		location = glGetUniformLocation(program, name.c_str());
 
-	glProgramUniformMatrix3fv(program, location, 1, GL_FALSE, &data[0][0]);
+	glProgramUniformMatrix3fv(program, location, 1, GL_FALSE, glm::value_ptr(data));
 }
 
 void Uniform::bind(const glm::mat4 &data, unsigned int program)
@@ -95,5 +96,5 @@ void Uniform::bind(const glm::mat4 &data, unsigned int program)
 	if(location < 0)
 		location = glGetUniformLocation(program, name.c_str());
 
-	glProgramUniformMatrix4fv(program, location, 1, GL_FALSE, &data[0][0]);
+	glProgramUniformMatrix4fv(program, location, 1, GL_FALSE, glm::value_ptr(data));
 }
