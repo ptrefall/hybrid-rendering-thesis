@@ -22,42 +22,31 @@ namespace global
 	protowizard::ProtoGraphicsPtr proto;
 }
 
-struct material_t
-{
-	glm::vec3 col;
-};
-
 struct material_ext_t
 {
 	glm::vec3 amb,dif,spc;
 	float phong_pow;
 	float transmittance;
 	float ior;
+	bool isExtended;
 };
 
 struct sphere_t
 {
 	glm::vec3 pos;
 	float radius;
-	material_t mat;
+	material_ext_t mat;
 };
 
 struct cone_t
 {
 	glm::vec3 a,b;
 	float r1,r2;
-	material_t mat;
+	material_ext_t mat;
 };
 
+/* Polygon vertices don't have xforms. Vertices are in global space. */
 struct poly_t
-{
-	protowizard::MeshPtr mesh;
-	glm::mat4 tform;
-	material_t mat;
-	std::string texture;
-};
-
-struct mesh_t
 {
 	protowizard::MeshPtr mesh;
 	glm::mat4 tform;
@@ -70,15 +59,12 @@ typedef std::shared_ptr<SceneNode> SceneNodePtr;
 struct SceneNode
 {
 	std::string name, fileScope;
+	std::vector<SceneNodePtr> children;
+
 	protowizard::MeshPtr mesh;
 	glm::mat4 tform;
 	material_ext_t mat;
 	std::string texture;
-	std::vector<SceneNodePtr> children;
-
-	SceneNode() : name("noname"), mesh(nullptr), texture("")
-	{
-	}
 
 	SceneNode(const std::string& name) : name(name), mesh(nullptr), texture("")
 	{
@@ -129,7 +115,6 @@ struct SceneNode
 		bool isTwoSided = mat.transmittance > 0.f;
 		if ( isTwoSided ) {
 			global::proto->setBlend(true);
-			global::proto->setColor( glm::vec3(0.75f) );
 			global::proto->setAlpha( 1.0f - 0.5f*mat.transmittance );
 		} else {
 			global::proto->setBlend(false);
@@ -176,8 +161,6 @@ private:
 		// Keep track of transform hiearchy so we know when to pop a static tform
 		std::stack<tformtype::eTransformType> tformTypeStack;
 		
-
-		material_t material; // found in .nff-s
 		material_ext_t extMaterial; // found in .aff-s
 		std::string texture;
 
@@ -193,7 +176,6 @@ private:
 	std::vector<sphere_t> sphereList;
 	std::vector<cone_t> coneList;
 	std::vector<poly_t> polyList;
-	std::vector<mesh_t> meshList;
 
 	SceneNodePtr sceneRoot;
 
@@ -233,22 +215,18 @@ void addTexturedTriangle( const std::string& texturename, glm::vec3* verts, glm:
 }
 void addPoly( std::vector<protowizard::Vertex_VNT>& vertices )
 {
-	protowizard::MeshPtr m = std::make_shared<protowizard::Mesh>( vertices );
-	poly_t p = {m, active.tformMatrix, active.material, active.texture};
+	protowizard::MeshPtr mesh = std::make_shared<protowizard::Mesh>( vertices );
+	poly_t p = {mesh, active.tformMatrix, active.extMaterial, active.texture};
 	polyList.push_back(p);
 }
 void addMesh( std::vector<protowizard::Vertex_VNT>& vertices )
 {
-	protowizard::MeshPtr mesh = std::make_shared<protowizard::Mesh>( vertices );
-	mesh_t mesh_and_mat = {mesh, active.tformMatrix, active.extMaterial, active.texture};
-	meshList.push_back( mesh_and_mat );
-
 	assert( active.sceneNode->name != "root" );
 
+	protowizard::MeshPtr mesh = std::make_shared<protowizard::Mesh>( vertices );
+	active.sceneNode->mesh = mesh;
 	active.sceneNode->mat = active.extMaterial;
 	active.sceneNode->texture = active.texture;
-	active.sceneNode->mesh = mesh;
-	//active.sceneNode->tform = active.tformMatrix; // NO!
 }
 
 /*----------------------------------------------------------------------
@@ -490,8 +468,9 @@ void parseFill(FILE *fp)
 		active.extMaterial.dif = dif;
 		active.extMaterial.spc = spc;
 		active.extMaterial.phong_pow = phong_pow;
-		active.extMaterial.transmittance = t;
+		active.extMaterial.transmittance = std::min(t, 1.0f); // TODO. can transmittance be > 1? probably.
 		active.extMaterial.ior = ior;
+		active.extMaterial.isExtended = true;
 	}
 	else   /* parse the old NFF description of a material */
 	{
@@ -510,7 +489,13 @@ void parseFill(FILE *fp)
 		/* add the normal NFF material here 
 		* e.g., viAddMaterial(col,kd,ks,4.0*phong_pow,t,ior);
 		*/
-		active.material.col = col;
+		active.extMaterial.amb = glm::vec3(kd);
+		active.extMaterial.dif = col;
+		active.extMaterial.spc = glm::vec3(ks);
+		active.extMaterial.phong_pow = phong_pow;
+		active.extMaterial.transmittance = std::min(t, 1.0f); // TODO. can transmittance be > 1? probably.
+		active.extMaterial.ior = ior;
+		active.extMaterial.isExtended = false;
 	}
 }
 
@@ -556,7 +541,7 @@ void parseCone(FILE *fp)
        r1 = -r1;
     }
 
-    cone_t cone = {base_pt, apex_pt, r0, r1, active.material};
+    cone_t cone = {base_pt, apex_pt, r0, r1, active.extMaterial};
 	coneList.push_back( cone );
 }
 
@@ -584,7 +569,7 @@ void parseSphere(FILE *fp)
        exit(1);
     }
 
-	sphere_t sph = {center, radius, active.material};
+	sphere_t sph = {center, radius, active.extMaterial};
 	sphereList.push_back( sph );
 }	
 
@@ -743,7 +728,6 @@ void parseInclude(FILE *fp)
 	}
 	else
 	{
-		
 		if(detail_level<=gDetailLevel) /* skip file if our detail is less than the global detail */
 		{
 			active.fileScopeStack.push(includeName);
@@ -760,11 +744,6 @@ void parseInclude(FILE *fp)
 				exit(1);
 			}
 			popNode();
-			// TODO remove
-			std::string lastInc = active.fileScopeStack.top();
-			if ( lastInc == "root" ) {
-				printf("we have a problem\n"); exit(1);
-			}
 			active.fileScopeStack.pop();
 		}
 		else
@@ -853,7 +832,7 @@ void parseTexturedTriangle(FILE *fp)
 	texName = sceneFolder + "//"+ texName.substr(0,texName.size()-3) + "dds";
 
 	if ( texName != active.texture && active.triangleVerts.size() > 0 ) {
-		addMesh( active.triangleVerts );
+		addPoly( active.triangleVerts );
 		active.triangleVerts.clear();
 	}
 
@@ -1380,7 +1359,6 @@ void viEndXform()
 	}
 
 	popNode();
-
 	active.tformTypeStack.pop();
 }
 
@@ -1788,7 +1766,7 @@ virtual void loadScene()
 void traverseScene()
 {
 	if ( sceneRoot.get() != nullptr ) {
-		//sceneRoot->visit(0);
+		sceneRoot->visit(0);
 	} else {
 		puts("scene has no root!?");
 	}
@@ -1799,36 +1777,6 @@ void drawSceneRec( const SceneNodePtr& node, glm::mat4 tform )
 	//drawMesh( node->mesh );
 }
 
-void drawScene()
-{
-	assert( sceneRoot.get() != nullptr );
-
-	sceneRoot->draw();
-}
-
-void drawMesh( mesh_t& m ) {
-	material_ext_t& mat = m.mat;
-	//proto->setMaterial( mat.amb, mat.dif, mat.spc, mat.phong_pow );
-	proto->setColor( (mat.amb+mat.dif+mat.spc) );
-		
-	bool isTwoSided = mat.transmittance > 0.f;
-	if ( isTwoSided ) {
-		proto->setBlend(true);
-		proto->setColor( glm::vec3(0.75f) );
-		proto->setAlpha( 1.0f - 0.5f*mat.transmittance );
-	} else {
-		proto->setBlend(false);
-	}
-
-	if ( m.texture != "" )
-	{
-		proto->setTexture(m.texture);
-	}
-	glm::mat4 &tform = m.tform;
-	proto->setOrientation( tform );
-	proto->drawMesh( m.mesh, isTwoSided );
-}
-
 virtual void draw()
 {
 	proto->cls( bgcolor.r, bgcolor.g, bgcolor.b );
@@ -1836,29 +1784,48 @@ virtual void draw()
 	// TODO. decouple materials and geometry. have a unordered_map of <material, geo> pairs? less material dupes.
 
 	for(size_t i=0; i<sphereList.size(); i++){
-		proto->setColor( sphereList[i].mat.col );
+		material_ext_t &mat = polyList[i].mat;
+		if(mat.isExtended) {
+			proto->setColor( (mat.amb+mat.dif+mat.spc) );
+		} else {
+			proto->setColor(  mat.dif );
+		}
 		proto->drawSphere( sphereList[i].pos, sphereList[i].radius );
 	}
 	for(size_t i=0; i<coneList.size(); i++){
-		proto->setColor( coneList[i].mat.col );
-		proto->drawCone( coneList[i].a, coneList[i].b, coneList[i].r1 );
+		material_ext_t &mat = polyList[i].mat;
+		if(mat.isExtended) {
+			proto->setColor( (mat.amb+mat.dif+mat.spc) );
+		} else {
+			proto->setColor( mat.dif );
+		}
+		//proto->drawCone( coneList[i].a, coneList[i].b, coneList[i].r1 );
 	}
 	for(size_t i=0; i<polyList.size(); i++){
-		proto->setColor( polyList[i].mat.col * 3.f );
-		glm::mat4 &xform = polyList[i].tform;
-		proto->setOrientation( xform );
-		proto->drawMesh( polyList[i].mesh, false );
+		const poly_t &poly = polyList[i];
+		const material_ext_t &mat = poly.mat;
+
+		if(mat.isExtended) {
+			proto->setColor( (mat.amb+mat.dif+mat.spc) );
+		} else {
+			proto->setColor( mat.dif );
+		}
+		//glm::mat4 &xform = polyList[i].tform;
+		//assert( poly.tform == glm::mat4(1.f) ); // could have tforms in some .aff-s TODO
+		proto->setOrientation( glm::mat4(1.f) );
+		bool isDoubleSided = polyList[i].mat.transmittance > 0.f;
+		if ( poly.texture != "" ) proto->setTexture( poly.texture );
+		proto->drawMesh( polyList[i].mesh, isDoubleSided ); // always doublesided
 	}
+
+	assert( sceneRoot.get() != nullptr );
 	sceneRoot->draw();
-	/*for(auto it=meshList.begin(); it!=meshList.end(); ++it) {
-		drawMesh( *it );
-	}*/
 	proto->setOrientation( glm::mat4(1.0f) );
 	proto->setBlend(false);
 
 	float speed = 0.25f;
-	speed += proto->getMouseWheel() * 0.25f;
-	if ( speed < 0.01f ) speed = 0.1f;
+	speed += proto->getMouseWheel() * 0.05f;
+	if ( speed < 0.01f ) speed = 0.01f;
 
 	proto->getCamera()->update( proto->keystatus(protowizard::KEY::LEFT), proto->keystatus(protowizard::KEY::RIGHT), proto->keystatus(protowizard::KEY::UP), proto->keystatus(protowizard::KEY::DOWN), (float)proto->getMouseX(), (float)proto->getMouseY(), proto->mouseDownLeft(), speed * proto->getMSPF() );
 
