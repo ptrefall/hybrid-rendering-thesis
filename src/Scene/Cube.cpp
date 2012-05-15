@@ -7,7 +7,7 @@
 #include <vector>
 
 using namespace Scene;
-using namespace Eigen;
+using namespace glm;
 
 Cube::Cube(const float &size)
 {
@@ -68,35 +68,35 @@ Cube::Cube(const float &size)
 	AvgCubeNormalsData n = calcAvgNormalsData();
 	float normals[] =	{
 								//TOP
-								n.n0.x(), n.n0.y(), n.n0.z(),
-								n.n1.x(), n.n1.y(), n.n1.z(),
-								n.n2.x(), n.n2.y(), n.n2.z(),
-								n.n3.x(), n.n3.y(), n.n3.z(),
+								n.n0.x, n.n0.y, n.n0.z,
+								n.n1.x, n.n1.y, n.n1.z,
+								n.n2.x, n.n2.y, n.n2.z,
+								n.n3.x, n.n3.y, n.n3.z,
 								//BOTTOM
-								n.n4.x(), n.n4.y(), n.n4.z(),
-								n.n5.x(), n.n5.y(), n.n5.z(),
-								n.n6.x(), n.n6.y(), n.n6.z(),
-								n.n7.x(), n.n7.y(), n.n7.z(),
+								n.n4.x, n.n4.y, n.n4.z,
+								n.n5.x, n.n5.y, n.n5.z,
+								n.n6.x, n.n6.y, n.n6.z,
+								n.n7.x, n.n7.y, n.n7.z,
 								//FRONT
-								n.n3.x(), n.n3.y(), n.n3.z(),
-								n.n2.x(), n.n2.y(), n.n2.z(),
-								n.n5.x(), n.n5.y(), n.n5.z(),
-								n.n4.x(), n.n4.y(), n.n4.z(),
+								n.n3.x, n.n3.y, n.n3.z,
+								n.n2.x, n.n2.y, n.n2.z,
+								n.n5.x, n.n5.y, n.n5.z,
+								n.n4.x, n.n4.y, n.n4.z,
 								//BACK
-								n.n7.x(), n.n7.y(), n.n7.z(),
-								n.n6.x(), n.n6.y(), n.n6.z(),
-								n.n1.x(), n.n1.y(), n.n1.z(),
-								n.n0.x(), n.n0.y(), n.n0.z(),
+								n.n7.x, n.n7.y, n.n7.z,
+								n.n6.x, n.n6.y, n.n6.z,
+								n.n1.x, n.n1.y, n.n1.z,
+								n.n0.x, n.n0.y, n.n0.z,
 								//LEFT
-								n.n2.x(), n.n2.y(), n.n2.z(),
-								n.n1.x(), n.n1.y(), n.n1.z(),
-								n.n6.x(), n.n6.y(), n.n6.z(),
-								n.n5.x(), n.n5.y(), n.n5.z(),
+								n.n2.x, n.n2.y, n.n2.z,
+								n.n1.x, n.n1.y, n.n1.z,
+								n.n6.x, n.n6.y, n.n6.z,
+								n.n5.x, n.n5.y, n.n5.z,
 								//RIGHT
-								n.n0.x(), n.n0.y(), n.n0.z(),
-								n.n3.x(), n.n3.y(), n.n3.z(),
-								n.n4.x(), n.n4.y(), n.n4.z(),
-								n.n7.x(), n.n7.y(), n.n7.z(),
+								n.n0.x, n.n0.y, n.n0.z,
+								n.n3.x, n.n3.y, n.n3.z,
+								n.n4.x, n.n4.y, n.n4.z,
+								n.n7.x, n.n7.y, n.n7.z,
 						};	// 72
 
 	float tex_coords[] =	{
@@ -153,14 +153,14 @@ Cube::Cube(const float &size)
 
 void Cube::render(const Render::ShaderPtr &active_program)
 {
-	Affine3f model = Affine3f::Identity();
-  model.matrix()(12) = position.x();
-	model.matrix()(13) = position.y();
-	model.matrix()(14) = position.z();
+	mat4 model = mat4(1.0);
+	model[3][0] = position.x;
+	model[3][1] = position.y;
+	model[3][2] = position.z;
 
-  static float var = 0.f;
+  /*static float var = 0.f;
   var += 1e-2;
-  model.rotate( AngleAxisf(var,  Vector3f::UnitY()) );
+  model.rotate( AngleAxisf(var,  vec3::UnitY()) );*/
   
 
   auto &proj = Camera::getSingleton()->getProjection();
@@ -168,25 +168,11 @@ void Cube::render(const Render::ShaderPtr &active_program)
 
   auto modelView = view * model;
   auto modelViewProj = proj * view * model;
-  auto mv_inv4x4 = modelView.inverse();
-  
-  Matrix3f mv_inv3x3;
-  Matrix3f model3x3;
+  auto normal = transpose(mat3(inverse(modelView)));
 
-  for(int i=0; i<3; i++){
-    for(int j=0; j<3; j++){
-      mv_inv3x3(i,j) = mv_inv4x4(i,j);
-      model3x3(i,j) = model(i,j);
-    }
-  }
-
-  auto normal = mv_inv3x3.transpose();
-  //auto worldRotationInverse = model3x3.transpose();
-  Matrix3f normalWorldRotationInverse = /*worldRotationInverse * */normal;
-
-  mvp->bind(modelViewProj.matrix());
-  mv->bind(modelView.matrix());
-  n_wri->bind(normalWorldRotationInverse);
+  mvp->bind(modelViewProj);
+  mv->bind(modelView);
+  n_wri->bind(normal);
 
 	if(tex)
 	{
@@ -217,37 +203,37 @@ Cube::AvgCubeNormalsData Cube::calcAvgNormalsData()
 {
 	AvgCubeNormalsData n;
 
-	n.n0 = Vector3f(0,1,0) + Vector3f(0,0,-1) + Vector3f(1,0,0);
+	n.n0 = vec3(0,1,0) + vec3(0,0,-1) + vec3(1,0,0);
 	n.n0 /= 3.0f;
-	n.n0.normalize();
+	n.n0 = normalize(n.n0);
 
-	n.n1 = Vector3f(0,1,0) + Vector3f(0,0,-1) + Vector3f(-1,0,0);
+	n.n1 = vec3(0,1,0) + vec3(0,0,-1) + vec3(-1,0,0);
 	n.n1 /= 3.0f;
-	n.n1.normalize();
+	n.n1 = normalize(n.n1);
 
-	n.n2 = Vector3f(0,1,0) + Vector3f(0,0,1) + Vector3f(-1,0,0);
+	n.n2 = vec3(0,1,0) + vec3(0,0,1) + vec3(-1,0,0);
 	n.n2 /= 3.0f;
-	n.n2.normalize();
+	n.n2 = normalize(n.n2);
 
-	n.n3 = Vector3f(0,1,0) + Vector3f(0,0,1) + Vector3f(1,0,0);
+	n.n3 = vec3(0,1,0) + vec3(0,0,1) + vec3(1,0,0);
 	n.n3 /= 3.0f;
-	n.n3.normalize();
+	n.n3 = normalize(n.n3);
 
-	n.n4 = Vector3f(0,-1,0) + Vector3f(0,0,1) + Vector3f(1,0,0);
+	n.n4 = vec3(0,-1,0) + vec3(0,0,1) + vec3(1,0,0);
 	n.n4 /= 3.0f;
-	n.n4.normalize();
+	n.n4 = normalize(n.n4);
 
-	n.n5 = Vector3f(0,-1,0) + Vector3f(0,0,1) + Vector3f(-1,0,0);
+	n.n5 = vec3(0,-1,0) + vec3(0,0,1) + vec3(-1,0,0);
 	n.n5 /= 3.0f;
-	n.n5.normalize();
+	n.n5 = normalize(n.n5);
 
-	n.n6 = Vector3f(0,-1,0) + Vector3f(0,0,-1) + Vector3f(-1,0,0);
+	n.n6 = vec3(0,-1,0) + vec3(0,0,-1) + vec3(-1,0,0);
 	n.n6 /= 3.0f;
-	n.n6.normalize();
+	n.n6 = normalize(n.n6);
 
-	n.n7 = Vector3f(0,-1,0) + Vector3f(0,0,-1) + Vector3f(1,0,0);
+	n.n7 = vec3(0,-1,0) + vec3(0,0,-1) + vec3(1,0,0);
 	n.n7 /= 3.0f;
-	n.n7.normalize();
+	n.n7 = normalize(n.n7);
 
 	return n;
 }

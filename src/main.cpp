@@ -188,7 +188,7 @@ void loadScene()
 		cube->setTexture(array_tex, array_sampler);
 		cube->setMaterial(basic_cube_mat);
 		scene->add(cube);
-		cube->setPosition( Eigen::Vector3f(10,-8,20) );
+		cube->setPosition( glm::vec3(10,-8,20) );
 	}
 
 	Scene::CubePtr cube2 = std::make_shared<Scene::Cube>(.5f);
@@ -199,6 +199,6 @@ void loadScene()
 		cube2->setTexture(array_tex, array_sampler);
 		cube2->setMaterial(red_cube_mat);
 		scene->add(cube2);
-		cube2->setPosition( Eigen::Vector3f(10,-4,20) );
+		cube2->setPosition( glm::vec3(10,-4,20) );
 	}
 }

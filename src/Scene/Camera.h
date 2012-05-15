@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Eigen/Geometry>
+#include <glm/ext.hpp>
 #include <memory>
 
 namespace Scene
@@ -16,28 +16,28 @@ namespace Scene
 
         void init(unsigned int w, unsigned int h, float fov, float near, float far);
 
-    const Eigen::Matrix4f &updateProjection(unsigned int w, unsigned int h, float fov, float near, float far);
-    const Eigen::Affine3f &updateView();
+    const glm::mat4 &updateProjection(unsigned int w, unsigned int h, float fov, float near, float far);
+    const glm::mat4 &updateView();
 
-    const Eigen::Matrix4f &getProjection() const { return projection; }
-    const Eigen::Affine3f &getView() const { return view; }
+    const glm::mat4 &getProjection() const { return projection; }
+    const glm::mat4 &getView() const { return view; }
+	
+    void setPosition( const glm::vec3 &position ) { this->position = position; }
+    void setOrientation( const glm::quat &orientation) { this->orientation = orientation; }
 
-    void setPosition( const Eigen::Vector3f &position ) { this->position = position; }
-    void setOrientation( const Eigen::Quaternionf &orientation) { this->orientation = orientation; }
+    const glm::vec3 &getPosition() const { return position; }
 
-    const Eigen::Vector3f &getPosition() const { return position; }
-
-    void setDirection(const Eigen::Vector3f &direction);
-    void setTarget(const Eigen::Vector3f &position);
+    void setDirection(const glm::vec3 &direction);
+    void setTarget(const glm::vec3 &position);
 
     static CameraPtr active_camera;
 
 	private:
         static CameraPtr singleton;
-		Eigen::Matrix4f projection;
-		Eigen::Affine3f view;
+		glm::mat4 projection;
+		glm::mat4 view;
 
-    Eigen::Quaternionf orientation;
-    Eigen::Vector3f position;
+    glm::quat orientation;
+    glm::vec3 position;
 	};
 }

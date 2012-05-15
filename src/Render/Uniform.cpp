@@ -22,24 +22,24 @@ void Uniform::bind(float data)
 	glProgramUniform1f(program, location, data);
 }
 
-void Uniform::bind(const Eigen::Vector2f &data)
+void Uniform::bind(const glm::vec2 &data)
 {
 	glProgramUniform2fv(program, location, 1, &data[0]);
 }
 
-void Uniform::bind(const Eigen::Vector3f &data)
+void Uniform::bind(const glm::vec3 &data)
 {
 	glProgramUniform3fv(program, location, 1, &data[0]);
 }
 
-void Uniform::bind(const Eigen::Matrix3f &data)
+void Uniform::bind(const glm::mat3 &data)
 {
-	glProgramUniformMatrix3fv(program, location, 1, GL_FALSE, &data(0));
+	glProgramUniformMatrix3fv(program, location, 1, GL_FALSE, &data[0][0]);
 }
 
-void Uniform::bind(const Eigen::Matrix4f &data)
+void Uniform::bind(const glm::mat4 &data)
 {
-	glProgramUniformMatrix4fv(program, location, 1, GL_FALSE, &data(0));
+	glProgramUniformMatrix4fv(program, location, 1, GL_FALSE, &data[0][0]);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -66,7 +66,7 @@ void Uniform::bind(float data, unsigned int program)
 	glProgramUniform1f(program, location, data);
 }
 
-void Uniform::bind(const Eigen::Vector2f &data, unsigned int program)
+void Uniform::bind(const glm::vec2 &data, unsigned int program)
 {
 	if(location < 0)
 		location = glGetUniformLocation(program, name.c_str());
@@ -74,7 +74,7 @@ void Uniform::bind(const Eigen::Vector2f &data, unsigned int program)
 	glProgramUniform2fv(program, location, 1, &data[0]);
 }
 
-void Uniform::bind(const Eigen::Vector3f &data, unsigned int program)
+void Uniform::bind(const glm::vec3 &data, unsigned int program)
 {
 	if(location < 0)
 		location = glGetUniformLocation(program, name.c_str());
@@ -82,18 +82,18 @@ void Uniform::bind(const Eigen::Vector3f &data, unsigned int program)
 	glProgramUniform3fv(program, location, 1, &data[0]);
 }
 
-void Uniform::bind(const Eigen::Matrix3f &data, unsigned int program)
+void Uniform::bind(const glm::mat3 &data, unsigned int program)
 {
 	if(location < 0)
 		location = glGetUniformLocation(program, name.c_str());
 
-	glProgramUniformMatrix3fv(program, location, 1, GL_FALSE, &data(0));
+	glProgramUniformMatrix3fv(program, location, 1, GL_FALSE, &data[0][0]);
 }
 
-void Uniform::bind(const Eigen::Matrix4f &data, unsigned int program)
+void Uniform::bind(const glm::mat4 &data, unsigned int program)
 {
 	if(location < 0)
 		location = glGetUniformLocation(program, name.c_str());
 
-	glProgramUniformMatrix4fv(program, location, 1, GL_FALSE, &data(0));
+	glProgramUniformMatrix4fv(program, location, 1, GL_FALSE, &data[0][0]);
 }
