@@ -1,11 +1,11 @@
 #include "SceneNode.h"
 
 using namespace Scene;
-using namespace Eigen;
+using namespace glm;
 
 SceneNode::SceneNode()
 {
-	position = Vector3f(0.0f, 0.0f, 0.0f);
+	position = vec3(0.0f, 0.0f, 0.0f);
 }
 
 void SceneNode::setTexture(const Render::Tex2DPtr &tex, const Render::SamplerPtr &sampler) 

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <GL3\gl3w.h>
-#include <Eigen\Eigen>
+#include <glm/glm.hpp>
 
 #include <memory>
 #include <string>

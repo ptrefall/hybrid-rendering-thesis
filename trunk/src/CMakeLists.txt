@@ -164,7 +164,7 @@ find_package(CUDA REQUIRED)
 find_package(Optix REQUIRED)
 find_package(DevIL REQUIRED)
 
-add_definitions(-DFREEGLUT_STATIC -DEIGEN_DONT_VECTORIZE -DEIGEN_DISABLE_UNALIGNED_ARRAY_ASSERT)
+add_definitions(-DFREEGLUT_STATIC)
 
 target_link_libraries(HybridMethods
 	OpenGL32

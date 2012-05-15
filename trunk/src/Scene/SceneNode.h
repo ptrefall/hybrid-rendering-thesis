@@ -7,7 +7,7 @@
 #include "../Render/Material.h"
 #include "../Render/Shader.h"
 
-#include <Eigen/Eigen>
+#include <glm/glm.hpp>
 #include <Eigen/Geometry>
 
 #include <memory>
@@ -28,7 +28,7 @@ namespace Scene
 		void setMV(const Render::UniformPtr &mv) { this->mv = mv; }
 		void setN_WRI(const Render::UniformPtr &n_wri) { this->n_wri = n_wri; }
 
-		void setPosition(const Eigen::Vector3f &position) { this->position = position; }
+		void setPosition(const glm::vec3 &position) { this->position = position; }
 
 		void setTexture(const Render::Tex2DPtr &tex, const Render::SamplerPtr &sampler);
 		void setTexture(const Render::Tex2DArrayPtr &tex_array, const Render::SamplerPtr &sampler);
@@ -45,7 +45,7 @@ namespace Scene
 
 		Render::MaterialPtr material;
 
-		Eigen::Vector3f position;
+		glm::vec3 position;
 		//Eigen::Transform< model;
 	};
 }

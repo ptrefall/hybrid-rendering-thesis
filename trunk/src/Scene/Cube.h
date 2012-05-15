@@ -6,7 +6,7 @@
 
 #include "SceneNode.h"
 
-#include <Eigen/Eigen>
+#include <glm/glm.hpp>
 #include <memory>
 
 namespace Scene
@@ -24,14 +24,14 @@ namespace Scene
 	private:
 		struct AvgCubeNormalsData
 		{
-			Eigen::Vector3f n0;
-			Eigen::Vector3f n1;
-			Eigen::Vector3f n2;
-			Eigen::Vector3f n3;
-			Eigen::Vector3f n4;
-			Eigen::Vector3f n5;
-			Eigen::Vector3f n6;
-			Eigen::Vector3f n7;
+			glm::vec3 n0;
+			glm::vec3 n1;
+			glm::vec3 n2;
+			glm::vec3 n3;
+			glm::vec3 n4;
+			glm::vec3 n5;
+			glm::vec3 n6;
+			glm::vec3 n7;
 		};
 		AvgCubeNormalsData calcAvgNormalsData();
 

@@ -128,22 +128,22 @@ Context OptixRender::createContext()
   auto &pos = camera->getPosition();
   
   float3 cam_eye;// = { camera->getPosition().x, camera->getPosition().y, camera->getPosition().z };
-  cam_eye.x = pos.x();
-  cam_eye.y = pos.y();
-  cam_eye.z = pos.z();
+  cam_eye.x = pos.x;
+  cam_eye.y = pos.y;
+  cam_eye.z = pos.z;
 
   float3 camera_u, camera_v, camera_w;
-  camera_u.x = view(0, 0); 
-  camera_u.y = view(1, 0); 
-  camera_u.z = view(2, 0);
+  camera_u.x = view[0][0]; 
+  camera_u.y = view[1][0]; 
+  camera_u.z = view[2][0];
 
-  camera_v.x = view(0, 1); 
-  camera_v.y = view(1, 1); 
-  camera_v.z = view(2, 1);
+  camera_v.x = view[0][1]; 
+  camera_v.y = view[1][1]; 
+  camera_v.z = view[2][1];
 
-  camera_w.x = view(0, 2); 
-  camera_w.y = view(1, 2); 
-  camera_w.z = view(2, 2);
+  camera_w.x = view[0][2]; 
+  camera_w.y = view[1][2]; 
+  camera_w.z = view[2][2];
  
   context["eye"]->setFloat( cam_eye );
   context["U"]->setFloat( camera_u );
