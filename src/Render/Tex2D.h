@@ -28,8 +28,13 @@ namespace Render
 	class Tex2D
 	{
 	public:
+		Tex2D();
 		Tex2D(const T2DTexParams &tex_params);
 		~Tex2D();
+
+		void init(const T2DTexParams &tex_params);
+		void update(const T2DTexParams &tex_params);
+		void reset();
 
 		void bind();
 		void unbind();

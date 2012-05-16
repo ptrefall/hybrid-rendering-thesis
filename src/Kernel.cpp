@@ -95,7 +95,7 @@ void Kernel::init(int argc, char** argv)
     //////////////////////////////////////////
 	// DEFERRED RENDERER INITIALIZING
 	//////////////////////////////////////////
-    //raytracer = std::make_shared<Raytracer::OptixRender>(g_buffer, width, height, base_dir + "optix\\");
+    raytracer = std::make_shared<Raytracer::OptixRender>(g_buffer, width, height, resource_dir + "optix\\");
 
 	//////////////////////////////////////////
 	// SCENE INITIALIZING
@@ -120,7 +120,7 @@ void Kernel::render()
 	renderer->render();
 
     //Raytrace
-    //raytracer->render();
+    raytracer->render();
 }
 
 void Kernel::reshape(int w, int h)
@@ -132,19 +132,19 @@ void Kernel::reshape(int w, int h)
 void Kernel::inputKeyDown(unsigned char key, int x, int y)
 {
 	keystatus[key] = true;
-	mouse.coords = glm::ivec2(x,y);
+	//mouse.coords = glm::ivec2(x,y);
 }
 
 void Kernel::inputKeyUp(unsigned char key, int x, int y)
 {
 	keystatus[key] = false;
-	mouse.coords = glm::ivec2(x,y);
+	//mouse.coords = glm::ivec2(x,y);
 }
 
 void Kernel::input(int key, int x, int y)
 {
 	// Special keys ALT CTRL etc.
-	mouse.coords = glm::ivec2(x,y);
+	//mouse.coords = glm::ivec2(x,y);
 }
 
 void Kernel::motion(int x, int y)
@@ -168,7 +168,7 @@ void Kernel::mousePressed(int button, int state, int x, int y)
 		mouse.rightPressed = (state==PRESSED);
 	}
 
-	mouse.coords = glm::ivec2(x,y);
+	//mouse.coords = glm::ivec2(x,y);
 }
 
 void Kernel::initScene()
@@ -182,8 +182,8 @@ void Kernel::initScene()
 	//auto tex_sampler = std::make_shared<Render::Uniform>(g_buffer->getShader()->getFS(), "diffuse_tex");
 
 	//auto array_tex = tex_loader->load_array("array.png", 16, 16, 2, 2, GL_REPEAT);
-	auto array_tex = tex_loader->load("cube.jpg", GL_REPEAT);
-	auto array_sampler = std::make_shared<Render::Sampler>(GL_REPEAT);
+	auto array_tex = tex_loader->load("cube.jpg");
+	auto array_sampler = std::make_shared<Render::Sampler>();
 
 	auto basic_cube_mat = renderer->addMaterial(mat_loader->load("basic_cube.mat"));
 	auto red_cube_mat = renderer->addMaterial(mat_loader->load("red_cube.mat"));
@@ -194,7 +194,7 @@ void Kernel::initScene()
 		cube->setMVP(	g_buffer->getMVP());
 		cube->setMV(	g_buffer->getMV());
 		cube->setN_WRI(	g_buffer->getN_WRI());
-		cube->setTexture(array_tex, array_sampler);
+		cube->setTexture(raytracer->getRenderTexture(), array_sampler);
 		cube->setMaterial(basic_cube_mat);
 		scene->add(cube);
 		cube->setPosition( glm::vec3(5,5,-20) );

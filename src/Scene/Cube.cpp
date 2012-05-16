@@ -156,6 +156,9 @@ Cube::Cube(const float &size)
 void Cube::render(const Render::ShaderPtr &active_program)
 {
 	mat4 model = glm::translate(position);
+	static float var = 0.f;
+	var += 0.1f;
+	model = glm::rotate<float>(model, var, vec3(0,1,0));
 
 	  /*static float var = 0.f;
 	  var += 1e-2;
