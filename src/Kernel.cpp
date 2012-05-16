@@ -148,7 +148,7 @@ void Kernel::initScene()
 	//auto tex_sampler = std::make_shared<Render::Uniform>(g_buffer->getShader()->getFS(), "diffuse_tex");
 
 	//auto array_tex = tex_loader->load_array("array.png", 16, 16, 2, 2, GL_REPEAT);
-	auto array_tex = tex_loader->load("terminal.png", GL_REPEAT);
+	auto array_tex = tex_loader->load("cube.jpg", GL_REPEAT);
 	auto array_sampler = std::make_shared<Render::Sampler>(GL_REPEAT);
 
 	auto basic_cube_mat = renderer->addMaterial(mat_loader->load("basic_cube.mat"));
@@ -163,7 +163,7 @@ void Kernel::initScene()
 		cube->setTexture(array_tex, array_sampler);
 		cube->setMaterial(basic_cube_mat);
 		scene->add(cube);
-		cube->setPosition( glm::vec3(10,-8,20) );
+		cube->setPosition( glm::vec3(10,8,-20) );
 	}
 
 	Scene::CubePtr cube2 = std::make_shared<Scene::Cube>(.5f);
@@ -174,6 +174,6 @@ void Kernel::initScene()
 		cube2->setTexture(array_tex, array_sampler);
 		cube2->setMaterial(red_cube_mat);
 		scene->add(cube2);
-		cube2->setPosition( glm::vec3(10,-4,20) );
+		cube2->setPosition( glm::vec3(10,4,-20) );
 	}
 }

@@ -4,6 +4,8 @@
 #include "../Render/ATTRIB.h"
 #include "../Render/ShaderConstants.h"
 
+#include <glm/ext.hpp>
+
 #include <vector>
 
 using namespace Scene;
@@ -153,14 +155,11 @@ Cube::Cube(const float &size)
 
 void Cube::render(const Render::ShaderPtr &active_program)
 {
-	mat4 model = mat4(1.0);
-	model[3][0] = position.x;
-	model[3][1] = position.y;
-	model[3][2] = position.z;
+	mat4 model = glm::translate(position);
 
-  /*static float var = 0.f;
-  var += 1e-2;
-  model.rotate( AngleAxisf(var,  vec3::UnitY()) );*/
+	  /*static float var = 0.f;
+	  var += 1e-2;
+	  model.rotate( AngleAxisf(var,  vec3::UnitY()) );*/
   
 
   auto &proj = FirstPersonCamera::getSingleton()->getProjection();
