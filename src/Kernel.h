@@ -55,6 +55,16 @@ public:
 	int getOpenGLVersionMinor() const;
 	std::string getOpenGLVersionString() const;
 
+public:
+	Render::GBufferPtr getGBuffer() const { return g_buffer; }
+	Render::DeferredRenderPtr getRenderer() const { return renderer; }
+	Raytracer::OptixRenderPtr getRaytracer() const { return raytracer; }
+	File::ShaderLoaderPtr getShaderLoader() const { return shader_loader; }
+	File::TextureLoaderPtr getTextureLoader() const { return tex_loader; }
+	File::MaterialLoaderPtr getMaterialLoader() const { return mat_loader; }
+	Scene::SceneManagerPtr getSceneManager() const { return scene; }
+	Scene::FirstPersonCameraPtr getActiveCamera() const { return camera; }
+
 private:
 #if(_MSC_VER >= 1700)
 	friend class std::_Ref_count_obj<Kernel>;
@@ -81,7 +91,6 @@ private:
 	File::TextureLoaderPtr tex_loader;
 	File::MaterialLoaderPtr mat_loader;
 	Scene::SceneManagerPtr scene;
-  
     Scene::FirstPersonCameraPtr camera;
 	glm::ivec2 mouse;
 };
