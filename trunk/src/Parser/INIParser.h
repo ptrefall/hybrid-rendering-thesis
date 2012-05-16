@@ -1,3 +1,5 @@
+#pragma once
+
 #include <cstdio>
 #include <fstream>
 #include <string>
@@ -41,12 +43,12 @@ namespace ini
 	}
 
 	// only trims end whitespace 
-	std::string trim2( std::string str ) {
+	static inline std::string trim2( std::string str ) {
 		str.erase(str.find_last_not_of(" \n\r\t")+1);
 		return str;
 	}
 	
-	std::string eraseAfterFirst(std::string str, char c)
+	static inline std::string eraseAfterFirst(std::string str, char c)
 	{
 		size_t idx = str.find_first_of(c);
 		if (idx != -1) {
