@@ -181,6 +181,7 @@ void Cube::render(const Render::ShaderPtr &active_program)
 		glActiveTexture(GL_TEXTURE0);
 		tex->bind();
 		tex_sampler->bind(0);
+		tex_uniform->bind(0);
 	}
 	if(material)
 		material->bind_id(active_program->getFS());

@@ -29,8 +29,8 @@ namespace Scene
 
 		void setPosition(const glm::vec3 &position) { this->position = position; }
 
-		void setTexture(const Render::Tex2DPtr &tex, const Render::SamplerPtr &sampler);
-		void setTexture(const Render::Tex2DArrayPtr &tex_array, const Render::SamplerPtr &sampler);
+		void setTexture(const Render::Tex2DPtr &tex, const Render::UniformPtr &uniform, const Render::SamplerPtr &sampler);
+		void setTexture(const Render::Tex2DArrayPtr &tex_array, const Render::UniformPtr &uniform, const Render::SamplerPtr &sampler);
 		void setMaterial(const Render::MaterialPtr &material) { this->material = material; }
 
 	protected:
@@ -40,6 +40,7 @@ namespace Scene
 
 		Render::Tex2DPtr tex;
 		Render::Tex2DArrayPtr tex_array;
+		Render::UniformPtr tex_uniform;
 		Render::SamplerPtr tex_sampler;
 
 		Render::MaterialPtr material;
