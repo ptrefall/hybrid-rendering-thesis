@@ -35,12 +35,14 @@ public:
 
 	void config(const std::string &resource_dir);
 	void init(int argc, char** argv);
+	void initScene(); //Will be deprecated at some point...
 
 	void render();
 	void reshape(int w, int h);
 
 	void input(unsigned char key, int x, int y);
 	void input(int key, int x, int y);
+	void motion(int x, int y);
 
 public:
 	const std::string &getResourceDir() const { return resource_dir; }
