@@ -12,8 +12,10 @@
 void display();
 void reshape(int w, int h);
 void keyboard(unsigned char key, int x, int y);
+void keyboardUp(unsigned char key, int x, int y);
 void special(int key, int x, int y);
 void motion(int x, int y);
+void mousePressed(int button, int state, int posX, int posY);
 
 int main(int argc, char** argv)
 {
@@ -76,8 +78,10 @@ int main(int argc, char** argv)
 	glutDisplayFunc(display); 
 	glutReshapeFunc(reshape);
 	glutKeyboardFunc(keyboard);
+	glutKeyboardUpFunc(keyboardUp);
 	glutSpecialFunc(special);
 	glutMotionFunc(motion);
+	glutMouseFunc(mousePressed);
 
 	//////////////////////////////////////////
 	// KERNEL INITIALIZATION
@@ -111,7 +115,16 @@ void keyboard(unsigned char key, int x, int y)
 	if(key == 27)
 		glutLeaveMainLoop();
 
-	Kernel::getSingleton()->input(key, x,y);
+	Kernel::getSingleton()->inputKeyDown(key, x,y);
+}
+
+void keyboardUp(unsigned char key, int x, int y)
+{
+	//ESCAPE KEY
+	if(key == 27)
+		glutLeaveMainLoop();
+
+	Kernel::getSingleton()->inputKeyUp(key, x,y);
 }
 
 void special(int key, int x, int y)
@@ -123,3 +136,10 @@ void motion(int x, int y)
 {
 	Kernel::getSingleton()->motion(x,y);
 }
+
+void mousePressed(int button, int state, int x, int y)
+{
+	Kernel::getSingleton()->mousePressed(button, state, x, y);
+}
+
+

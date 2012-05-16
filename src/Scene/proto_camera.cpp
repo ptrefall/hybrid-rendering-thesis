@@ -73,8 +73,8 @@ void FirstPersonCamera::update(bool left_key, bool right_key, bool back_key, boo
 	oldmousy = mouse_y;
 	if ( mouse_is_down )
 	{	
-		hang += mouse_speed_x * 0.5f;
-		vang += mouse_speed_y * 0.5f;
+		hang += mouse_speed_x * 0.05f;
+		vang += mouse_speed_y * 0.05f;
 	}
 	float speed = delta * 50.0f; // meters per second
 
@@ -82,7 +82,8 @@ void FirstPersonCamera::update(bool left_key, bool right_key, bool back_key, boo
 	glm::mat4 rmy = glm::rotate( glm::mat4(1.0f), hang, cameraUp );
 	glm::mat4 rotMat = rmx * rmy;
 
-	glm::vec4 moveDir( speed * (left_key-right_key), 0.0f, speed * (back_key - forwards_key), 0.0f );
+	//glm::vec4 moveDir( speed * (left_key-right_key), 0.0f, speed * (back_key - forwards_key), 0.0f );
+	glm::vec4 moveDir( speed * (left_key-right_key), 0.0f, speed * (forwards_key-back_key), 0.0f );
 	glm::vec4 lookDir = moveDir * rotMat;
 	glm::vec3 newPos = getPos() + glm::vec3( lookDir );
 

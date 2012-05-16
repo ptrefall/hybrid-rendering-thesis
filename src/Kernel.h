@@ -39,10 +39,11 @@ public:
 
 	void render();
 	void reshape(int w, int h);
-
-	void input(unsigned char key, int x, int y);
+	void inputKeyDown(unsigned char key, int x, int y);
+	void inputKeyUp(unsigned char key, int x, int y);
 	void input(int key, int x, int y);
 	void motion(int x, int y);
+	void mousePressed(int button, int state, int x, int y);
 
 public:
 	const std::string &getResourceDir() const { return resource_dir; }
@@ -94,5 +95,14 @@ private:
 	File::MaterialLoaderPtr mat_loader;
 	Scene::SceneManagerPtr scene;
     Scene::FirstPersonCameraPtr camera;
-	glm::ivec2 mouse;
+	
+	const static int MAX_KEYS = 256;
+	bool keystatus[MAX_KEYS];
+	
+	struct mouseDef
+	{
+		bool leftPressed;
+		bool rightPressed;
+		glm::ivec2 coords;
+	} mouse;
 };
