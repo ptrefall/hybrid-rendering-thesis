@@ -43,7 +43,7 @@ namespace ini
 			return ltrim(rtrim(s));
 	}
 	
-	std::string eraseAfterFirst(std::string str, char c)
+	static inline std::string eraseAfterFirst(std::string str, char c)
 	{
 		size_t idx = str.find_first_of(c);
 		if (idx != -1) {
