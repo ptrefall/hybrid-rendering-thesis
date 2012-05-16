@@ -8,8 +8,9 @@
 #include <vector>
 #include <sstream>
 #include <algorithm>
-#include <functional>
 #include <cctype> // isspace
+#include <functional>
+#include <glm/glm.hpp>
 
 //////////////////////////////////////////////
 // Written by Torbjoern Haugen
@@ -41,14 +42,8 @@ namespace ini
 	static inline std::string &trim(std::string &s) {
 			return ltrim(rtrim(s));
 	}
-
-	// only trims end whitespace 
-	static inline std::string trim2( std::string str ) {
-		str.erase(str.find_last_not_of(" \n\r\t")+1);
-		return str;
-	}
 	
-	static inline std::string eraseAfterFirst(std::string str, char c)
+	std::string eraseAfterFirst(std::string str, char c)
 	{
 		size_t idx = str.find_first_of(c);
 		if (idx != -1) {
@@ -67,72 +62,7 @@ namespace ini
 		{
 			parse();
 		}
-		
-		void createSection( std::ifstream& in, const std::string& sectionName )
-		{
-			section_t sec;
-			sec.sectionName = sectionName;
-			sections.push_back( sec );
 			
-			// look for a names
-			std::string str;
-			while( std::getline(in,str) )
-			{
-				str = eraseAfterFirst(str, ';'); // Remove comment
-				
-				if ( str.size() == 0 ) 
-					continue; // first char was a comment
-				else if ( str[0] == '[' )
-				{
-					for(size_t i=0; i<str.size()+1; i++){
-						in.unget(); // found a new section. go back 1 line
-					}
-					return; 
-				}
-				else if( str[0] == ' ' || str[0] == ';' ) 
-				{
-					// ignore empty lines
-				}
-				else
-				{
-					size_t pos = str.find_first_of('='); // property = value
-					if ( pos != -1 ){
-						std::string propName = str.substr(0, pos); // property
-						std::string value = str.substr(pos+1); // value
-						
-						
-						
-						propName = trim(propName);
-						value = trim(value);	
-						
-						section_t &sec = sections.back();
-						sec.values[propName] = value;
-					}
-					
-				}
-			}
-		}
-		
-		
-		void parse()
-		{
-			std::ifstream in( filepath );
-			
-			// look for a section
-			std::string str;
-			while( std::getline(in,str) )
-			{
-				if( str.length() ) // ignore empty lines
-				{
-					if ( str[0] == '[' )
-					{
-						std::string sectionName = str.substr(1, str.size()-2 );
-						createSection( in, sectionName );
-					}
-				}
-			}
-		}
-		
 		bool getBool( const char* section, const char* property, bool defaultValue )
 		{
 			return getProperty<bool>( section, property, defaultValue );
@@ -152,28 +82,19 @@ namespace ini
 		{
 			return getProperty<std::string>( section, property, defaultValue );
 		}
-		
+				
 		template <typename T> 
 		bool getProperty( const char* section, const char* property, bool defaultValue )
 		{
-			for(auto it=sections.begin(); it!=sections.end(); ++it)
+			std::string val = getValue(section, property);
+			if ( val != "" )
 			{
-				if ( (*it).sectionName == section ) {
-					
-					const PropertyValueMap &values = (*it).values;
-					
-					auto mapIt = values.find(property);
-					if ( mapIt != values.end() ) {
-						std::string str = mapIt->second;
-						std::transform( str.begin(), str.end(), str.begin(), tolower );
-						
-						if ( str == "true" ) {
-							return true;
-						} else {
-							return false;
-						}
-						
-					}					
+				std::transform( val.begin(), val.end(), val.begin(), tolower );
+				
+				if ( val == "true" ) {
+					return true;
+				} else {
+					return false;
 				}
 			}
 			return defaultValue;
@@ -182,28 +103,45 @@ namespace ini
 		template <typename T> 
 		T getProperty( const char* section, const char* property, T defaultValue )
 		{
-			for(auto it=sections.begin(); it!=sections.end(); ++it)
+			std::string val = getValue(section, property);
+			if ( val != "" )
 			{
-				if ( (*it).sectionName == section ) {
-					
-					const PropertyValueMap &values = (*it).values;
-					
-					auto mapIt = values.find(property);
-					if ( mapIt != values.end() ) {
-					
-						std::string str = mapIt->second;
-						/*std::cout << "sect: " << section;
-						std::cout << "prop: " << property;
-						std::cout << "val: " << str;
-						std::cout << std::endl;*/
-						std::stringstream sstream;
-						sstream << str;
-						T tmp;
-						sstream >> tmp;
-						return tmp;
-						
-					}					
+				std::stringstream sstream;
+				sstream << val;
+				T tmp;
+				sstream >> tmp;
+				return tmp;
+			}
+			return defaultValue;
+		}
+				
+		glm::vec2 getVec2( const char* section, const char* property, glm::vec2 defaultValue )
+		{
+			return getVec<glm::vec2>( section, property, defaultValue );
+		}
+		glm::vec3 getVec3( const char* section, const char* property, glm::vec3 defaultValue )
+		{
+			return getVec<glm::vec3>( section, property, defaultValue );
+		}
+		glm::vec4 getVec4( const char* section, const char* property, glm::vec4 defaultValue )
+		{
+			glm::vec4 v;
+			return getVec<glm::vec4>( section, property, defaultValue );
+		}
+		
+		template <typename T>
+		T getVec( const char* section, const char* property, T defaultValue )
+		{
+			std::string val = getValue(section, property);
+			if ( val != "" ) {
+				T v(0);
+				size_t components = sizeof(T)/sizeof(float);
+				std::stringstream sstream;
+				sstream << val;
+				for(size_t i=0; i<components; i++){
+					sstream >> v[i];
 				}
+				return v;
 			}
 			return defaultValue;
 		}
@@ -222,6 +160,86 @@ namespace ini
 			}
 		}
 	
+		private:
+			
+		std::string getValue( const char* section, const char* property )
+		{
+			for(auto it=sections.begin(); it!=sections.end(); ++it)
+			{
+				if ( (*it).sectionName == section ) {
+					
+					const PropertyValueMap &values = (*it).values;
+					
+					auto mapIt = values.find(property);
+					if ( mapIt != values.end() ) {
+						return (*mapIt).second;
+					}
+						
+				}
+			}
+			return "";
+		}
+		
+		void createSection( std::ifstream& in, const std::string& sectionName )
+		{
+			section_t sec;
+			sec.sectionName = sectionName;
+			sections.push_back( sec );
+			
+			// look for value names
+			std::string str;
+			while( std::getline(in,str) )
+			{
+				str = eraseAfterFirst(str, ';'); // Remove comment
+				if ( str.size() == 0 ) continue; // first char was a comment
+
+				if ( str[0] == '[' )
+				{
+					for(size_t i=0; i<str.size()+1; i++){
+						in.unget(); // found a new section. go back 1 line
+					}
+					return; 
+				}
+				else if( str[0] == ' ' || str[0] == ';' ) 
+				{
+					// ignore empty lines
+				}
+				else
+				{
+					size_t pos = str.find_first_of('='); // property = value
+					if ( pos != -1 ){
+						std::string propName = str.substr(0, pos); // property
+						std::string value = str.substr(pos+1); // value
+						
+						propName = trim(propName);
+						value = trim(value);	
+						
+						section_t &sec = sections.back();
+						sec.values[propName] = value;
+					}
+					
+				}
+			}
+		}
+		
+		void parse()
+		{
+			std::ifstream in( filepath );
+			
+			// look for a section
+			std::string str;
+			while( std::getline(in,str) )
+			{
+				if( str.length() ) // ignore empty lines
+				{
+					if ( str[0] == '[' )	
+					{
+						std::string sectionName = str.substr(1, str.size()-2 );
+						createSection( in, sectionName );
+					}
+				}
+			}
+		}
 	};
 
 } // end namespace

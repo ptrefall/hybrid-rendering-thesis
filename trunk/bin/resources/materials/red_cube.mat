@@ -1,15 +1,7 @@
 [Material]
-ambient_r = 0.2
-ambient_g = 0.2
-ambient_b = 0.2
-
-diffuse_r = 1.0
-diffuse_g = 0.0
-diffuse_b = 0.0
-
-specular_r = 0.5
-specular_g = 0.5
-specular_b = 0.5
+ambient = 0.2 0.2 0.2
+diffuse = 1.0 0.0 0.0
+specular = 0.5 0.5 0.5
 
 phong_pow = 1.0
 transparency = 1.0

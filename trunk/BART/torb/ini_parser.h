@@ -1,3 +1,5 @@
+#pragma once
+
 #include <cstdio>
 #include <fstream>
 #include <string>
@@ -9,6 +11,11 @@
 #include <cctype> // isspace
 #include <functional>
 #include <glm/glm.hpp>
+
+//////////////////////////////////////////////
+// Written by Torbjoern Haugen
+// Free for all use, but at your own risk!
+//////////////////////////////////////////////
 
 namespace ini
 {
