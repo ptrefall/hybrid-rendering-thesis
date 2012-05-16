@@ -1,11 +1,32 @@
 #pragma once
 
+#include <glm/glm.hpp>
+
 #include <memory>
 #include <string>
 
-class Kernel;
-typedef std::shared_ptr<Kernel> KernelPtr;
+namespace Render
+{
+	class GBuffer; typedef std::shared_ptr<GBuffer> GBufferPtr;
+	class DeferredRender; typedef std::shared_ptr<DeferredRender> DeferredRenderPtr;
+}
+namespace Raytracer
+{
+	class OptixRender; typedef std::shared_ptr<OptixRender> OptixRenderPtr;
+}
+namespace File
+{
+	class ShaderLoader; typedef std::shared_ptr<ShaderLoader> ShaderLoaderPtr;
+	class TextureLoader; typedef std::shared_ptr<TextureLoader> TextureLoaderPtr;
+	class MaterialLoader; typedef std::shared_ptr<MaterialLoader> MaterialLoaderPtr;
+}
+namespace Scene
+{
+	class SceneManager; typedef std::shared_ptr<SceneManager> SceneManagerPtr;
+	class FirstPersonCamera; typedef std::shared_ptr<FirstPersonCamera> FirstPersonCameraPtr;
+}
 
+class Kernel; typedef std::shared_ptr<Kernel> KernelPtr;
 class Kernel
 {
 public:
@@ -51,4 +72,16 @@ private:
 	int refresh_rate;
 	int fullscreen;
 	int game_mode;
+
+private:
+	Render::GBufferPtr g_buffer;
+	Render::DeferredRenderPtr renderer;
+    Raytracer::OptixRenderPtr raytracer;
+	File::ShaderLoaderPtr shader_loader;
+	File::TextureLoaderPtr tex_loader;
+	File::MaterialLoaderPtr mat_loader;
+	Scene::SceneManagerPtr scene;
+  
+    Scene::FirstPersonCameraPtr camera;
+	glm::ivec2 mouse;
 };

@@ -2,6 +2,17 @@
 #include "config.h"
 #include "Parser\INIParser.h"
 
+#include "Render\DeferredRender.h"
+#include "Render\GBuffer.h"
+#include "Render\Shader.h"
+#include "Raytracer\OptixRender.h"
+#include "File\ShaderLoader.h"
+#include "File\TextureLoader.h"
+#include "File\MaterialLoader.h"
+#include "Scene\SceneManager.h"
+#include "Scene\Cube.h"
+#include "Scene\proto_camera.h"
+
 #include <GL3\gl3w.h>
 
 #include <sstream>
@@ -62,7 +73,29 @@ void Kernel::config(const std::string &resource_dir)
 
 void Kernel::init(int argc, char** argv)
 {
+	//////////////////////////////////////////
+	// FILE SYSTEM INITIALIZING
+	//////////////////////////////////////////
+	shader_loader = std::make_shared<File::ShaderLoader>(resource_dir+"shaders\\");
+	tex_loader = std::make_shared<File::TextureLoader>(resource_dir+"textures\\");
+	mat_loader = std::make_shared<File::MaterialLoader>(resource_dir+"materials\\");
 
+
+	//////////////////////////////////////////
+	// DEFERRED RENDERER INITIALIZING
+	//////////////////////////////////////////
+	g_buffer = std::make_shared<Render::GBuffer>(shader_loader, width, height);
+	renderer = std::make_shared<Render::DeferredRender>(g_buffer, shader_loader, width, height);
+
+    //////////////////////////////////////////
+	// DEFERRED RENDERER INITIALIZING
+	//////////////////////////////////////////
+    //raytracer = std::make_shared<Raytracer::OptixRender>(g_buffer, width, height, base_dir + "optix\\");
+
+	//////////////////////////////////////////
+	// SCENE INITIALIZING
+	//////////////////////////////////////////
+	scene = std::make_shared<Scene::SceneManager>();
 }
 
 void Kernel::render()
