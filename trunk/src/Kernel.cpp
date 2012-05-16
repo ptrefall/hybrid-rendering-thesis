@@ -187,6 +187,7 @@ void Kernel::initScene()
 
 	auto basic_cube_mat = renderer->addMaterial(mat_loader->load("basic_cube.mat"));
 	auto red_cube_mat = renderer->addMaterial(mat_loader->load("red_cube.mat"));
+	auto blue_cube_mat = renderer->addMaterial(mat_loader->load("blue_cube.mat"));
 
 	Scene::CubePtr cube;
 	cube = std::make_shared<Scene::Cube>(1.0f);
@@ -209,5 +210,23 @@ void Kernel::initScene()
 		cube2->setMaterial(red_cube_mat);
 		scene->add(cube2);
 		cube2->setPosition( glm::vec3(5,3,-20) );
+	}
+
+	for ( int i=0; i<3; i++ ) {
+		for ( int j=0; j<3; j++ ) {
+			float x = 10*(-.5f + i/3.f);
+			float z = 10*(-.5f + j/3.f);
+
+			Scene::CubePtr cube2 = std::make_shared<Scene::Cube>(.5f);
+			{
+				cube2->setMVP(	g_buffer->getMVP());
+				cube2->setMV(	g_buffer->getMV());
+				cube2->setN_WRI(	g_buffer->getN_WRI());
+				cube2->setTexture(array_tex, array_sampler);
+				cube2->setMaterial(blue_cube_mat);
+				scene->add(cube2);
+				cube2->setPosition( glm::vec3(5 + x,-3,-20 + z) );
+			}
+		}
 	}
 }
