@@ -28,6 +28,9 @@ KernelPtr Kernel::getSingleton()
 
 Kernel::Kernel()
 {
+	for(int i=0; i<MAX_KEYS; i++) {
+		keystatus[i] = false;
+	}
 }
 
 Kernel::~Kernel()
@@ -101,7 +104,7 @@ void Kernel::init(int argc, char** argv)
 
 void Kernel::render()
 {
-	camera->update(false, false, false, false, (float)mouse.x/(float)width, (float)mouse.y/(float)height, true, 1.0f);
+	camera->update(keystatus['a'], keystatus['d'], keystatus['s'], keystatus['w'], mouse.coords.x, mouse.coords.y, mouse.leftPressed, 0.001f);
 
 	glClearColor(0.f,0.f,0.f,1.f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
@@ -124,17 +127,46 @@ void Kernel::reshape(int w, int h)
 	renderer->reshape(w,h);
 }
 
-void Kernel::input(unsigned char key, int x, int y)
+void Kernel::inputKeyDown(unsigned char key, int x, int y)
 {
+	keystatus[key] = true;
+	mouse.coords = glm::ivec2(x,y);
 }
+
+void Kernel::inputKeyUp(unsigned char key, int x, int y)
+{
+	keystatus[key] = false;
+	mouse.coords = glm::ivec2(x,y);
+}
+
 void Kernel::input(int key, int x, int y)
 {
+	// Special keys ALT CTRL etc.
+	mouse.coords = glm::ivec2(x,y);
 }
 
 void Kernel::motion(int x, int y)
 {
-	mouse.x = x;
-	mouse.y = y;
+	mouse.coords = glm::ivec2(x,y);
+}
+
+void Kernel::mousePressed(int button, int state, int x, int y)
+{
+	const int LEFT_BUTTON = 0;
+	const int MIDDLE_BUTTON = 1;
+	const int RIGHT_BUTTON = 2;
+	const int PRESSED = 0;
+	const int RELEASED = 1;
+	if(button==LEFT_BUTTON)
+	{
+		mouse.leftPressed = (bool)state;
+	} 
+	else if(button==RIGHT_BUTTON)
+	{
+		mouse.rightPressed = (bool)state;
+	}
+
+	mouse.coords = glm::ivec2(x,y);
 }
 
 void Kernel::initScene()
