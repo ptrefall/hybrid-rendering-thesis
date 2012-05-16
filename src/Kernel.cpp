@@ -140,7 +140,7 @@ void Kernel::motion(int x, int y)
 void Kernel::initScene()
 {
 	camera = Scene::FirstPersonCamera::getSingleton();
-	camera->updateProjection(width, height, 90, 1.0f, 1000.0f);
+	camera->updateProjection(width, height, 40.0f, 1.0f, 1000.0f);
     //camera->init(width, height, 60.0f, 1.0f, 1000.0f);
 	//camera->setTarget(glm::vec3(10,-8,20));
 
@@ -163,7 +163,7 @@ void Kernel::initScene()
 		cube->setTexture(array_tex, array_sampler);
 		cube->setMaterial(basic_cube_mat);
 		scene->add(cube);
-		cube->setPosition( glm::vec3(10,8,-20) );
+		cube->setPosition( glm::vec3(5,5,-20) );
 	}
 
 	Scene::CubePtr cube2 = std::make_shared<Scene::Cube>(.5f);
@@ -174,6 +174,6 @@ void Kernel::initScene()
 		cube2->setTexture(array_tex, array_sampler);
 		cube2->setMaterial(red_cube_mat);
 		scene->add(cube2);
-		cube2->setPosition( glm::vec3(10,4,-20) );
+		cube2->setPosition( glm::vec3(5,3,-20) );
 	}
 }
