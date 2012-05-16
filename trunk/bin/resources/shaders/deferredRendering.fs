@@ -73,5 +73,8 @@ void main( void )
 		1.0
 		);
 		
-	//out_FragColor = vec4(diffuse, 1.0);
+		
+	//out_FragColor = vec4( diffuse, 1.0 );
+	//out_FragColor = ec4( diffuse, 1.0 );
+	//out_FragColor = normal_matid;
 }

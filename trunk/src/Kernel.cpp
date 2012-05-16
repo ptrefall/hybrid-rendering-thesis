@@ -131,6 +131,9 @@ void Kernel::reshape(int w, int h)
 
 void Kernel::inputKeyDown(unsigned char key, int x, int y)
 {
+	if ( key == 'r' ) {
+		renderer->reloadShaders();
+	}
 	keystatus[key] = true;
 	//mouse.coords = glm::ivec2(x,y);
 }

@@ -23,5 +23,5 @@ void main( void )
 	Vertex.t = (pos_norm * madd) + madd; // Scale to 0-1 range
 	
 	//gl_Position = vec4( 2.0*Position - vec2(1.0,1.0) , 0.0, 1.0); // screen coords are -1 to +1
-	gl_Position = vec4( 2.0 * Position , 0.0, 1.0); // why does 1/2 size look like correct pixel size?
+	gl_Position = vec4( Position , 0.0, 1.0); // why does 1/2 size look like correct pixel size?
 }

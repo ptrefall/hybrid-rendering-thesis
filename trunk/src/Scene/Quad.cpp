@@ -10,8 +10,7 @@ using namespace Scene;
 Quad::Quad(unsigned int w, unsigned int h)
 {
 	unsigned int indices[] = {0,1,2, 2,3,0};	// 6
-	//float vertices[] = {0,0, 1,0, 1,1, 0,1};	// 8
-	const float s = .5f;
+	const float s = 1.0f;
 	float vertices[] = {-s,-s, +s,-s, +s,+s, -s,+s};	// 8
 
 	unsigned int buffer_size = sizeof(float) * 8;
