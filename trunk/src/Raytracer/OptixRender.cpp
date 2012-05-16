@@ -1,6 +1,8 @@
 #include "OptixRender.h"
 #include "../Scene/proto_camera.h"
 
+#include <glm/glm.hpp>
+#include <glm/ext.hpp>
 #include <iostream>
 
 using namespace Raytracer;
@@ -17,9 +19,12 @@ OptixRender::OptixRender(const Render::GBufferPtr &g_buffer, unsigned int w, uns
     createInstance( context, sphere, material );
     
     // Run
+	try{
     context->validate();
     context->compile();
-    context->launch( 0, w, h);
+    //context->launch( 0, w, h);
+	}catch(const optix::Exception &e){
+	}
 }
 
 void OptixRender::_displayFrame( Buffer buffer )
@@ -149,6 +154,17 @@ Context OptixRender::createContext()
   context["U"]->setFloat( view[0][0], view[1][0], view[2][0] );
   context["V"]->setFloat( view[0][1], view[1][1], view[2][1] );
   context["W"]->setFloat( view[0][2], view[1][2], view[2][2] );
+
+	/*glm::vec3 W = glm::normalize(glm::vec3(0,-1,-1));          // normalize(at-eye) <--- view direction
+	glm::vec3 U = glm::normalize(glm::cross(W, glm::vec3(0,1,0) )); // normalize(w x up) <--- right direction
+	glm::vec3 V = glm::normalize(glm::cross(U,W ));           // normalize(u x w)  <--- up direction
+	float vLen = tanf( glm::radians( 60.0f * 0.5f ) );   // compute image height <--- tan( fovy / 2)
+	float uLen = vLen * 1.0;                      // compute image width  <--- height * aspect
+
+  context["eye"]->setFloat( 0.0f,5.0f,5.0f );
+  context["U"]->setFloat(uLen*U.x, uLen*U.y, uLen*U.z);
+  context["V"]->setFloat(vLen*V.x, vLen*V.y, vLen*V.z);
+  context["W"]->setFloat(W.x,W.y,W.z);*/
 
   // Exception program
   Program exception_program = context->createProgramFromPTXFile( ptx_path, "exception" );
