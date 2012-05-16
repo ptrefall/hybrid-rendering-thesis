@@ -120,10 +120,13 @@ namespace ini
 			std::string str;
 			while( std::getline(in,str) )
 			{
-				if ( str[0] == '[' )
+				if( str.length() ) // ignore empty lines
 				{
-					std::string sectionName = str.substr(1, str.size()-2 );
-					createSection( in, sectionName );
+					if ( str[0] == '[' )
+					{
+						std::string sectionName = str.substr(1, str.size()-2 );
+						createSection( in, sectionName );
+					}
 				}
 			}
 		}
