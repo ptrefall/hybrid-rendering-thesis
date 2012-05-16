@@ -194,6 +194,13 @@ private:
 		int meshCount;
 	} active;
 
+	struct anim_def
+	{
+		float startTime;
+		float endTime;
+		int numkeys;
+	} anim;
+
 	// Scene objects
 	std::vector<sphere_t> sphereList;
 	std::vector<cone_t> coneList;
@@ -206,6 +213,7 @@ public:
 BARTSceneImplementation( protowizard::ProtoGraphicsPtr proto, const std::string& sceneFolder, const std::string& mainSceneFile ) : 
 	  gDetailLevel(0), proto(proto), sceneFolder(sceneFolder), mainSceneFile(mainSceneFile)
 {
+	mAnimations = nullptr;
 	global::proto = proto;
 	// Root. needed for addPoly when no prior tform spec'd ? TODO
 	active.tformMatrix = glm::mat4(1.0f);
@@ -260,6 +268,27 @@ void addMesh( std::vector<protowizard::Vertex_VNT>& vertices )
 	mesh_t bartMesh = {mesh, active.extMaterial, active.texture};
 	active.sceneNode->addMesh( bartMesh );
 	active.meshCount++;
+}
+void setupAnimParams( float start, float end, int num_frames ) 
+{
+	printf("AnimParams start end numframes: %f %f %d\n", start, end, num_frames);
+	anim.startTime = start;
+	anim.endTime = end;
+	anim.numkeys = num_frames;
+}
+/* 
+	needed for robots/city2.aff
+	Since .aff files are only loaded once, load the state of a node associated
+	with material state from that file
+*/
+void recursiveSetMaterialState( const SceneNodePtr& node ) {
+	if ( node->meshes.size() ) {
+		recursiveSetMaterialState( node->children.front() );
+
+		const mesh_t& leaf = node->meshes.front();
+		active.extMaterial = leaf.mat;
+		active.texture = leaf.texture;
+	}
 }
 
 /*----------------------------------------------------------------------
@@ -753,6 +782,7 @@ void parseInclude(FILE *fp)
 		SceneNodePtr subtreeAtInc = (*sceneNodeIt).second;
 		assert( subtreeAtInc->name == "null" );
 		active.sceneNode->add( subtreeAtInc );
+		recursiveSetMaterialState( active.sceneNode );
 		//printf("attaching subtree to %s::%s\n", active.sceneNode->fileScope.c_str(), active.sceneNode->name.c_str() );
 		//subtreeAtInc->visit(0);
 	}
@@ -1116,7 +1146,6 @@ void parseKeyFrames(FILE *fp)
 {   
 	char name[200];
 	char motion[200];
-	char ch;
 	int  c;
 	int visibility;
 	int  ret, i, nKeyFrames;
@@ -1132,7 +1161,7 @@ void parseKeyFrames(FILE *fp)
 		exit(1);
 	}
 	eatWhitespace(fp);
-	ch=getc(fp);
+	char ch=getc(fp);
 	if(ch!='{')
 	{
 		printf("Error: could not find a { in animation %s.\n",name);
@@ -1150,6 +1179,7 @@ void parseKeyFrames(FILE *fp)
 		* animation = &(animationlist->animation);
 		* gScene.mAnimations was our global list of animations
 	*/
+	animationlist->next = mAnimations;
 	mAnimations = animationlist;
 	animation = &(animationlist->animation);
 
@@ -1185,9 +1215,9 @@ void parseKeyFrames(FILE *fp)
 				&te, &co, &bi);
 				if(ret != 7)
 				{
-				printf("error in parsing translation keyframes for %s\n",
-				animation->name);
-				exit(1);
+					printf("error in parsing translation keyframes for %s\n",
+					animation->name);
+					exit(1);
 				}
 				PKeys[i].t = time;
 				PKeys[i].P.x = x;
@@ -1275,7 +1305,7 @@ void parseKeyFrames(FILE *fp)
 		}
 		eatWhitespace(fp);
 	}   
-	//printf("finished parsing anim %s\n", name);
+	printf("finished parsing anim %s\n", name);
 }
 
 
@@ -1463,7 +1493,7 @@ Format:
       Note: the step time (from one frame to the next) is then
       (end_time-start_time)/(num_frames-1)
 ----------------------------------------------------------------------*/
-static void parseAnimParams(FILE *fp)
+void parseAnimParams(FILE *fp)
 {
    float start,end;
    int num_frames;
@@ -1472,10 +1502,8 @@ static void parseAnimParams(FILE *fp)
       printf("Error: could not parse animations parameters.\n");
       exit(1);
    }
-   /* add animations parameters here
-    * e.g., viSetupAnimParams(start,end,num_frames);
-    */
-   printf("AnimParams: %f %f %d\n", start, end, num_frames);
+   /* add animations parameters here e.g., viSetupAnimParams(start,end,num_frames); */
+   setupAnimParams(start, end, num_frames);
 }
 
 /*----------------------------------------------------------------------
@@ -1864,6 +1892,59 @@ virtual void draw()
 	
 	proto->setOrientation( glm::mat4(1.0f) );
 	proto->setBlend(false);
+
+	AnimationList* curr = mAnimations;
+	
+	while( curr != 0x0 )
+	{
+		auto name = std::string(curr->animation.name);
+		if (name== "camera" || name== "toycar" ) {
+		} else {
+			curr = curr->next;
+			continue;
+		};
+		//mAnimations->animation.translations;
+		double poz[3];
+		double dblMtx[4][4];
+		glm::vec3 oldpos;
+		glm::vec3 pos;
+		glm::mat4 mtx;
+		//curr->animation.translations
+		int keysToShow = anim.numkeys;
+		if (name == "camera" ) {
+			proto->setColor(0,1,0);
+		} else {
+			proto->setColor(1,0,0);
+		}
+
+		for ( int i=0; i<keysToShow; i++ ) {
+			//bool found = GetTranslation(curr,curr->animation.name, i/(double)numkeys * 20.0, poz );
+			bool found = GetMatrix(curr,curr->animation.name, i/(double)anim.numkeys * anim.endTime, dblMtx ) ;
+			if (found) {
+				for ( int ii=0; ii<4; ii++ ) {
+					for ( int jj=0; jj<4; jj++ ) {
+						mtx[ii][jj] = dblMtx[ii][jj];
+					}
+				}
+
+				//proto->setOrientation( mtx );
+				mtx = glm::transpose(mtx);
+				glm::vec3 pos = mtx[3].xyz();
+				
+				//proto->drawSphere( mtx[3].xyz(), 0.025f );
+				if ( i>0 ) {
+					proto->drawCone( oldpos, pos, 0.0125f );
+				}
+				oldpos = pos;
+				
+				//proto->drawSphere( glm::vec3(mtx[3].x, mtx[3].y, mtx[3].z), 0.025f );
+				
+			}
+			//if (found) proto->drawSphere( glm::vec3(pos[0], poz[1], poz[2]), 0.01f );
+		}
+
+		curr = curr->next;
+	}
 
 	float speed = 0.25f;
 	speed += proto->getMouseWheel() * 0.05f;
