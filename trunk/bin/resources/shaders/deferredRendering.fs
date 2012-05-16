@@ -64,7 +64,7 @@ void main( void )
 	
 	float NdotL = max(dot(N,L), 0.0);
 	float shininess = pp_t_ior_mat[material_id].r;
-	float term = compute_blinn_term(N, L, V, NdotL, shininess);
+	float term = compute_gauss_term(N, L, V, NdotL, shininess);
 	
 	out_FragColor = vec4( 
 		((diffuse * diffuse_mat[material_id] * NdotL) +
