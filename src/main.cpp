@@ -13,6 +13,7 @@ void display();
 void reshape(int w, int h);
 void keyboard(unsigned char key, int x, int y);
 void special(int key, int x, int y);
+void motion(int x, int y);
 
 int main(int argc, char** argv)
 {
@@ -76,6 +77,7 @@ int main(int argc, char** argv)
 	glutReshapeFunc(reshape);
 	glutKeyboardFunc(keyboard);
 	glutSpecialFunc(special);
+	glutMotionFunc(motion);
 
 	//////////////////////////////////////////
 	// KERNEL INITIALIZATION
@@ -115,4 +117,9 @@ void keyboard(unsigned char key, int x, int y)
 void special(int key, int x, int y)
 {
 	Kernel::getSingleton()->input(key, x,y);
+}
+
+void motion(int x, int y)
+{
+	Kernel::getSingleton()->motion(x,y);
 }
