@@ -8,8 +8,8 @@ Sampler::Sampler(int wrap_mode)
 {
 	glGenSamplers(1, &handle);
 
-	setParameteri(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	setParameteri(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	setParameteri(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	setParameteri(GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	setParameteri(GL_TEXTURE_WRAP_S, wrap_mode);
 	setParameteri(GL_TEXTURE_WRAP_T, wrap_mode);
 	setParameteri(GL_TEXTURE_WRAP_R, wrap_mode);

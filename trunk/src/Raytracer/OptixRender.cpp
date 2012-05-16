@@ -9,6 +9,8 @@ using namespace optix;
 OptixRender::OptixRender(const Render::GBufferPtr &g_buffer, unsigned int w, unsigned int h, const std::string& baseDir)
 	: g_buffer(g_buffer), w(w), h(h), baseDir(baseDir)
 {
+	tex = std::make_shared<Render::Tex2D>();
+
     context  = createContext();
     sphere   = createGeometry( context );
     material = createMaterial( context );
@@ -21,7 +23,7 @@ OptixRender::OptixRender(const Render::GBufferPtr &g_buffer, unsigned int w, uns
     context->launch( 0, w, h);
 }
 
-void _displayFrame( Buffer buffer )
+void OptixRender::_displayFrame( Buffer buffer )
 {
   // Draw the resulting image
   RTsize buffer_width_rts, buffer_height_rts;
@@ -62,7 +64,10 @@ void _displayFrame( Buffer buffer )
             break;
     }
     
-    static GLuint idk = 0;
+	Render::T2DTexParams params((unsigned int)gl_format, (unsigned int)gl_format, (unsigned int)gl_data_type, (unsigned int)buffer_width, (unsigned int)buffer_height, (unsigned int)GL_CLAMP_TO_EDGE, (unsigned char*)imageData);
+	tex->update(params);
+	
+    /*static GLuint idk = 0;
     if ( !idk ) {
       glGenTextures(1, &idk );
     }
@@ -75,7 +80,7 @@ void _displayFrame( Buffer buffer )
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     
-    glTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, buffer_width, buffer_height, gl_format, gl_data_type, imageData );
+    glTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, buffer_width, buffer_height, gl_format, gl_data_type, imageData );*/
     //glDrawPixels( static_cast<GLsizei>( buffer_width),
       //static_cast<GLsizei>( buffer_height ),
       //gl_format, gl_data_type, imageData);
