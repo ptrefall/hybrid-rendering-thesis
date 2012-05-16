@@ -29,6 +29,5 @@ void main( void )
 	gl_Position		= MVP * Position;
 	Vertex.v		= vec4(MV * Position).xyz;
 	Vertex.n		= normalize(N_WRI * Normal); //Normal in world space
-	Vertex.t.s 		= TexCoord.s*(1.0/16.0);
-	Vertex.t.t 		= TexCoord.t*(1.0/16.0)+(6.0/16.0);
+	Vertex.t 		= TexCoord;
 }
