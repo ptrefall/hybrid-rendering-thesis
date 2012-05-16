@@ -1,4 +1,4 @@
-#version 420 core
+#version 330 core
 #define DIFFUSE		0
 #define POSITION	1
 #define NORMAL		2
