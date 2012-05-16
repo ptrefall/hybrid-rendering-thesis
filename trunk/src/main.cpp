@@ -81,6 +81,7 @@ int main(int argc, char** argv)
 	glutKeyboardUpFunc(keyboardUp);
 	glutSpecialFunc(special);
 	glutMotionFunc(motion);
+	glutPassiveMotionFunc(motion);
 	glutMouseFunc(mousePressed);
 
 	//////////////////////////////////////////

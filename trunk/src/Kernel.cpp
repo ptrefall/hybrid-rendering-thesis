@@ -31,6 +31,8 @@ Kernel::Kernel()
 	for(int i=0; i<MAX_KEYS; i++) {
 		keystatus[i] = false;
 	}
+	mouse.leftPressed = false;
+	mouse.rightPressed = false;
 }
 
 Kernel::~Kernel()
@@ -104,7 +106,7 @@ void Kernel::init(int argc, char** argv)
 
 void Kernel::render()
 {
-	camera->update(keystatus['a'], keystatus['d'], keystatus['s'], keystatus['w'], mouse.coords.x, mouse.coords.y, mouse.leftPressed, 0.001f);
+	camera->update(keystatus['a'], keystatus['d'], keystatus['s'], keystatus['w'], mouse.coords.x, mouse.coords.y, mouse.leftPressed, 0.01f);
 
 	glClearColor(0.f,0.f,0.f,1.f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
@@ -159,11 +161,11 @@ void Kernel::mousePressed(int button, int state, int x, int y)
 	const int RELEASED = 1;
 	if(button==LEFT_BUTTON)
 	{
-		mouse.leftPressed = (bool)state;
+		mouse.leftPressed = (state==PRESSED);
 	} 
 	else if(button==RIGHT_BUTTON)
 	{
-		mouse.rightPressed = (bool)state;
+		mouse.rightPressed = (state==PRESSED);
 	}
 
 	mouse.coords = glm::ivec2(x,y);

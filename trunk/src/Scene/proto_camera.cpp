@@ -28,7 +28,7 @@ FirstPersonCamera::FirstPersonCamera()
 	cameraUp =      glm::vec3(0.f, 1.f, 0.f);
 	cameraForward = glm::vec3(0.f, 0.f, 1.f);
 
-	fov = 90.f;
+	fov = 45.f;
 	near_dist = 1.0f;
 	far_dist = 1000.f;
 
@@ -73,8 +73,8 @@ void FirstPersonCamera::update(bool left_key, bool right_key, bool back_key, boo
 	oldmousy = mouse_y;
 	if ( mouse_is_down )
 	{	
-		hang += mouse_speed_x * 0.05f;
-		vang += mouse_speed_y * 0.05f;
+		hang += mouse_speed_x * 0.1f;
+		vang += mouse_speed_y * 0.1f;
 	}
 	float speed = delta * 50.0f; // meters per second
 
