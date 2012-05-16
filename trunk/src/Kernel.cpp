@@ -179,10 +179,11 @@ void Kernel::initScene()
 	//camera->setTarget(glm::vec3(10,-8,20));
 
 	//auto cube_tex = tex_loader->load("cube.jpg", GL_REPEAT);
-	//auto tex_sampler = std::make_shared<Render::Uniform>(g_buffer->getShader()->getFS(), "diffuse_tex");
 
 	//auto array_tex = tex_loader->load_array("array.png", 16, 16, 2, 2, GL_REPEAT);
 	auto array_tex = tex_loader->load("cube.jpg");
+	auto array2_tex = tex_loader->load("array.png");
+	auto tex_sampler = std::make_shared<Render::Uniform>(g_buffer->getShader()->getFS(), "diffuse_tex");
 	auto array_sampler = std::make_shared<Render::Sampler>();
 
 	auto basic_cube_mat = renderer->addMaterial(mat_loader->load("basic_cube.mat"));
@@ -195,7 +196,7 @@ void Kernel::initScene()
 		cube->setMVP(	g_buffer->getMVP());
 		cube->setMV(	g_buffer->getMV());
 		cube->setN_WRI(	g_buffer->getN_WRI());
-		cube->setTexture(raytracer->getRenderTexture(), array_sampler);
+		cube->setTexture(raytracer->getRenderTexture(), tex_sampler, array_sampler);
 		cube->setMaterial(basic_cube_mat);
 		scene->add(cube);
 		cube->setPosition( glm::vec3(5,5,-20) );
@@ -206,7 +207,7 @@ void Kernel::initScene()
 		cube2->setMVP(	g_buffer->getMVP());
 		cube2->setMV(	g_buffer->getMV());
 		cube2->setN_WRI(	g_buffer->getN_WRI());
-		cube2->setTexture(array_tex, array_sampler);
+		cube2->setTexture(array2_tex, tex_sampler, array_sampler);
 		cube2->setMaterial(red_cube_mat);
 		scene->add(cube2);
 		cube2->setPosition( glm::vec3(5,3,-20) );
@@ -222,7 +223,7 @@ void Kernel::initScene()
 				cube2->setMVP(	g_buffer->getMVP());
 				cube2->setMV(	g_buffer->getMV());
 				cube2->setN_WRI(	g_buffer->getN_WRI());
-				cube2->setTexture(array_tex, array_sampler);
+				cube2->setTexture(array_tex, tex_sampler, array_sampler);
 				cube2->setMaterial(blue_cube_mat);
 				scene->add(cube2);
 				cube2->setPosition( glm::vec3(5 + x,-3,-20 + z) );
