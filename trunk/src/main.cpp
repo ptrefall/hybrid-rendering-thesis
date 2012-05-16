@@ -2,16 +2,17 @@
 #include <GL3\gl3.h>
 #include <GL3\gl3w.h>
 #include <GL\freeglut.h>
-#include <string>
 
 #include "config.h"
-#include "Parser\INIParser.h"
+#include "Kernel.h"
+
+#include <string>
+
 
 void display();
 void reshape(int w, int h);
 void keyboard(unsigned char key, int x, int y);
 void special(int key, int x, int y);
-void init(int argc, char** argv);
 
 int main(int argc, char** argv)
 {
@@ -24,15 +25,10 @@ int main(int argc, char** argv)
 	resource_dir += "\\resources\\";
 
 	//////////////////////////////////////////////
-	// PARSE ENGINE SETTINGS
+	// CONFIGURE KERNEL
 	//////////////////////////////////////////////
-	ini::Parser parser(resource_dir + "ini\\engine.ini");
-	int width = parser.getInt("Dimensions", "width", ENGINE_DEFAULT_WINDOW_WIDTH);
-	int height = parser.getInt("Dimensions", "height", ENGINE_DEFAULT_WINDOW_HEIGHT);
-	int depth = parser.getInt("Dimensions", "depth", ENGINE_DEFAULT_WINDOW_DEPTH);
-	int refresh_rate = parser.getInt("Dimensions", "refresh_rate", ENGINE_DEFAULT_WINDOW_REFRESH_RATE);
-	int fullscreen = parser.getInt("Modes", "fullscreen", ENGINE_DEFAULT_FULLSCREEN);
-	int game_mode = parser.getInt("Modes", "game", ENGINE_DEFAULT_GAME_MODE);
+	auto kernel = Kernel::getSingleton();
+	kernel->config(resource_dir);
 
 	//////////////////////////////////////////
 	// GLUT INITIALIZING
@@ -43,11 +39,9 @@ int main(int argc, char** argv)
 	glutInitContextFlags (GLUT_FORWARD_COMPATIBLE | GLUT_DEBUG);
 	glutInitContextProfile(GLUT_CORE_PROFILE);
 	glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
-	if(game_mode)
+	if(kernel->getGameMode())
 	{
-		std::stringstream ss;
-		ss << width << "x" << height << ":" << depth << "@" << refresh_rate;
-		glutGameModeString(ss.str().c_str());
+		glutGameModeString(kernel->getGameModeString().c_str());
 		if(glutGameModeGet(GLUT_GAME_MODE_POSSIBLE))
 			glutEnterGameMode();
 		else
@@ -58,10 +52,10 @@ int main(int argc, char** argv)
 	}
 	else 	
 	{
-		glutInitWindowSize (width, height); 
+		glutInitWindowSize (kernel->getWidth(), kernel->getHeight()); 
 		glutInitWindowPosition (100, 100);
 		glutCreateWindow(argv[0]);
-		if(fullscreen)
+		if(kernel->getFullscreen())
 			glutFullScreen();
 	}
 
@@ -72,11 +66,7 @@ int main(int argc, char** argv)
 	if(gl3wInitErr)
 		throw std::runtime_error("Failed to initialize OpenGL!");
 	if(gl3wIsSupported(ENGINE_OPENGL_VERSION_MAJOR,ENGINE_OPENGL_VERSION_MINOR) == false)
-	{
-		std::stringstream ss;
-		ss << "Opengl " << ENGINE_OPENGL_VERSION_MAJOR << "." << ENGINE_OPENGL_VERSION_MINOR << " is not supported!";
-		throw std::runtime_error(ss.str());
-	}
+		throw std::runtime_error("Opengl " + kernel->getOpenGLVersionString() + " is not supported!");
 
 	//////////////////////////////////////////
 	// GLUT FUNCTOR INITIALIZING
@@ -88,9 +78,9 @@ int main(int argc, char** argv)
 	glutSpecialFunc(special);
 
 	//////////////////////////////////////////
-	// CUSTOM INITIALIZATION
+	// KERNEL INITIALIZATION
 	//////////////////////////////////////////
-	init(argc,argv);
+	kernel->init(argc, argv);
 
 	//////////////////////////////////////////
 	// HEARTBEAT
@@ -104,12 +94,14 @@ void display()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
 	//CUSTOM RENDER CODE GOES HERE
+	Kernel::getSingleton()->render();
 
 	glutSwapBuffers();
 }
 
 void reshape(int w, int h)
 {
+	Kernel::getSingleton()->reshape(w,h);
 }
 
 void keyboard(unsigned char key, int x, int y)
@@ -117,13 +109,11 @@ void keyboard(unsigned char key, int x, int y)
 	//ESCAPE KEY
 	if(key == 27)
 		glutLeaveMainLoop();
+
+	Kernel::getSingleton()->input(key, x,y);
 }
 
 void special(int key, int x, int y)
 {
-}
-
-void init(int argc, char** argv)
-{
-	//CUSTOM INITIALIZATION CODE GOES HERE
+	Kernel::getSingleton()->input(key, x,y);
 }

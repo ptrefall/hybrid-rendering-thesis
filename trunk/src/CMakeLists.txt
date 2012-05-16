@@ -28,25 +28,30 @@ project(${NAME})
 file(GLOB_RECURSE GL3W_HEADER ${CMAKE_SOURCE_DIR}/depends/include/GL3/*.h)
 file(GLOB_RECURSE GLUT_HEADER ${CMAKE_SOURCE_DIR}/depends/include/GL/*.h)
 file(GLOB_RECURSE PARSER_HEADER ./Parser/*.h)
+file(GLOB_RECURSE RENDER_HEADER ./Render/*.h)
 file(GLOB ROOT_HEADER *.h)
 
 file(GLOB_RECURSE GL3W_SOURCE ${CMAKE_SOURCE_DIR}/depends/include/GL3/*.c)
 file(GLOB_RECURSE GLUT_SOURCE ${CMAKE_SOURCE_DIR}/depends/include/GL/src/*.c)
 file(GLOB_RECURSE PARSER_SOURCE ./Parser/*.cpp)
+file(GLOB_RECURSE RENDER_SOURCE ./Render/*.cpp)
 file(GLOB ROOT_SOURCE *.cpp)
 
 SOURCE_GROUP("Header Files\\Depends\\Gl3w" FILES ${GL3W_HEADER})
 SOURCE_GROUP("Header Files\\Depends\\Glut" FILES ${GLUT_HEADER})
 SOURCE_GROUP("Header Files\\Parser" FILES ${PARSER_HEADER})
+SOURCE_GROUP("Header Files\\Render" FILES ${RENDER_HEADER})
 
 SOURCE_GROUP("Source Files\\Depends\\Gl3w" FILES ${GL3W_SOURCE})
 SOURCE_GROUP("Source Files\\Depends\\Glut" FILES ${GLUT_SOURCE})
 SOURCE_GROUP("Source Files\\Parser" FILES ${PARSER_SOURCE})
+SOURCE_GROUP("Source Files\\Render" FILES ${RENDER_SOURCE})
 
 set(HDRS
   ${GL3W_HEADER}
   ${GLUT_HEADER}
   ${PARSER_HEADER}
+  #${RENDER_HEADER}
   ${ROOT_HEADER}
 )
 
@@ -54,6 +59,7 @@ set(SRCS
   ${GL3W_SOURCE}
   ${GLUT_SOURCE}
   ${PARSER_SOURCE}
+  #${RENDER_SOURCE}
   ${ROOT_SOURCE}
 )
 
