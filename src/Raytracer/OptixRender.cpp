@@ -1,5 +1,5 @@
 #include "OptixRender.h"
-#include "../Scene/Camera.h"
+#include "../Scene/proto_camera.h"
 
 #include <iostream>
 
@@ -15,7 +15,6 @@ OptixRender::OptixRender(const Render::GBufferPtr &g_buffer, unsigned int w, uns
     sphere   = createGeometry( context );
     material = createMaterial( context );
     createInstance( context, sphere, material );
-
     
     // Run
     context->validate();
@@ -91,9 +90,23 @@ void OptixRender::_displayFrame( Buffer buffer )
 void OptixRender::render()
 {
   //unsigned int pbo = context["output_buffer"]->getBuffer()->getGLBOId(); // not a pbo!
-  
-  _displayFrame( context["output_buffer"]->getBuffer() );
-  glClearColor(1,0,0,0);
+	auto camera = Scene::FirstPersonCamera::getSingleton();
+	auto &view = camera->getViewMatrix();
+	auto &pos = camera->getPos();
+ 
+	context["eye"]->setFloat( pos.x, pos.y, pos.z );
+	context["U"]->setFloat( view[0][0], view[1][0], view[2][0] );
+	context["V"]->setFloat( view[0][1], view[1][1], view[2][1] );
+	context["W"]->setFloat( view[0][2], view[1][2], view[2][2] );
+
+	try {
+		context->launch(0, w,h);
+	} catch (optix::Exception& e) {
+		std::cout << e.getErrorString();
+		return;
+	}
+	_displayFrame( context["output_buffer"]->getBuffer() );
+	//glClearColor(1,0,0,0);
 }
 
 void OptixRender::reshape(unsigned int w, unsigned int h) 
@@ -120,40 +133,22 @@ Context OptixRender::createContext()
   // Ray generation program
   std::string ptx_path( baseDir + "pinhole_camera.cu.ptx" );
   try{
-  Program ray_gen_program = context->createProgramFromPTXFile( ptx_path, "pinhole_camera" );
-  context->setRayGenerationProgram( 0, ray_gen_program );
+	Program ray_gen_program = context->createProgramFromPTXFile( ptx_path, "pinhole_camera" );
+	context->setRayGenerationProgram( 0, ray_gen_program );
   }catch(optix::Exception &e)
   {
       std::string w(e.what());
       std::cout << w << std::endl;
   }
 
-  auto camera = Scene::Camera::getSingleton();
-  auto &view = camera->getView();
-  auto &pos = camera->getPosition();
-  
-  float3 cam_eye;// = { camera->getPosition().x, camera->getPosition().y, camera->getPosition().z };
-  cam_eye.x = pos.x;
-  cam_eye.y = pos.y;
-  cam_eye.z = pos.z;
-
-  float3 camera_u, camera_v, camera_w;
-  camera_u.x = view[0][0]; 
-  camera_u.y = view[1][0]; 
-  camera_u.z = view[2][0];
-
-  camera_v.x = view[0][1]; 
-  camera_v.y = view[1][1]; 
-  camera_v.z = view[2][1];
-
-  camera_w.x = view[0][2]; 
-  camera_w.y = view[1][2]; 
-  camera_w.z = view[2][2];
+  auto camera = Scene::FirstPersonCamera::getSingleton();
+  auto &view = camera->getViewMatrix();
+  auto &pos = camera->getPos();
  
-  context["eye"]->setFloat( cam_eye );
-  context["U"]->setFloat( camera_u );
-  context["V"]->setFloat( camera_v );
-  context["W"]->setFloat( camera_w );
+  context["eye"]->setFloat( pos.x, pos.y, pos.z );
+  context["U"]->setFloat( view[0][0], view[1][0], view[2][0] );
+  context["V"]->setFloat( view[0][1], view[1][1], view[2][1] );
+  context["W"]->setFloat( view[0][2], view[1][2], view[2][2] );
 
   // Exception program
   Program exception_program = context->createProgramFromPTXFile( ptx_path, "exception" );
@@ -175,7 +170,7 @@ Geometry OptixRender::createGeometry( Context context )
   sphere->setPrimitiveCount( 1u );
   sphere->setBoundingBoxProgram( context->createProgramFromPTXFile( baseDir + "sphere.cu.ptx", "bounds" ) );
   sphere->setIntersectionProgram( context->createProgramFromPTXFile( baseDir + "sphere.cu.ptx", "intersect" ) );
-  sphere["sphere"]->setFloat( 0, 0, 0, 1.5 );
+  sphere["sphere"]->setFloat( 5, 3, -20.0f, 1.0f );
   return sphere;
 }
 
