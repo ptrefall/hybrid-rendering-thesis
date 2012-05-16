@@ -58,7 +58,7 @@ void main( void )
 	vec3 N = normalize(normal_matid.xyz);
 	int material_id = int(normal_matid.a);
 	
-	vec3 light_pos = vec3(0,0,10);
+	vec3 light_pos = vec3(0,0,0);
 	vec3 L = normalize(light_pos - position);
 	vec3 V = normalize(CamPos-position);
 	
