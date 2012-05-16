@@ -22,6 +22,13 @@ namespace global
 	protowizard::ProtoGraphicsPtr proto;
 }
 
+struct light_t
+{
+	std::string name;
+	glm::vec3 pos;
+	glm::vec3 col;
+};
+
 struct material_ext_t
 {
 	glm::vec3 amb,dif,spc;
@@ -191,7 +198,8 @@ private:
 	std::vector<sphere_t> sphereList;
 	std::vector<cone_t> coneList;
 	std::vector<poly_t> polyList;
-
+	std::vector<light_t> lightList;
+	
 	SceneNodePtr sceneRoot;
 
 public:
@@ -209,6 +217,7 @@ BARTSceneImplementation( protowizard::ProtoGraphicsPtr proto, const std::string&
 	loadScene();
 	printf("num scene nodes: %d \n", active.nodeCount );
 	printf("num meshes: %d \n", active.meshCount );
+	printf("num lights: %d \n", (int)lightList.size() );
 }
 
 
@@ -231,6 +240,11 @@ void addTexturedTriangle( const std::string& texturename, glm::vec3* verts, glm:
 	active.triangleVerts.push_back(Vertex_VNT( verts[0], n, uv[0]) );
 	active.triangleVerts.push_back(Vertex_VNT( verts[1], n, uv[1]) );
 	active.triangleVerts.push_back(Vertex_VNT( verts[2], n, uv[2]) );
+}
+void addLight( const std::string name, const glm::vec3& pos, const glm::vec3& col ) 
+{
+	light_t l = {name, pos, col};
+	lightList.push_back( l );
 }
 void addPoly( std::vector<protowizard::Vertex_VNT>& vertices )
 {
@@ -348,14 +362,12 @@ void parseViewpoint(FILE *fp)
 ----------------------------------------------------------------------*/
 void parseLight(FILE *fp)
 {
-   glm::vec4 pos;
-   glm::vec4 col;
-   int num;
-   int is_animated;
+   glm::vec3 pos;
+   glm::vec3 col;
    char name[100];
    strcpy(name,"");
 
-   is_animated = getc(fp);
+   int is_animated = getc(fp);
    if(is_animated != 'a')
    {
       ungetc(is_animated, fp);
@@ -372,24 +384,23 @@ void parseLight(FILE *fp)
       printf("Light source position syntax error");
       exit(1);
    }
-   pos.w=1.0f;
 
    /* read optional color of light */
-   num=fscanf(fp, "%f %f %f ",&col.r, &col.g, &col.b);
+   int num=fscanf(fp, "%f %f %f ",&col.r, &col.g, &col.b);
    if(num==0)
    {
-      col = glm::vec4(1.0f,1.0f,1.0f,1.0f);
+      col = glm::vec3(1.0f);
    }
    else if(num!=3)
    {
       printf("Light source color syntax error");
       exit(1);
    }
-   col.a=1.0f;
 
    /* add light source here:
     * e.g. viAddLight(name,pos,col);
     */
+   addLight(std::string(name),pos,col);
 }
 
 
@@ -742,8 +753,8 @@ void parseInclude(FILE *fp)
 		SceneNodePtr subtreeAtInc = (*sceneNodeIt).second;
 		assert( subtreeAtInc->name == "null" );
 		active.sceneNode->add( subtreeAtInc );
-		printf("attaching subtree to %s::%s\n", active.sceneNode->fileScope.c_str(), active.sceneNode->name.c_str() );
-		subtreeAtInc->visit(0);
+		//printf("attaching subtree to %s::%s\n", active.sceneNode->fileScope.c_str(), active.sceneNode->name.c_str() );
+		//subtreeAtInc->visit(0);
 	}
 	else
 	{
@@ -1364,7 +1375,7 @@ void parseXform(FILE *f)
 	
 }
 
-void viEndXform()
+void endXform()
 {
 	if ( active.tformTypeStack.top() == tformtype::STATIC_TRANSFORM )
 	{
@@ -1740,7 +1751,7 @@ bool parseFile(FILE *f)
 	 parseXform(f);
 	 break;
       case '}':
-	 viEndXform();
+	 endXform();
 	 break;
       case 'a':  /* global amb light or animation parameters */
 	 parseA(f);
@@ -1803,27 +1814,34 @@ virtual void draw()
 	proto->cls( bgcolor.r, bgcolor.g, bgcolor.b );
 
 	// TODO. decouple materials and geometry. have a unordered_map of <material, geo> pairs? less material dupes.
+	for(auto it=lightList.cbegin(); it!=lightList.cend(); ++it ) {
+		const light_t &l = *it;
+		proto->setColor( l.col );
+		proto->drawSphere( l.pos, 0.05f ); // should find scene size..?
+	}
 
-	for(size_t i=0; i<sphereList.size(); i++){
-		material_ext_t &mat = polyList[i].mat;
+	for(auto it=sphereList.cbegin(); it!=sphereList.cend(); ++it ) {
+		const sphere_t &s = *it;
+		const material_ext_t &mat = s.mat;
 		if(mat.isExtended) {
 			proto->setColor( (mat.amb+mat.dif+mat.spc) );
 		} else {
 			proto->setColor(  mat.dif );
 		}
-		proto->drawSphere( sphereList[i].pos, sphereList[i].radius );
+		proto->drawSphere( s.pos, s.radius );
 	}
-	for(size_t i=0; i<coneList.size(); i++){
-		material_ext_t &mat = polyList[i].mat;
+	for(auto it=coneList.cbegin(); it!=coneList.cend(); ++it ) {
+		const cone_t &c = *it;
+		const material_ext_t &mat = c.mat;
 		if(mat.isExtended) {
 			proto->setColor( (mat.amb+mat.dif+mat.spc) );
 		} else {
 			proto->setColor( mat.dif );
 		}
-		proto->drawCone( coneList[i].a, coneList[i].b, coneList[i].r1 );
+		proto->drawCone( c.a, c.b, c.r1 );
 	}
-	for(size_t i=0; i<polyList.size(); i++){
-		const poly_t &poly = polyList[i];
+	for(auto it=polyList.cbegin(); it!=polyList.cend(); ++it ) {
+		const poly_t &poly = *it;
 		const material_ext_t &mat = poly.mat;
 
 		if(mat.isExtended) {
@@ -1835,9 +1853,9 @@ virtual void draw()
 		//glm::mat4 &xform = polyList[i].tform;
 		//assert( poly.tform == glm::mat4(1.f) ); // could have tforms in some .aff-s TODO
 		proto->setOrientation( glm::mat4(1.f) );
-		bool isDoubleSided = polyList[i].mat.transmittance > 0.f;
+		bool isDoubleSided = mat.transmittance > 0.f;
 		if ( poly.texture != "" ) proto->setTexture( poly.texture );
-		proto->drawMesh( polyList[i].mesh, isDoubleSided ); // always doublesided
+		proto->drawMesh( poly.mesh, isDoubleSided ); // always doublesided
 	}
 
 	assert( sceneRoot.get() != nullptr );
