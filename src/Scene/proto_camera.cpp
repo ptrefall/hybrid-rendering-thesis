@@ -15,9 +15,8 @@ FirstPersonCameraPtr FirstPersonCamera::getSingleton()
 
 const glm::mat4 &FirstPersonCamera::updateProjection(unsigned int w, unsigned int h, float fov, float near, float far)
 {
-  projection = glm::perspectiveFov<float>(fov, (float)w, (float)h, near, far);
-	//projection = glm::perspective<float>(fov, w/h, near, far);
-  return projection;
+	projection = glm::perspective<float>(fov, w/(float)h, near, far);
+	return projection;
 }
 
 FirstPersonCamera::FirstPersonCamera()
