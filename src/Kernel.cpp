@@ -2,6 +2,8 @@
 #include "config.h"
 #include "Parser\INIParser.h"
 
+#include <GL3\gl3w.h>
+
 #include <sstream>
 
 KernelPtr Kernel::singleton;
@@ -65,6 +67,8 @@ void Kernel::init(int argc, char** argv)
 
 void Kernel::render()
 {
+	glClearColor(0.f,0.f,0.f,1.f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 }
 
 void Kernel::reshape(int w, int h)

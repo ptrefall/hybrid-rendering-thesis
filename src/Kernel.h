@@ -35,7 +35,11 @@ public:
 	std::string getOpenGLVersionString() const;
 
 private:
+#if(_MSC_VER >= 1700)
 	friend class std::_Ref_count_obj<Kernel>;
+#else
+	friend class std::tr1::_Ref_count_obj<Kernel>;
+#endif
 	static KernelPtr singleton;
 	Kernel();
 
