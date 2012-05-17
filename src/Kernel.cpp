@@ -121,6 +121,7 @@ void Kernel::render()
 
     //Raytrace
     raytracer->render();
+	//tex_loader->save(nullptr, resource_dir+"screens\\MRT.png");
 }
 
 void Kernel::reshape(int w, int h)
@@ -188,6 +189,8 @@ void Kernel::initScene()
 	auto array2_tex = tex_loader->load("array.png");
 	auto tex_sampler = std::make_shared<Render::Uniform>(g_buffer->getShader()->getFS(), "diffuse_tex");
 	auto array_sampler = std::make_shared<Render::Sampler>();
+
+	tex_loader->save(array2_tex, resource_dir+"screens\\array.png");
 
 	auto basic_cube_mat = renderer->addMaterial(mat_loader->load("basic_cube.mat"));
 	auto red_cube_mat = renderer->addMaterial(mat_loader->load("red_cube.mat"));

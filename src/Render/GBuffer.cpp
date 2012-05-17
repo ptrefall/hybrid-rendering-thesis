@@ -22,9 +22,9 @@ GBuffer::GBuffer(const File::ShaderLoaderPtr &shader_loader, unsigned int w, uns
 	fbo->add(GL_DEPTH_ATTACHMENT,  std::make_shared<RT>(GL_DEPTH_COMPONENT24, w,h));	//Depth
 
 	//Add render textures
-	fbo->add(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, "TEX_DIFF", std::make_shared<Tex2D>(T2DTexParams(GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, w,h)));//Diffuse
-	fbo->add(GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, "TEX_POS",  std::make_shared<Tex2D>(T2DTexParams(GL_RGBA32F, GL_RGBA, GL_FLOAT, w,h)));		//Position
-	fbo->add(GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, "TEX_NORM", std::make_shared<Tex2D>(T2DTexParams(GL_RGBA16F, GL_RGBA, GL_FLOAT, w,h)));		//Normal
+	fbo->add(GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, "TEX_DIFF", std::make_shared<Tex2D>(T2DTexParams(GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE, 4, w,h)));//Diffuse
+	fbo->add(GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, "TEX_POS",  std::make_shared<Tex2D>(T2DTexParams(GL_RGBA32F, GL_RGBA, GL_FLOAT, 4, w,h)));		//Position
+	fbo->add(GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, "TEX_NORM", std::make_shared<Tex2D>(T2DTexParams(GL_RGBA16F, GL_RGBA, GL_FLOAT, 4, w,h)));		//Normal
 
 	//Check that everything is ok
 	fbo->check();

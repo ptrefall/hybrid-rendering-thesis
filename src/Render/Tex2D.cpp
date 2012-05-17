@@ -8,7 +8,7 @@ Tex2D::Tex2D()
 }
 
 Tex2D::Tex2D(const T2DTexParams &tex_params)
-	: internal_format(tex_params.internal_format), format(tex_params.format), type(tex_params.type), w(tex_params.w), h(tex_params.h), wrap_mode(tex_params.wrap_mode), data(tex_params.data)
+	: internal_format(tex_params.internal_format), format(tex_params.format), type(tex_params.type), bpp(tex_params.bpp), w(tex_params.w), h(tex_params.h), wrap_mode(tex_params.wrap_mode), data(tex_params.data)
 {
 	glGenTextures(1, &handle);
 	bind();
@@ -88,4 +88,12 @@ void Tex2D::bind()
 void Tex2D::unbind()
 {
 	glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+unsigned char *Tex2D::downloadData()
+{
+	bind();
+	unsigned char *new_data = new unsigned char[w*h*bpp];
+	glGetTexImage(GL_TEXTURE_2D, 0, format, type, new_data);
+	return new_data;
 }
