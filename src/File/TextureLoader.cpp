@@ -2,7 +2,6 @@
 
 #include <IL\il.h>
 #include <IL\ilu.h>
-//#include <IL\ilut.h>
 
 #include <algorithm>
 #include <stdio.h>
@@ -21,17 +20,19 @@ TextureLoader::TextureLoader(const std::string &base_dir)
 
 Render::Tex2DPtr TextureLoader::load(const std::string &filename, unsigned int wrap_mode)
 {
-	internal_tex_data data = internal_load(filename);
+	unsigned int il_handle = 0;
+	internal_tex_data data = internal_load(il_handle, filename);
 
 	Render::T2DTexParams params(data.format, data.format, GL_UNSIGNED_BYTE, data.bpp, data.w, data.h, wrap_mode, data.data);
 	auto tex = std::make_shared<Render::Tex2D>(params);
-
+	ilDeleteImages(1, &il_handle);
 	return tex;
 }
 
 Render::Tex2DArrayPtr TextureLoader::load_array(const std::string &filename, unsigned int width, unsigned int height, unsigned int slice_count_width, unsigned int slice_count_height, unsigned int wrap_mode)
 {
-	internal_tex_data data = internal_load(filename);
+	unsigned int il_handle = 0;
+	internal_tex_data data = internal_load(il_handle, filename);
 	unsigned int w = width;
 	unsigned int h = height;
 	unsigned int tile_size = w*h;
@@ -44,7 +45,7 @@ Render::Tex2DArrayPtr TextureLoader::load_array(const std::string &filename, uns
 	auto tex = std::make_shared<Render::Tex2DArray>(params);
 
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-
+	ilDeleteImages(1, &il_handle);
 	return tex;
 }
 
@@ -87,9 +88,8 @@ Render::Tex2DArrayPtr TextureLoader::load_array(const std::string &filename, uns
 	return tex;
 }*/
 
-TextureLoader::internal_tex_data TextureLoader::internal_load(const std::string &filename)
+TextureLoader::internal_tex_data TextureLoader::internal_load(unsigned int &il_handle, const std::string &filename)
 {
-	unsigned int il_handle = 0;
     ilGenImages(1, &il_handle);
 
     ilBindImage(il_handle);
@@ -124,7 +124,7 @@ TextureLoader::internal_tex_data TextureLoader::internal_load(const std::string 
 	return data;
 }
 
-void TextureLoader::save(const Render::Tex2DPtr &tex, const std::string &location)
+/*void TextureLoader::save(const Render::Tex2DPtr &tex, const std::string &location)
 {
 	unsigned int il_handle = 0;
 	ilGenImages(1, &il_handle);
@@ -148,4 +148,4 @@ void TextureLoader::save(const Render::Tex2DPtr &tex, const std::string &locatio
 
 	//ilBindImage(0);
 	//ilDeleteImages(1, &il_handle);
-}
+}*/

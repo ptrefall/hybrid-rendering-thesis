@@ -51,7 +51,7 @@ namespace Render
 		unsigned int getWrapMode() const { return wrap_mode; }
 		unsigned char *getData() const { return data; }
 
-		unsigned char *downloadData();
+		//unsigned char *downloadData();
 
 	private:
 		unsigned int handle;
