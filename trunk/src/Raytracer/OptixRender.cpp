@@ -1,5 +1,7 @@
 #include "OptixRender.h"
 #include "../Scene/proto_camera.h"
+//#include "../Kernel.h"
+//#include "../File/TextureLoader.h"
 
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
@@ -68,8 +70,10 @@ void OptixRender::_displayFrame( Buffer buffer )
             break;
     }
     
-	Render::T2DTexParams params((unsigned int)gl_format, (unsigned int)gl_format, (unsigned int)gl_data_type, (unsigned int)buffer_width, (unsigned int)buffer_height, (unsigned int)GL_CLAMP_TO_EDGE, (unsigned char*)imageData);
+	Render::T2DTexParams params((unsigned int)gl_format, (unsigned int)gl_format, (unsigned int)gl_data_type, 4, (unsigned int)buffer_width, (unsigned int)buffer_height, (unsigned int)GL_CLAMP_TO_EDGE, (unsigned char*)imageData);
 	tex->update(params);
+
+	//Kernel::getSingleton()->getTextureLoader()->save(tex, Kernel::getSingleton()->getResourceDir()+"screens\\raytraced.png");
 	
     /*static GLuint idk = 0;
     if ( !idk ) {

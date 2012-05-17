@@ -2,6 +2,7 @@
 
 #include <IL\il.h>
 #include <IL\ilu.h>
+//#include <IL\ilut.h>
 
 #include <algorithm>
 #include <stdio.h>
@@ -22,7 +23,7 @@ Render::Tex2DPtr TextureLoader::load(const std::string &filename, unsigned int w
 {
 	internal_tex_data data = internal_load(filename);
 
-	Render::T2DTexParams params(data.format, data.format, GL_UNSIGNED_BYTE, data.w, data.h, wrap_mode, data.data);
+	Render::T2DTexParams params(data.format, data.format, GL_UNSIGNED_BYTE, data.bpp, data.w, data.h, wrap_mode, data.data);
 	auto tex = std::make_shared<Render::Tex2D>(params);
 
 	return tex;
@@ -88,10 +89,10 @@ Render::Tex2DArrayPtr TextureLoader::load_array(const std::string &filename, uns
 
 TextureLoader::internal_tex_data TextureLoader::internal_load(const std::string &filename)
 {
-	ILuint img_id;
-    ilGenImages(1, &img_id);
+	unsigned int il_handle = 0;
+    ilGenImages(1, &il_handle);
 
-    ilBindImage(img_id);
+    ilBindImage(il_handle);
     int success = ilLoadImage((base_dir+filename).c_str());
     if(!success)
     {
@@ -116,6 +117,35 @@ TextureLoader::internal_tex_data TextureLoader::internal_load(const std::string 
     data.w = ilGetInteger(IL_IMAGE_WIDTH);
     data.h = ilGetInteger(IL_IMAGE_HEIGHT);
     data.format = ilGetInteger(IL_IMAGE_FORMAT);
+	data.type = ilGetInteger(IL_IMAGE_TYPE);
     data.data = ilGetData();
+
+	//ilDeleteImages(1, &il_handle);
 	return data;
+}
+
+void TextureLoader::save(const Render::Tex2DPtr &tex, const std::string &location)
+{
+	unsigned int il_handle = 0;
+	ilGenImages(1, &il_handle);
+    ilBindImage(il_handle);
+
+	unsigned char *data = tex->downloadData();
+
+	ilSetInteger(IL_IMAGE_WIDTH, tex->getWidth());
+	ilSetInteger(IL_IMAGE_HEIGHT, tex->getHeight());
+	ilSetInteger(IL_IMAGE_BPP, tex->getBpp());
+	if(tex->getFormat() == GL_RGBA)
+		ilSetInteger(IL_IMAGE_FORMAT, IL_RGBA);
+	if(tex->getType() == GL_UNSIGNED_BYTE)
+		ilSetInteger(IL_IMAGE_TYPE, IL_UNSIGNED_BYTE);
+	ilSetData( data ) ;
+
+	ilEnable(IL_FILE_OVERWRITE);
+	ilSaveImage( location.c_str() ) ;
+
+	delete[] data;
+
+	//ilBindImage(0);
+	//ilDeleteImages(1, &il_handle);
 }

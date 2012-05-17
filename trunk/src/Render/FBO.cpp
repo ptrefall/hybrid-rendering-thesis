@@ -1,5 +1,6 @@
 #include "FBO.h"
-
+//#include "../Kernel.h"
+//#include "../File/TextureLoader.h"
 using namespace Render;
 
 // TODO fbo doesn't actually use members w,h yet
@@ -32,6 +33,7 @@ void FBO::bind_rt(unsigned int active_program)
 		glActiveTexture(GL_TEXTURE0 + i);
 		render_textures[i]->bind();
 		render_samplers[i]->bind(i, active_program);
+		//Kernel::getSingleton()->getTextureLoader()->save(render_textures[i], Kernel::getSingleton()->getResourceDir()+"screens\\MRT.png");
 	}
 }
 
