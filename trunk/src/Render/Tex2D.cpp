@@ -90,10 +90,10 @@ void Tex2D::unbind()
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-unsigned char *Tex2D::downloadData()
+/*unsigned char *Tex2D::downloadData()
 {
 	bind();
-	unsigned char *new_data = new unsigned char[w*h*bpp];
-	glGetTexImage(GL_TEXTURE_2D, 0, format, type, new_data);
+	unsigned char *new_data = new unsigned char[w*h*bpp*sizeof(unsigned char)];
+	glGetTexImage(GL_TEXTURE_2D, 0, internal_format, type, new_data);
 	return new_data;
-}
+}*/
