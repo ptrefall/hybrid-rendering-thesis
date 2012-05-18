@@ -92,15 +92,11 @@ int main(int argc, char** argv)
 	//////////////////////////////////////////
 	// HEARTBEAT
 	//////////////////////////////////////////
-	//glutMainLoop();
-	kernel->run();
-	while(kernel->isRunning())
-	{
+	kernel->run([](){
 		glutMainLoopEvent();
 		glutPostRedisplay();
-	}
+	});
 
-	Kernel::Shutdown();
 	if(kernel.use_count())
 		kernel.reset();
 
@@ -109,11 +105,7 @@ int main(int argc, char** argv)
 
 void display()
 {
-	
-
-	//CUSTOM RENDER CODE GOES HERE
 	Kernel::getSingleton()->render();
-
 	glutSwapBuffers();
 }
 
@@ -135,7 +127,7 @@ void keyboardUp(unsigned char key, int x, int y)
 {
 	//ESCAPE KEY
 	if(key == 27)
-		glutLeaveMainLoop();
+		Kernel::getSingleton()->exit();
 
 	Kernel::getSingleton()->inputKeyUp(key, x,y);
 }

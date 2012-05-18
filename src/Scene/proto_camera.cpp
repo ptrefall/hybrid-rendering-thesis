@@ -13,6 +13,15 @@ FirstPersonCameraPtr FirstPersonCamera::getSingleton()
     return singleton;
 }
 
+void FirstPersonCamera::Shutdown()
+{
+	if(singleton)
+	{
+		long count = singleton.use_count();
+		singleton.reset();
+	}
+}
+
 const glm::mat4 &FirstPersonCamera::updateProjection(unsigned int w, unsigned int h, float fov, float near, float far)
 {
 	projection = glm::perspective<float>(fov, w/(float)h, near, far);

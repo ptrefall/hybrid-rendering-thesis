@@ -13,6 +13,7 @@ class FirstPersonCamera
 {
 public:
 	static FirstPersonCameraPtr getSingleton();
+	static void Shutdown();
 	FirstPersonCamera();
 
 	void lookAt( const glm::vec3& pos, const glm::vec3& target, const glm::vec3& up );

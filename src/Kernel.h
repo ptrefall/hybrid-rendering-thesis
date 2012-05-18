@@ -4,6 +4,7 @@
 
 #include <memory>
 #include <string>
+#include <functional>
 
 namespace Render
 {
@@ -38,7 +39,7 @@ public:
 	void init(int argc, char** argv);
 	void initScene(); //Will be deprecated at some point...
 
-	void run() { running = true; }
+	void run(std::function<void()> mainLoopBody);
 	void exit() { running = false; }
 	bool isRunning() const { return running; }
 

@@ -45,10 +45,9 @@ namespace ini
 	
 	static inline std::string eraseAfterFirst(std::string str, char c)
 	{
-		size_t idx = str.find_first_of(c);
-		if (idx != -1) {
+		auto idx = str.find_first_of(c);
+		if (idx != std::string::npos)
 			str.erase(idx);
-		}
 		return str;
 	}
 	
@@ -86,33 +85,27 @@ namespace ini
 		template <typename T> 
 		bool getProperty( const char* section, const char* property, bool defaultValue )
 		{
-			std::string val = getValue(section, property);
-			if ( val != "" )
-			{
-				std::transform( val.begin(), val.end(), val.begin(), tolower );
-				
-				if ( val == "true" ) {
-					return true;
-				} else {
-					return false;
-				}
-			}
-			return defaultValue;
+			auto val = getValue(section, property);
+			if(val.empty())
+				return defaultValue;
+
+			std::transform( val.begin(), val.end(), val.begin(), tolower );
+			if ( val == "true" ) return true;
+			else return false;
 		}
 		
 		template <typename T> 
 		T getProperty( const char* section, const char* property, T defaultValue )
 		{
-			std::string val = getValue(section, property);
-			if ( val != "" )
-			{
-				std::stringstream sstream;
-				sstream << val;
-				T tmp;
-				sstream >> tmp;
-				return tmp;
-			}
-			return defaultValue;
+			auto val = getValue(section, property);
+			if(val.empty())
+				return defaultValue;
+
+			std::stringstream sstream;
+			sstream << val;
+			T tmp;
+			sstream >> tmp;
+			return tmp;
 		}
 				
 		glm::vec2 getVec2( const char* section, const char* property, glm::vec2 defaultValue )
@@ -125,59 +118,52 @@ namespace ini
 		}
 		glm::vec4 getVec4( const char* section, const char* property, glm::vec4 defaultValue )
 		{
-			glm::vec4 v;
 			return getVec<glm::vec4>( section, property, defaultValue );
 		}
 		
 		template <typename T>
 		T getVec( const char* section, const char* property, T defaultValue )
 		{
-			std::string val = getValue(section, property);
-			if ( val != "" ) {
-				T v(0);
-				size_t components = sizeof(T)/sizeof(float);
-				std::stringstream sstream;
-				sstream << val;
-				for(size_t i=0; i<components; i++){
-					sstream >> v[i];
-				}
-				return v;
-			}
-			return defaultValue;
+			auto val = getValue(section, property);
+			if(val.empty())
+				return defaultValue;
+
+			T v(0);
+			auto components = sizeof(T)/sizeof(float);
+			std::stringstream sstream;
+			sstream << val;
+			for(unsigned int i=0; i<components; i++)
+				sstream >> v[i];
+			return v;
 		}
 		
 		void print()
 		{
 			std::cout << "sections for " << filepath << std::endl;
-			for(auto it=sections.begin(); it!=sections.end(); ++it){
+			for(auto it=sections.begin(); it!=sections.end(); ++it)
+			{
 				std::cout << (*it).sectionName << std::endl;
 				
-				const PropertyValueMap &values = (*it).values;
-				
-				for ( auto it2=values.begin(); it2!=values.end(); ++it2  ){
+				auto const &values = (*it).values;
+				for (auto it2=values.begin(); it2 != values.end(); ++it2)
 					std::cout << '\t' << (*it2).first << "=" << (*it2).second << std::endl;
-				}
 			}
 		}
 	
-		private:
-			
+	private:
 		std::string getValue( const char* section, const char* property )
 		{
-			for(auto it=sections.begin(); it!=sections.end(); ++it)
+			for(auto it=sections.begin(); it != sections.end(); ++it)
 			{
-				if ( (*it).sectionName == section ) {
-					
-					const PropertyValueMap &values = (*it).values;
-					
+				if ( (*it).sectionName == section )
+				{
+					auto const &values = (*it).values;
 					auto mapIt = values.find(property);
-					if ( mapIt != values.end() ) {
-						return (*mapIt).second;
-					}
-						
+					if(mapIt != values.end()) 
+						return (*mapIt).second;	
 				}
 			}
-			return "";
+			return std::string();
 		}
 		
 		void createSection( std::ifstream& in, const std::string& sectionName )
@@ -195,9 +181,8 @@ namespace ini
 
 				if ( str[0] == '[' )
 				{
-					for(size_t i=0; i<str.size()+1; i++){
+					for(std::string::size_type i = 0; i < str.size()+1; i++)
 						in.unget(); // found a new section. go back 1 line
-					}
 					return; 
 				}
 				else if( str[0] == ' ' || str[0] == ';' ) 
@@ -206,8 +191,9 @@ namespace ini
 				}
 				else
 				{
-					size_t pos = str.find_first_of('='); // property = value
-					if ( pos != -1 ){
+					auto pos = str.find_first_of('='); // property = value
+					if(pos != std::string::npos)
+					{
 						std::string propName = str.substr(0, pos); // property
 						std::string value = str.substr(pos+1); // value
 						
@@ -234,7 +220,7 @@ namespace ini
 				{
 					if ( str[0] == '[' )	
 					{
-						std::string sectionName = str.substr(1, str.size()-2 );
+						auto sectionName = str.substr(1, str.size()-2 );
 						createSection( in, sectionName );
 					}
 				}

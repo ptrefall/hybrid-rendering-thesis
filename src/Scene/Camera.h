@@ -12,6 +12,7 @@ namespace Scene
 	{
 	public:
         static CameraPtr getSingleton();
+		static void Shutdown();
 		Camera();
 
         void init(unsigned int w, unsigned int h, float fov, float near, float far);
