@@ -43,6 +43,7 @@ public:
 	void exit() { running = false; }
 	bool isRunning() const { return running; }
 
+	void update(float dt);
 	void render();
 	void reshape(int w, int h);
 	void inputKeyDown(unsigned char key, int x, int y);

@@ -137,17 +137,20 @@ void Kernel::init(int argc, char** argv)
 
 void Kernel::run(std::function<void()> mainLoopBody)
 {
+	running = true;
 	while(running)
-	{
 		mainLoopBody();
-	}
+
 	Kernel::Shutdown();
+}
+
+void Kernel::update(float dt)
+{
+	camera->update(keystatus['a'], keystatus['d'], keystatus['s'], keystatus['w'], mouse.coords.x, mouse.coords.y, mouse.leftPressed, dt);
 }
 
 void Kernel::render()
 {
-	camera->update(keystatus['a'], keystatus['d'], keystatus['s'], keystatus['w'], mouse.coords.x, mouse.coords.y, mouse.leftPressed, 0.01f);
-
 	glClearColor(0.f,0.f,0.f,1.f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
