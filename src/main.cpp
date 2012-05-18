@@ -16,6 +16,7 @@ void keyboardUp(unsigned char key, int x, int y);
 void special(int key, int x, int y);
 void motion(int x, int y);
 void mousePressed(int button, int state, int posX, int posY);
+void close();
 
 int main(int argc, char** argv)
 {
@@ -37,9 +38,9 @@ int main(int argc, char** argv)
 	// GLUT INITIALIZING
 	//////////////////////////////////////////
 	glutInit(&argc, argv);
-	glutInitDisplayMode (GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
-	glutInitContextVersion (ENGINE_OPENGL_VERSION_MAJOR, ENGINE_OPENGL_VERSION_MINOR);
-	glutInitContextFlags (GLUT_FORWARD_COMPATIBLE | GLUT_DEBUG);
+	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
+	glutInitContextVersion(ENGINE_OPENGL_VERSION_MAJOR, ENGINE_OPENGL_VERSION_MINOR);
+	glutInitContextFlags(GLUT_FORWARD_COMPATIBLE | GLUT_DEBUG);
 	glutInitContextProfile(GLUT_CORE_PROFILE);
 	glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
 	if(kernel->getGameMode())
@@ -55,8 +56,8 @@ int main(int argc, char** argv)
 	}
 	else 	
 	{
-		glutInitWindowSize (kernel->getWidth(), kernel->getHeight()); 
-		glutInitWindowPosition (100, 100);
+		glutInitWindowSize(kernel->getWidth(), kernel->getHeight()); 
+		glutInitWindowPosition(100, 100);
 		glutCreateWindow(argv[0]);
 		if(kernel->getFullscreen())
 			glutFullScreen();
@@ -84,6 +85,7 @@ int main(int argc, char** argv)
 	glutPassiveMotionFunc(motion);
 	glutMouseFunc(mousePressed);
 	glutTimerFunc(kernel->getLogicUpdateRate(), update, 0);
+	glutCloseFunc(close);
 
 	//////////////////////////////////////////
 	// KERNEL INITIALIZATION
@@ -95,9 +97,10 @@ int main(int argc, char** argv)
 	//////////////////////////////////////////
 	kernel->run(
 		glutGet(GLUT_ELAPSED_TIME), 
-		[](){
+		[&](){
 			glutMainLoopEvent();
-			glutPostRedisplay();
+			if(kernel->isRunning())
+				glutPostRedisplay();
 		});
 
 	//////////////////////////////////////////
@@ -163,4 +166,7 @@ void mousePressed(int button, int state, int x, int y)
 	Kernel::getSingleton()->mousePressed(button, state, x, y);
 }
 
-
+void close()
+{
+	Kernel::getSingleton()->exit();
+}
