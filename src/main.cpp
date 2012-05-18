@@ -8,7 +8,7 @@
 
 #include <string>
 
-
+void update(int value);
 void display();
 void reshape(int w, int h);
 void keyboard(unsigned char key, int x, int y);
@@ -83,6 +83,7 @@ int main(int argc, char** argv)
 	glutMotionFunc(motion);
 	glutPassiveMotionFunc(motion);
 	glutMouseFunc(mousePressed);
+	glutTimerFunc(kernel->getLogicUpdateRate(), update, 0);
 
 	//////////////////////////////////////////
 	// KERNEL INITIALIZATION
@@ -92,20 +93,34 @@ int main(int argc, char** argv)
 	//////////////////////////////////////////
 	// HEARTBEAT
 	//////////////////////////////////////////
-	kernel->run([](){
-		glutMainLoopEvent();
-		glutPostRedisplay();
-	});
+	kernel->run(
+		glutGet(GLUT_ELAPSED_TIME), 
+		[](){
+			glutMainLoopEvent();
+			glutPostRedisplay();
+		});
 
-	if(kernel.use_count())
-		kernel.reset();
+	//////////////////////////////////////////
+	// CLEAN UP
+	//////////////////////////////////////////
+	kernel.reset();
 
+	//////////////////////////////////////////
+	// DESTROY GL CONTEXT AND GLUT WINDOW
+	//////////////////////////////////////////
 	glutExit();
+}
+
+void update(int value)
+{
+	auto kernel = Kernel::getSingleton();
+	glutTimerFunc(kernel->getLogicUpdateRate(), update, 0);
+
+	kernel->update((float)kernel->getTimeSincePrevFrame(glutGet(GLUT_ELAPSED_TIME))/1000.0f);
 }
 
 void display()
 {
-	Kernel::getSingleton()->update(0.01f);
 	Kernel::getSingleton()->render();
 	glutSwapBuffers();
 }
