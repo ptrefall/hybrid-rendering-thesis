@@ -1,5 +1,4 @@
 #include "Kernel.h"
-#include "config.h"
 #include "Parser\INIParser.h"
 
 #include "Render\DeferredRender.h"
@@ -16,6 +15,8 @@
 #include <GL3\gl3w.h>
 
 #include <sstream>
+
+#include "config.h"
 
 KernelPtr Kernel::singleton;
 
@@ -75,20 +76,10 @@ std::string Kernel::getGameModeString() const
 	return ss.str();
 }
 
-int Kernel::getOpenGLVersionMajor() const
-{
-	return ENGINE_OPENGL_VERSION_MAJOR;
-}
-
-int Kernel::getOpenGLVersionMinor() const
-{
-	return ENGINE_OPENGL_VERSION_MINOR;
-}
-
 std::string Kernel::getOpenGLVersionString() const
 {
 	std::stringstream ss;
-	ss << ENGINE_OPENGL_VERSION_MAJOR << "." << ENGINE_OPENGL_VERSION_MINOR;
+	ss << opengl_major_version << "." << opengl_minor_version;
 	return ss.str();
 }
 
@@ -104,10 +95,21 @@ void Kernel::config(const std::string &resource_dir)
 	logic_update_rate = parser.getInt("Dimensions", "logic_update_rate", ENGINE_DEFAULT_LOGIC_UPDATE_RATE);
 	fullscreen = parser.getInt("Modes", "fullscreen", ENGINE_DEFAULT_FULLSCREEN);
 	game_mode = parser.getInt("Modes", "game", ENGINE_DEFAULT_GAME_MODE);
+	opengl_major_version = parser.getInt("OpenGL", "major_version", ENGINE_OPENGL_VERSION_MAJOR);
+	opengl_minor_version = parser.getInt("OpenGL", "minor_version", ENGINE_OPENGL_VERSION_MINOR);
 }
 
 void Kernel::init(int argc, char** argv)
 {
+	//////////////////////////////////////////
+	// GL3W INITIALIZING
+	//////////////////////////////////////////
+	GLenum gl3wInitErr = gl3wInit();
+	if(gl3wInitErr)
+		throw std::runtime_error("Failed to initialize OpenGL!");
+	if(gl3wIsSupported(opengl_major_version, opengl_minor_version) == false)
+		throw std::runtime_error("Opengl " + getOpenGLVersionString() + " is not supported!");
+
 	//////////////////////////////////////////
 	// FILE SYSTEM INITIALIZING
 	//////////////////////////////////////////
@@ -179,9 +181,12 @@ void Kernel::reshape(int w, int h)
 
 void Kernel::inputKeyDown(unsigned char key, int x, int y)
 {
-	if ( key == 'r' ) {
+	//ESCAPE KEY
+	if(key == 27)
+		exit();
+	else if(key == 'r')
 		renderer->reloadShaders();
-	}
+
 	keystatus[key] = true;
 	//mouse.coords = glm::ivec2(x,y);
 }

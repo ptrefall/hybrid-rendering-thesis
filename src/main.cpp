@@ -3,10 +3,10 @@
 #include <GL3\gl3w.h>
 #include <GL\freeglut.h>
 
-#include "config.h"
 #include "Kernel.h"
 
 #include <string>
+#include <iostream>
 
 void update(int value);
 void display();
@@ -39,7 +39,7 @@ int main(int argc, char** argv)
 	//////////////////////////////////////////
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
-	glutInitContextVersion(ENGINE_OPENGL_VERSION_MAJOR, ENGINE_OPENGL_VERSION_MINOR);
+	glutInitContextVersion(kernel->getOpenGLVersionMajor(), kernel->getOpenGLVersionMinor());
 	glutInitContextFlags(GLUT_FORWARD_COMPATIBLE | GLUT_DEBUG);
 	glutInitContextProfile(GLUT_CORE_PROFILE);
 	glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
@@ -64,13 +64,15 @@ int main(int argc, char** argv)
 	}
 
 	//////////////////////////////////////////
-	// GL3W INITIALIZING
-	//////////////////////////////////////////
-	GLenum gl3wInitErr = gl3wInit();
-	if(gl3wInitErr)
-		throw std::runtime_error("Failed to initialize OpenGL!");
-	if(gl3wIsSupported(ENGINE_OPENGL_VERSION_MAJOR,ENGINE_OPENGL_VERSION_MINOR) == false)
-		throw std::runtime_error("Opengl " + kernel->getOpenGLVersionString() + " is not supported!");
+	// KERNEL INITIALIZATION
+	//////////////////////////////////////////'
+	try {
+		kernel->init(argc, argv);
+	} catch( std::exception &e) {
+		std::cout << e.what() << std::endl;
+		system("pause");
+		return -1;
+	}
 
 	//////////////////////////////////////////
 	// GLUT FUNCTOR INITIALIZING
@@ -86,11 +88,6 @@ int main(int argc, char** argv)
 	glutMouseFunc(mousePressed);
 	glutTimerFunc(kernel->getLogicUpdateRate(), update, 0);
 	glutCloseFunc(close);
-
-	//////////////////////////////////////////
-	// KERNEL INITIALIZATION
-	//////////////////////////////////////////
-	kernel->init(argc, argv);
 
 	//////////////////////////////////////////
 	// HEARTBEAT
@@ -135,19 +132,11 @@ void reshape(int w, int h)
 
 void keyboard(unsigned char key, int x, int y)
 {
-	//ESCAPE KEY
-	if(key == 27)
-		Kernel::getSingleton()->exit();
-
 	Kernel::getSingleton()->inputKeyDown(key, x,y);
 }
 
 void keyboardUp(unsigned char key, int x, int y)
 {
-	//ESCAPE KEY
-	if(key == 27)
-		Kernel::getSingleton()->exit();
-
 	Kernel::getSingleton()->inputKeyUp(key, x,y);
 }
 
