@@ -67,8 +67,8 @@ public:
 	int getFullscreen() const { return fullscreen; }
 	int getGameMode() const { return game_mode; }
 	std::string getGameModeString() const;
-	int getOpenGLVersionMajor() const;
-	int getOpenGLVersionMinor() const;
+	int getOpenGLVersionMajor() const { return opengl_major_version; }
+	int getOpenGLVersionMinor() const { return opengl_minor_version; }
 	std::string getOpenGLVersionString() const;
 
 public:
@@ -99,6 +99,8 @@ private:
 	int logic_update_rate;
 	int fullscreen;
 	int game_mode;
+	int opengl_major_version;
+	int opengl_minor_version;
 
 	bool running;
 	int start_time;
