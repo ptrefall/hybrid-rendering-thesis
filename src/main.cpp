@@ -92,12 +92,19 @@ int main(int argc, char** argv)
 	//////////////////////////////////////////
 	// HEARTBEAT
 	//////////////////////////////////////////
-	glutMainLoop();
-
+	//glutMainLoop();
+	kernel->run();
+	while(kernel->isRunning())
+	{
+		glutMainLoopEvent();
+		glutPostRedisplay();
+	}
 
 	Kernel::Shutdown();
 	if(kernel.use_count())
 		kernel.reset();
+
+	glutExit();
 }
 
 void display()
@@ -119,7 +126,7 @@ void keyboard(unsigned char key, int x, int y)
 {
 	//ESCAPE KEY
 	if(key == 27)
-		glutLeaveMainLoop();
+		Kernel::getSingleton()->exit();
 
 	Kernel::getSingleton()->inputKeyDown(key, x,y);
 }

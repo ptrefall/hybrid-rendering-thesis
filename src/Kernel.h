@@ -38,6 +38,10 @@ public:
 	void init(int argc, char** argv);
 	void initScene(); //Will be deprecated at some point...
 
+	void run() { running = true; }
+	void exit() { running = false; }
+	bool isRunning() const { return running; }
+
 	void render();
 	void reshape(int w, int h);
 	void inputKeyDown(unsigned char key, int x, int y);
@@ -86,6 +90,8 @@ private:
 	int refresh_rate;
 	int fullscreen;
 	int game_mode;
+
+	bool running;
 
 private:
 	Render::GBufferPtr g_buffer;
