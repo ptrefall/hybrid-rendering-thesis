@@ -37,9 +37,7 @@ void Kernel::Shutdown()
 
 Kernel::Kernel()
 {
-	for(int i=0; i<MAX_KEYS; i++) {
-		keystatus[i] = false;
-	}
+	memset(keystatus, 0, MAX_KEYS);
 	mouse.leftPressed = false;
 	mouse.rightPressed = false;
 }
@@ -173,6 +171,8 @@ void Kernel::render()
 
 void Kernel::reshape(int w, int h)
 {
+	glViewportIndexedf(0,0.0f, 0.0f, (float)w, (float)h);
+
 	g_buffer->reshape(w,h);
 	renderer->reshape(w,h);
 }
