@@ -31,6 +31,7 @@ class Kernel
 {
 public:
 	static KernelPtr getSingleton();
+	static void Shutdown();
 	~Kernel();
 
 	void config(const std::string &resource_dir);
