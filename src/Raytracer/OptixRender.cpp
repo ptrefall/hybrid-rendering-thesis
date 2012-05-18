@@ -13,7 +13,7 @@ using namespace optix;
 OptixRender::OptixRender(const Render::GBufferPtr &g_buffer, unsigned int w, unsigned int h, const std::string& baseDir)
 	: g_buffer(g_buffer), w(w), h(h), baseDir(baseDir)
 {
-	tex = std::make_shared<Render::Tex2D>();
+	//tex = std::make_shared<Render::Tex2D>();
 
     context  = createContext();
     sphere   = createGeometry( context );
@@ -70,8 +70,8 @@ void OptixRender::_displayFrame( Buffer buffer )
             break;
     }
     
-	Render::T2DTexParams params((unsigned int)gl_format, (unsigned int)gl_format, (unsigned int)gl_data_type, 4, (unsigned int)buffer_width, (unsigned int)buffer_height, (unsigned int)GL_CLAMP_TO_EDGE, (unsigned char*)imageData);
-	tex->update(params);
+	//Render::T2DTexParams params((unsigned int)gl_format, (unsigned int)gl_format, (unsigned int)gl_data_type, 4, (unsigned int)buffer_width, (unsigned int)buffer_height, (unsigned int)GL_CLAMP_TO_EDGE, (unsigned char*)imageData);
+	//tex->update(params);
 
 	//Kernel::getSingleton()->getTextureLoader()->save(tex, Kernel::getSingleton()->getResourceDir()+"screens\\raytraced.png");
 	

@@ -187,8 +187,8 @@ void Kernel::initScene()
 	//auto array_tex = tex_loader->load_array("array.png", 16, 16, 2, 2, GL_REPEAT);
 	auto array_tex = tex_loader->load("cube.jpg");
 	auto array2_tex = tex_loader->load("array.png");
-	auto tex_sampler = std::make_shared<Render::Uniform>(g_buffer->getShader()->getFS(), "diffuse_tex");
-	auto array_sampler = std::make_shared<Render::Sampler>();
+	Render::UniformPtr tex_sampler = std::make_shared<Render::Uniform>(g_buffer->getShader()->getFS(), "diffuse_tex");
+	Render::SamplerPtr array_sampler;// = std::make_shared<Render::Sampler>();
 
 	//tex_loader->save(array2_tex, resource_dir+"screens\\array.png");
 
