@@ -105,6 +105,7 @@ int main(int argc, char** argv)
 
 void display()
 {
+	Kernel::getSingleton()->update(0.01f);
 	Kernel::getSingleton()->render();
 	glutSwapBuffers();
 }
