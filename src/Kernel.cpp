@@ -26,6 +26,15 @@ KernelPtr Kernel::getSingleton()
 	return singleton;
 }
 
+void Kernel::Shutdown()
+{
+	if(singleton)
+	{
+		long count = singleton.use_count();
+		singleton.reset();
+	}
+}
+
 Kernel::Kernel()
 {
 	for(int i=0; i<MAX_KEYS; i++) {

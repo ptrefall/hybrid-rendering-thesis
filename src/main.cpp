@@ -93,6 +93,11 @@ int main(int argc, char** argv)
 	// HEARTBEAT
 	//////////////////////////////////////////
 	glutMainLoop();
+
+
+	Kernel::Shutdown();
+	if(kernel.use_count())
+		kernel.reset();
 }
 
 void display()
