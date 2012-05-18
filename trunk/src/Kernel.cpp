@@ -46,6 +46,28 @@ Kernel::Kernel()
 
 Kernel::~Kernel()
 {
+	long renderer_count = renderer.use_count();
+	renderer.reset();
+
+	long raytracer_count = raytracer.use_count();
+	raytracer.reset();
+
+	long g_buffer_count = g_buffer.use_count();
+	g_buffer.reset();
+
+	long scene_count = scene.use_count();
+	scene.reset();
+
+	long shader_loader_count = shader_loader.use_count();
+	shader_loader.reset();
+	long tex_loader_count = tex_loader.use_count();
+	tex_loader.reset();
+	long mat_loader_count = mat_loader.use_count();
+	mat_loader.reset();
+
+	Scene::FirstPersonCamera::Shutdown();
+	long camera_count = camera.use_count();
+	camera.reset();
 }
 
 std::string Kernel::getGameModeString() const
@@ -111,6 +133,15 @@ void Kernel::init(int argc, char** argv)
 	//////////////////////////////////////////
 	scene = std::make_shared<Scene::SceneManager>();
 	initScene();
+}
+
+void Kernel::run(std::function<void()> mainLoopBody)
+{
+	while(running)
+	{
+		mainLoopBody();
+	}
+	Kernel::Shutdown();
 }
 
 void Kernel::render()

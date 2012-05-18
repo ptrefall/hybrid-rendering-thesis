@@ -15,6 +15,15 @@ CameraPtr Camera::getSingleton()
     return singleton;
 }
 
+void Camera::Shutdown()
+{
+	if(singleton)
+	{
+		long count = singleton.use_count();
+		singleton.reset();
+	}
+}
+
 Camera::Camera()
 {
 }
