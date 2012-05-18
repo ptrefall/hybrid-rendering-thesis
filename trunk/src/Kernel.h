@@ -39,7 +39,7 @@ public:
 	void init(int argc, char** argv);
 	void initScene(); //Will be deprecated at some point...
 
-	void run(std::function<void()> mainLoopBody);
+	void run(int start_time, std::function<void()> main_loop_body);
 	void exit() { running = false; }
 	bool isRunning() const { return running; }
 
@@ -52,12 +52,18 @@ public:
 	void motion(int x, int y);
 	void mousePressed(int button, int state, int x, int y);
 
+	int getPrevTime(int cur_time) { auto tmp_time = prev_time; prev_time = cur_time; return tmp_time; }
+	int getStartTime() const { return start_time; }
+	int getElapsedTime(int cur_time) const { return cur_time - start_time; }
+	int getTimeSincePrevFrame(int cur_time) { return cur_time - getPrevTime(cur_time); }
+
 public:
 	const std::string &getResourceDir() const { return resource_dir; }
 	int getWidth() const { return width; }
 	int getHeight() const { return height; }
 	int getDepth() const { return depth; }
 	int getRefreshRate() const { return refresh_rate; }
+	int getLogicUpdateRate() const { return logic_update_rate; }
 	int getFullscreen() const { return fullscreen; }
 	int getGameMode() const { return game_mode; }
 	std::string getGameModeString() const;
@@ -90,10 +96,13 @@ private:
 	int height;
 	int depth;
 	int refresh_rate;
+	int logic_update_rate;
 	int fullscreen;
 	int game_mode;
 
 	bool running;
+	int start_time;
+	int prev_time;
 
 private:
 	Render::GBufferPtr g_buffer;

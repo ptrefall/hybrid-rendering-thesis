@@ -103,6 +103,7 @@ void Kernel::config(const std::string &resource_dir)
 	height = parser.getInt("Dimensions", "height", ENGINE_DEFAULT_WINDOW_HEIGHT);
 	depth = parser.getInt("Dimensions", "depth", ENGINE_DEFAULT_WINDOW_DEPTH);
 	refresh_rate = parser.getInt("Dimensions", "refresh_rate", ENGINE_DEFAULT_WINDOW_REFRESH_RATE);
+	logic_update_rate = parser.getInt("Dimensions", "logic_update_rate", ENGINE_DEFAULT_LOGIC_UPDATE_RATE);
 	fullscreen = parser.getInt("Modes", "fullscreen", ENGINE_DEFAULT_FULLSCREEN);
 	game_mode = parser.getInt("Modes", "game", ENGINE_DEFAULT_GAME_MODE);
 }
@@ -135,11 +136,14 @@ void Kernel::init(int argc, char** argv)
 	initScene();
 }
 
-void Kernel::run(std::function<void()> mainLoopBody)
+void Kernel::run(int start_time, std::function<void()> main_loop_body)
 {
+	this->start_time = start_time;
+	prev_time = start_time;
+
 	running = true;
 	while(running)
-		mainLoopBody();
+		main_loop_body();
 
 	Kernel::Shutdown();
 }
