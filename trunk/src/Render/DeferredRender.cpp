@@ -26,8 +26,19 @@ void DeferredRender::render()
 			(*it)->bind_data(shader->getFS());
 	}
 
+    if(tex)
+	{
+		glActiveTexture(GL_TEXTURE0 + 0);
+		tex->bind();
+		if(tex_uniform)
+			tex_uniform->bind(0);
+	}
+
 	quad->render(0);
 	g_buffer->unbind();
+
+    if(tex)
+		tex->unbind();
 }
 
 void DeferredRender::reshape(unsigned int w, unsigned int h) 
@@ -40,4 +51,10 @@ void DeferredRender::reloadShaders()
 {
 	puts("reload");
 	shader = shader_loader->load("deferredRendering.vs", std::string(), "deferredRendering.fs");
+}
+
+void DeferredRender::setRayTexture(const Render::Tex2DPtr &tex, const Render::UniformPtr &uniform)
+{
+    this->tex = tex;
+    this->tex_uniform = uniform;
 }

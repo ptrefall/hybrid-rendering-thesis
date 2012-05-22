@@ -2,6 +2,7 @@
 
 #include "../Scene/Quad.h"
 #include "../File/ShaderLoader.h"
+#include "Tex2D.h"
 #include "Material.h"
 #include "Shader.h"
 #include "Uniform.h"
@@ -28,6 +29,7 @@ namespace Render
 		void reloadShaders();
 
 		MaterialPtr addMaterial(const MaterialPtr &material) { materials.push_back(material); return material; }
+        void setRayTexture(const Render::Tex2DPtr &tex, const Render::UniformPtr &uniform);
 	private:
 		unsigned int w;
 		unsigned int h;
@@ -40,5 +42,8 @@ namespace Render
 		Scene::QuadPtr quad;
 
 		std::vector<MaterialPtr> materials;
+
+        Render::Tex2DPtr tex;
+		Render::UniformPtr tex_uniform;
 	};
 }

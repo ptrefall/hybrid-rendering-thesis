@@ -242,6 +242,8 @@ void Kernel::initScene()
 	Render::UniformPtr tex_sampler = std::make_shared<Render::Uniform>(g_buffer->getShader()->getFS(), "diffuse_tex");
 	Render::SamplerPtr array_sampler;// = std::make_shared<Render::Sampler>();
 
+    renderer->setRayTexture(raytracer->getRenderTexture(), tex_sampler);
+
 	//tex_loader->save(array2_tex, resource_dir+"screens\\array.png");
 
 	auto basic_cube_mat = renderer->addMaterial(mat_loader->load("basic_cube.mat"));
@@ -260,7 +262,7 @@ void Kernel::initScene()
 		cube->setPosition( glm::vec3(5,5,-20) );
 	}
 
-	Scene::CubePtr cube2 = std::make_shared<Scene::Cube>(.5f);
+	/*Scene::CubePtr cube2 = std::make_shared<Scene::Cube>(.5f);
 	{
 		cube2->setMVP(	g_buffer->getMVP());
 		cube2->setMV(	g_buffer->getMV());
@@ -269,7 +271,7 @@ void Kernel::initScene()
 		cube2->setMaterial(red_cube_mat);
 		scene->add(cube2);
 		cube2->setPosition( glm::vec3(5,3,-20) );
-	}
+	}*/
 
 	for ( int i=0; i<3; i++ ) {
 		for ( int j=0; j<3; j++ ) {

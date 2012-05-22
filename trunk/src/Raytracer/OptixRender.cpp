@@ -13,7 +13,13 @@ using namespace optix;
 OptixRender::OptixRender(const Render::GBufferPtr &g_buffer, unsigned int w, unsigned int h, const std::string& baseDir)
 	: g_buffer(g_buffer), w(w), h(h), baseDir(baseDir)
 {
-	//tex = std::make_shared<Render::Tex2D>();
+    GLenum error = glGetError();
+	tex = std::make_shared<Render::Tex2D>();
+    error = glGetError();
+    Render::T2DTexParams params((unsigned int)GL_BGRA, (unsigned int)GL_BGRA, (unsigned int)GL_UNSIGNED_BYTE, 4, (unsigned int)w, (unsigned int)h, (unsigned int)GL_CLAMP_TO_EDGE, (unsigned char*)nullptr);
+    error = glGetError();
+	tex->update(params);
+    error = glGetError();
 
     context  = createContext();
     sphere   = createGeometry( context );
@@ -38,8 +44,10 @@ void OptixRender::_displayFrame( Buffer buffer )
   int buffer_height = static_cast<int>(buffer_height_rts);
   RTformat buffer_format = buffer->getFormat();
 
- GLvoid* imageData = buffer->map();
-    assert( imageData );
+  auto buf = (unsigned char*)buffer->map();
+  std::vector<unsigned char> imageData(buf, buf + buffer_width*buffer_height*4*sizeof(unsigned char));
+  
+    //assert( &imageData[0] );
 
     GLenum gl_data_type = GL_FALSE;
     GLenum gl_format = GL_FALSE;
@@ -70,8 +78,10 @@ void OptixRender::_displayFrame( Buffer buffer )
             break;
     }
     
-	//Render::T2DTexParams params((unsigned int)gl_format, (unsigned int)gl_format, (unsigned int)gl_data_type, 4, (unsigned int)buffer_width, (unsigned int)buffer_height, (unsigned int)GL_CLAMP_TO_EDGE, (unsigned char*)imageData);
-	//tex->update(params);
+	Render::T2DTexParams params((unsigned int)gl_format, (unsigned int)gl_format, (unsigned int)gl_data_type, 4, (unsigned int)buffer_width, (unsigned int)buffer_height, (unsigned int)GL_CLAMP_TO_EDGE, (unsigned char*)&imageData[0]);
+	tex->update(params);
+
+    
 
 	//Kernel::getSingleton()->getTextureLoader()->save(tex, Kernel::getSingleton()->getResourceDir()+"screens\\raytraced.png");
 	
@@ -96,6 +106,46 @@ void OptixRender::_displayFrame( Buffer buffer )
     buffer->unmap();
 }
 
+void CalculateCameraVariables( glm::vec3 eye,
+                                        glm::vec3 lookat, 
+                                        glm::vec3 up,
+                                        float hfov,
+                                        float aspect_ratio,
+                                        glm::vec3& U,
+                                        glm::vec3& V,
+                                        glm::vec3& W )
+{
+  W = lookat - eye; // Do not normalize W -- it implies focal length
+
+  float wlen = sqrtf( glm::dot( W, W ) );
+  U = glm::cross( W, up );
+  U = glm::normalize( U );
+  V = glm::cross( U, W );
+  V = glm::normalize( V );
+  float ulen = wlen * tanf( hfov / 2.0f * 3.14159265358979323846f / 180.0f );
+  U *= ulen;
+  float vlen =  ulen/aspect_ratio;
+  V *= vlen;
+}
+
+void CalculateCameraVariables( glm::mat4 view,
+                                        float hfov,
+                                        float aspect_ratio,
+                                        glm::vec3& U,
+                                        glm::vec3& V,
+                                        glm::vec3& W )
+{
+    U = glm::vec3(view[0]);
+    V = glm::vec3(view[1]);
+    W = glm::vec3(view[2]);
+    float wlen = sqrtf( glm::dot( W, W ) );
+    float ulen = wlen * tanf( hfov / 2.0f * 3.14159265358979323846f / 180.0f );
+    U *= ulen;
+    float vlen = ulen/aspect_ratio;
+    V *= vlen;
+    
+}
+
 void OptixRender::render()
 {
   //unsigned int pbo = context["output_buffer"]->getBuffer()->getGLBOId(); // not a pbo!
@@ -103,10 +153,20 @@ void OptixRender::render()
 	auto &view = camera->getViewMatrix();
 	auto &pos = camera->getPos();
  
-	context["eye"]->setFloat( pos.x, pos.y, pos.z );
-	context["U"]->setFloat( view[0][0], view[1][0], view[2][0] );
-	context["V"]->setFloat( view[0][1], view[1][1], view[2][1] );
-	context["W"]->setFloat( view[0][2], view[1][2], view[2][2] );
+    glm::vec3 cam_eye = pos;
+    glm::vec3 lookat  = pos + glm::vec3(view[2]);
+    glm::vec3 up      = glm::vec3(view[1]);
+    float  hfov = camera->getFov();
+    float  aspect_ratio = static_cast<float>(w) / static_cast<float>(h);
+
+    glm::vec3 U,V,W;
+    //CalculateCameraVariables(cam_eye,lookat,up,hfov,aspect_ratio, U, V, W );
+    CalculateCameraVariables( view,  hfov, aspect_ratio, U, V, W );
+
+    context["eye"]->setFloat( cam_eye.x, cam_eye.y, cam_eye.z );
+    context["U"]->set3fv( glm::value_ptr(U) );
+    context["V"]->set3fv( glm::value_ptr(V) );
+    context["W"]->set3fv( glm::value_ptr(W) );
 
 	try {
 		context->launch(0, w,h);
@@ -150,15 +210,6 @@ Context OptixRender::createContext()
       std::cout << w << std::endl;
   }
 
-  auto camera = Scene::FirstPersonCamera::getSingleton();
-  auto &view = camera->getViewMatrix();
-  auto &pos = camera->getPos();
- 
-  context["eye"]->setFloat( pos.x, pos.y, pos.z );
-  context["U"]->setFloat( view[0][0], view[1][0], view[2][0] );
-  context["V"]->setFloat( view[0][1], view[1][1], view[2][1] );
-  context["W"]->setFloat( view[0][2], view[1][2], view[2][2] );
-
 	/*glm::vec3 W = glm::normalize(glm::vec3(0,-1,-1));          // normalize(at-eye) <--- view direction
 	glm::vec3 U = glm::normalize(glm::cross(W, glm::vec3(0,1,0) )); // normalize(w x up) <--- right direction
 	glm::vec3 V = glm::normalize(glm::cross(U,W ));           // normalize(u x w)  <--- up direction
@@ -190,7 +241,7 @@ Geometry OptixRender::createGeometry( Context context )
   sphere->setPrimitiveCount( 1u );
   sphere->setBoundingBoxProgram( context->createProgramFromPTXFile( baseDir + "sphere.cu.ptx", "bounds" ) );
   sphere->setIntersectionProgram( context->createProgramFromPTXFile( baseDir + "sphere.cu.ptx", "intersect" ) );
-  sphere["sphere"]->setFloat( 5, 3, -20.0f, 1.0f );
+  sphere["sphere"]->setFloat( 5, 3, 20.0f, 1.0f );
   return sphere;
 }
 

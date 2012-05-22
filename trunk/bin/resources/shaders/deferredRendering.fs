@@ -9,6 +9,8 @@ uniform sampler2D TEX_DIFF;
 uniform sampler2D TEX_POS;
 uniform sampler2D TEX_NORM;
 
+uniform sampler2D TEX_RAY;
+
 uniform vec3 ambient_mat[16];
 uniform vec3 diffuse_mat[16];
 uniform vec3 specular_mat[16];
@@ -66,12 +68,14 @@ void main( void )
 	float shininess = pp_t_ior_mat[material_id].r;
 	float term = compute_gauss_term(N, L, V, NdotL, shininess);
 	
+	vec4 ray_color = texture( TEX_RAY, Vertex.t );
+	
 	out_FragColor = vec4( 
 		((diffuse * diffuse_mat[material_id] * NdotL) +
 		(specular_mat[material_id] * term) +
 		(diffuse * ambient_mat[material_id])), 
 		1.0
-		);
+		) + ray_color;
 		
 		
 	//out_FragColor = vec4( diffuse, 1.0 );
