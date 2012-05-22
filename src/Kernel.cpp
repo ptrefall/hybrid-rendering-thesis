@@ -158,6 +158,9 @@ void Kernel::render()
 	glClearColor(0.f,0.f,0.f,1.f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
+    //Raytrace
+    raytracer->render();
+
 	//Rasterize
 	glEnable(GL_DEPTH_TEST);
 	g_buffer->begin();
@@ -166,8 +169,7 @@ void Kernel::render()
 	glDisable(GL_DEPTH_TEST);
 	renderer->render();
 
-    //Raytrace
-    raytracer->render();
+
 	//tex_loader->save(nullptr, resource_dir+"screens\\MRT.png");
 }
 
@@ -262,7 +264,7 @@ void Kernel::initScene()
 		cube->setPosition( glm::vec3(5,5,-20) );
 	}
 
-	/*Scene::CubePtr cube2 = std::make_shared<Scene::Cube>(.5f);
+	Scene::CubePtr cube2 = std::make_shared<Scene::Cube>(.5f);
 	{
 		cube2->setMVP(	g_buffer->getMVP());
 		cube2->setMV(	g_buffer->getMV());
@@ -271,14 +273,21 @@ void Kernel::initScene()
 		cube2->setMaterial(red_cube_mat);
 		scene->add(cube2);
 		cube2->setPosition( glm::vec3(5,3,-20) );
-	}*/
+	}
 
-	for ( int i=0; i<3; i++ ) {
-		for ( int j=0; j<3; j++ ) {
-			float x = 10*(-.5f + i/3.f);
-			float z = 10*(-.5f + j/3.f);
-
-			Scene::CubePtr cube2 = std::make_shared<Scene::Cube>(.5f);
+    const int sideBySide = 25;
+    const float fSideBySide = float(sideBySide);
+	for ( int i=0; i<sideBySide; i++ ) {
+		for ( int j=0; j<sideBySide; j++ ) {
+            const float u = -.5f + i/fSideBySide;
+            const float v = -.5f + j/fSideBySide;
+            float freq = 2.f * 6.28f;
+            float distOrigin = sqrt(u*u + v*v);
+            const float x = fSideBySide*u;
+            const float y = 1.5f * cos(distOrigin * freq);
+			const float z = fSideBySide*v;
+            
+			Scene::CubePtr cube2 = std::make_shared<Scene::Cube>(0.5f);
 			{
 				cube2->setMVP(	g_buffer->getMVP());
 				cube2->setMV(	g_buffer->getMV());
@@ -286,7 +295,7 @@ void Kernel::initScene()
 				cube2->setTexture(array_tex, tex_sampler, array_sampler);
 				cube2->setMaterial(blue_cube_mat);
 				scene->add(cube2);
-				cube2->setPosition( glm::vec3(5 + x,-3,-20 + z) );
+				cube2->setPosition( glm::vec3(x,y,z) );
 			}
 		}
 	}

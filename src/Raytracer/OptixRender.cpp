@@ -106,44 +106,46 @@ void OptixRender::_displayFrame( Buffer buffer )
     buffer->unmap();
 }
 
-void CalculateCameraVariables( glm::vec3 eye,
-                                        glm::vec3 lookat, 
-                                        glm::vec3 up,
-                                        float hfov,
-                                        float aspect_ratio,
-                                        glm::vec3& U,
-                                        glm::vec3& V,
-                                        glm::vec3& W )
+// C++ version of sutil.c code
+void CalculateCameraVariables(  glm::vec3 eye, glm::vec3 lookAt, glm::vec3 up,
+                                float hfov,
+                                float aspect_ratio,
+                                glm::vec3& U,
+                                glm::vec3& V,
+                                glm::vec3& W )
 {
-  W = lookat - eye; // Do not normalize W -- it implies focal length
-
+  
+  W = lookAt - eye;  /* Do not normalize W -- it implies focal length */
+  U = glm::normalize( glm::cross(W, up) );
+  V = glm::normalize( glm::cross( U, W ) );
   float wlen = sqrtf( glm::dot( W, W ) );
-  U = glm::cross( W, up );
-  U = glm::normalize( U );
-  V = glm::cross( U, W );
-  V = glm::normalize( V );
   float ulen = wlen * tanf( hfov / 2.0f * 3.14159265358979323846f / 180.0f );
-  U *= ulen;
   float vlen =  ulen/aspect_ratio;
+  U *= ulen;
   V *= vlen;
 }
 
-void CalculateCameraVariables( glm::mat4 view,
-                                        float hfov,
-                                        float aspect_ratio,
-                                        glm::vec3& U,
-                                        glm::vec3& V,
-                                        glm::vec3& W )
+void CalculateCameraVariables(  float hfov,
+                                float aspect_ratio,
+                                glm::vec3& U,
+                                glm::vec3& V,
+                                glm::vec3& W )
 {
-    U = glm::vec3(view[0]);
-    V = glm::vec3(view[1]);
-    W = glm::vec3(view[2]);
+    auto &cam = Scene::FirstPersonCamera::getSingleton();
+    glm::vec3 side = cam->getStrafeDirection();
+    glm::vec3 up = cam->getUpDirection();
+    glm::vec3 fwd = cam->getLookDirection();
+
+    // set up the coordinate system
+    W = fwd;//glm::normalize (fwd); 
+    U = side;//glm::normalize (glm::cross(up, W));
+    V = up;//glm::normalize (glm::cross(W, U));
+
     float wlen = sqrtf( glm::dot( W, W ) );
-    float ulen = wlen * tanf( hfov / 2.0f * 3.14159265358979323846f / 180.0f );
+    float ulen = wlen * tanf( glm::radians(hfov) / 2.0f );
     U *= ulen;
     float vlen = ulen/aspect_ratio;
     V *= vlen;
-    
 }
 
 void OptixRender::render()
@@ -151,19 +153,19 @@ void OptixRender::render()
   //unsigned int pbo = context["output_buffer"]->getBuffer()->getGLBOId(); // not a pbo!
 	auto camera = Scene::FirstPersonCamera::getSingleton();
 	auto &view = camera->getViewMatrix();
-	auto &pos = camera->getPos();
+	auto pos = camera->getPos();
  
-    glm::vec3 cam_eye = pos;
-    glm::vec3 lookat  = pos + glm::vec3(view[2]);
-    glm::vec3 up      = glm::vec3(view[1]);
-    float  hfov = camera->getFov();
-    float  aspect_ratio = static_cast<float>(w) / static_cast<float>(h);
+    float aspect_ratio = static_cast<float>(w) / static_cast<float>(h);
+    float inv_aspect_ratio = static_cast<float>(h) / static_cast<float>(w);
+    
+    float vfov = camera->getFov();
+    float hfov = vfov * aspect_ratio;
 
     glm::vec3 U,V,W;
-    //CalculateCameraVariables(cam_eye,lookat,up,hfov,aspect_ratio, U, V, W );
-    CalculateCameraVariables( view,  hfov, aspect_ratio, U, V, W );
+    //CalculateCameraVariables( hfov, aspect_ratio, U, V, W );
+    CalculateCameraVariables( pos, pos+camera->getLookDirection(), camera->getUpDirection(), hfov, aspect_ratio, U, V, W );
 
-    context["eye"]->setFloat( cam_eye.x, cam_eye.y, cam_eye.z );
+    context["eye"]->set3fv( glm::value_ptr(pos) );
     context["U"]->set3fv( glm::value_ptr(U) );
     context["V"]->set3fv( glm::value_ptr(V) );
     context["W"]->set3fv( glm::value_ptr(W) );
@@ -210,17 +212,6 @@ Context OptixRender::createContext()
       std::cout << w << std::endl;
   }
 
-	/*glm::vec3 W = glm::normalize(glm::vec3(0,-1,-1));          // normalize(at-eye) <--- view direction
-	glm::vec3 U = glm::normalize(glm::cross(W, glm::vec3(0,1,0) )); // normalize(w x up) <--- right direction
-	glm::vec3 V = glm::normalize(glm::cross(U,W ));           // normalize(u x w)  <--- up direction
-	float vLen = tanf( glm::radians( 60.0f * 0.5f ) );   // compute image height <--- tan( fovy / 2)
-	float uLen = vLen * 1.0;                      // compute image width  <--- height * aspect
-
-  context["eye"]->setFloat( 0.0f,5.0f,5.0f );
-  context["U"]->setFloat(uLen*U.x, uLen*U.y, uLen*U.z);
-  context["V"]->setFloat(vLen*V.x, vLen*V.y, vLen*V.z);
-  context["W"]->setFloat(W.x,W.y,W.z);*/
-
   // Exception program
   Program exception_program = context->createProgramFromPTXFile( ptx_path, "exception" );
   context->setExceptionProgram( 0, exception_program );
@@ -241,7 +232,8 @@ Geometry OptixRender::createGeometry( Context context )
   sphere->setPrimitiveCount( 1u );
   sphere->setBoundingBoxProgram( context->createProgramFromPTXFile( baseDir + "sphere.cu.ptx", "bounds" ) );
   sphere->setIntersectionProgram( context->createProgramFromPTXFile( baseDir + "sphere.cu.ptx", "intersect" ) );
-  sphere["sphere"]->setFloat( 5, 3, 20.0f, 1.0f );
+  //sphere["sphere"]->setFloat( 0.f, 0.f, 0.f, 1.0f );
+  sphere["sphere"]->setFloat( 5, 3, -20.0f, 1.0f );
   return sphere;
 }
 
