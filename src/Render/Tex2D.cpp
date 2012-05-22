@@ -58,20 +58,35 @@ void Tex2D::update(const T2DTexParams &tex_params)
 	wrap_mode = tex_params.wrap_mode;
 	data = tex_params.data;
 
+    GLenum error = glGetError();
+
 	if(handle == 0)
 	{
 		glGenTextures(1, &handle);
+        error = glGetError();
 		bind();
-		glTexImage2D(GL_TEXTURE_2D, 0, internal_format, w, h, 0, format, type, nullptr);
+        error = glGetError();
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_BGRA, type, nullptr);
+        error = glGetError();
 	}
 
-	bind();
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, w, h, format, type, data);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap_mode);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap_mode);
-	glGenerateMipmap(GL_TEXTURE_2D);
+    if(data)
+    {
+	    bind();
+        error = glGetError();
+	    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, w, h, GL_BGRA, type, data);
+        error = glGetError();
+	    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        error = glGetError();
+	    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        error = glGetError();
+	    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap_mode);
+        error = glGetError();
+	    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap_mode);
+        error = glGetError();
+	    glGenerateMipmap(GL_TEXTURE_2D);
+        error = glGetError();
+    }
 }
 
 void Tex2D::reset()
