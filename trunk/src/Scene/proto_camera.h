@@ -69,8 +69,9 @@ private:
     glm::vec3 cameraForward;
 
 	float vFov;
+	float near_dist;
 	float far_dist;
-    float near_dist;
+    
     float movementUnitsPerSecond;
     float mouseDegreesPerSecond;
 

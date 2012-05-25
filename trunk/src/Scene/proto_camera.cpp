@@ -47,8 +47,8 @@ FirstPersonCamera::FirstPersonCamera()
     cameraUp= glm::vec3(0.f, 1.f, 0.f);
     cameraForward = glm::vec3(0.f, 0.f, 1.f);
 	vFov = 45.f;
-	far_dist = 1.f;
-    near_dist = 1000.f;
+	near_dist = 1.f;
+	far_dist = 1000.f;
     movementUnitsPerSecond = 50.f;
     mouseDegreesPerSecond = 10.f;
     hang = 0.f;
