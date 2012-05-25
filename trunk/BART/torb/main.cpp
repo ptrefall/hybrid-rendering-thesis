@@ -3,19 +3,19 @@
 #pragma comment (lib, "opengl32.lib")
 
 #include <proto/protographics.h>
-#include "BARTScene.h"
 #include "ini_parser.h"
 
-protowizard::ProtoGraphicsPtr protoGfx;
+#include "BARTLoader/BARTScene.h"
+#include "Scene/SceneManager.h"
 
 int main()
 {
-	protoGfx = protowizard::ProtoGraphics::create();
+	protowizard::ProtoGraphics proto;
 
 	ini::Parser protoIni("proto.ini");
 	std::string protoAssets = protoIni.getString("init", "assetsdir", "F:\\repos\\github\\ProtoWizard\\bin\\assets\\");
 
-	if ( !protoGfx->init(640,480, protoAssets) ) 
+	if ( !proto.init(640,480, protoAssets) ) 
 	{
 		return 1;
 	}
@@ -23,13 +23,27 @@ int main()
 	ini::Parser config("config.ini");
 	std::string sceneDir = config.getString("load", "dir", "procedural");
 	std::string sceneMain = config.getString("load", "scene", "balls.nff");
-	BARTScene* scene = BARTScene::create(protoGfx, sceneDir, sceneMain);
+	BARTScene* loader = BARTScene::create(&proto, sceneDir, sceneMain);
 
-	protoGfx->setFrameRate(60);
-	while( protoGfx->isWindowOpen() ) {
+	Scene::SceneManager sceneMgr;
+	const auto &sceneNodes = loader->getSceneNodes();
+	sceneMgr.addList( sceneNodes );
 
-		scene->draw();
-		protoGfx->frame();
+	proto.setFrameRate(60);
+	proto.setColor(0.75f, 0.75f, 0.75f);
+	while( proto.isWindowOpen() ) {
+		//proto.cls( bgcolor.r, bgcolor.g, bgcolor.b );
+		proto.cls( 0.25f, 0.25f, 0.25f );
+
+		sceneMgr.render( proto );
+		//loader->draw();
+
+		float speed = 0.25f;
+		speed += proto.getMouseWheel() * 0.05f;
+		if ( speed < 0.01f ) speed = 0.01f;
+		proto.getCamera()->update( proto.keystatus(protowizard::KEY::LEFT), proto.keystatus(protowizard::KEY::RIGHT), proto.keystatus(protowizard::KEY::DOWN), proto.keystatus(protowizard::KEY::UP), (float)proto.getMouseX(), (float)proto.getMouseY(), proto.mouseDownLeft(), speed * proto.getMSPF() );
+
+		proto.frame();
 
 	}
 
