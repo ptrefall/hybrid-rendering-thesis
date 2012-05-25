@@ -1,0 +1,29 @@
+#include "Light.h"
+
+#include <glm/ext.hpp>
+
+#include <vector>
+#include <sstream>
+
+using namespace Scene;
+using namespace glm;
+
+Light::Light(unsigned int lightId)
+{
+	data = std::make_shared<Data>(lightId, position);
+
+	{
+		std::stringstream ss;
+		ss << "light[" << lightId << "].position";
+		uni_position = std::make_shared<Render::Uniform>(ss.str());
+	}
+}
+
+void Light::bind(const Render::ShaderPtr &active_program)
+{
+	uni_position->bind(position, active_program->getFS());
+}
+
+void Light::unbind()
+{
+}

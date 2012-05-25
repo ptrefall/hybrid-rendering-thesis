@@ -22,10 +22,13 @@ namespace Render
 	{
 	public:
 		DeferredRender(const GBufferPtr &g_buffer, const File::ShaderLoaderPtr &shader_loader, unsigned int w, unsigned int h);
+		void begin();
 		void render();
+		void end();
 
 		void reshape(unsigned int w, unsigned int h);
-		
+
+		ShaderPtr getShader() const { return shader; }
 		void reloadShaders();
 
 		MaterialPtr addMaterial(const MaterialPtr &material) { materials.push_back(material); return material; }

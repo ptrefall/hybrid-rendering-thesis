@@ -10,6 +10,7 @@
 #include "File\MaterialLoader.h"
 #include "Scene\SceneManager.h"
 #include "Scene\Cube.h"
+#include "Scene\Light.h"
 #include "Scene\proto_camera.h"
 
 #include <GL3\gl3w.h>
@@ -164,10 +165,14 @@ void Kernel::render()
 	//Rasterize
 	glEnable(GL_DEPTH_TEST);
 	g_buffer->begin();
-	scene->render(g_buffer->getShader());
+		scene->render(g_buffer->getShader());
 	g_buffer->end();
 	glDisable(GL_DEPTH_TEST);
-	renderer->render();
+
+	renderer->begin();
+		scene->bindLights(renderer->getShader());
+		renderer->render();
+	renderer->end();
 
 
 	//tex_loader->save(nullptr, resource_dir+"screens\\MRT.png");
@@ -236,6 +241,9 @@ void Kernel::initScene()
     //camera->init(width, height, 60.0f, 1.0f, 1000.0f);
 	//camera->setTarget(glm::vec3(10,-8,20));
 
+	Scene::LightPtr light = std::make_shared<Scene::Light>(0);
+	light->setPosition(glm::vec3(0,0,0));
+
 	//auto cube_tex = tex_loader->load("cube.jpg", GL_REPEAT);
 
 	//auto array_tex = tex_loader->load_array("array.png", 16, 16, 2, 2, GL_REPEAT);
@@ -252,8 +260,7 @@ void Kernel::initScene()
 	auto red_cube_mat = renderer->addMaterial(mat_loader->load("red_cube.mat"));
 	auto blue_cube_mat = renderer->addMaterial(mat_loader->load("blue_cube.mat"));
 
-	Scene::CubePtr cube;
-	cube = std::make_shared<Scene::Cube>(1.0f);
+	Scene::CubePtr cube = std::make_shared<Scene::Cube>(1.0f);
 	{
 		cube->setMVP(	g_buffer->getMVP());
 		cube->setMV(	g_buffer->getMV());
@@ -287,15 +294,15 @@ void Kernel::initScene()
             const float y = 1.5f * cos(distOrigin * freq);
 			const float z = fSideBySide*v;
             
-			Scene::CubePtr cube2 = std::make_shared<Scene::Cube>(0.5f);
+			Scene::CubePtr cube3 = std::make_shared<Scene::Cube>(0.5f);
 			{
-				cube2->setMVP(	g_buffer->getMVP());
-				cube2->setMV(	g_buffer->getMV());
-				cube2->setN_WRI(	g_buffer->getN_WRI());
-				cube2->setTexture(array_tex, tex_sampler, array_sampler);
-				cube2->setMaterial(blue_cube_mat);
-				scene->add(cube2);
-				cube2->setPosition( glm::vec3(x,y,z) );
+				cube3->setMVP(	g_buffer->getMVP());
+				cube3->setMV(	g_buffer->getMV());
+				cube3->setN_WRI(	g_buffer->getN_WRI());
+				cube3->setTexture(array_tex, tex_sampler, array_sampler);
+				cube3->setMaterial(blue_cube_mat);
+				scene->add(cube3);
+				cube3->setPosition( glm::vec3(x,y,z) );
 			}
 		}
 	}
