@@ -18,12 +18,14 @@ namespace Scene
 
 		void render(const Render::ShaderPtr &active_program) override {}
 
+		void setPosition(const glm::vec3 &position) override;
+
 		struct Data
 		{
 			unsigned int lightId;
-			glm::vec3 &position;
+			glm::vec3 viewspace_position;
 			//Expand this later
-			Data(unsigned int lightId, glm::vec3 &position) : lightId(lightId), position(position) {}
+			Data(unsigned int lightId) : lightId(lightId){}
 		};
 		typedef std::shared_ptr<Data> DataPtr;
 		void setData(const DataPtr &data) { this->data = data; }
