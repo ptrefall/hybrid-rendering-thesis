@@ -16,6 +16,11 @@ uniform vec3 diffuse_mat[16];
 uniform vec3 specular_mat[16];
 uniform vec3 pp_t_ior_mat[16];
 
+uniform struct SLight
+{
+	vec3 position;
+} light[1];
+
 uniform vec3 CamPos;
 
 in block
@@ -60,7 +65,7 @@ void main( void )
 	vec3 N = normalize(normal_matid.xyz);
 	int material_id = int(normal_matid.a);
 	
-	vec3 light_pos = vec3(0,0,0);
+	vec3 light_pos = light[0].position;
 	vec3 L = normalize(light_pos - position);
 	vec3 V = normalize(CamPos-position);
 	

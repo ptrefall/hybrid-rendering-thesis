@@ -13,7 +13,7 @@ DeferredRender::DeferredRender(const GBufferPtr &g_buffer, const File::ShaderLoa
 	camPos = std::make_shared<Uniform>(shader->getFS(), "CamPos");
 }
 
-void DeferredRender::render()
+void DeferredRender::begin()
 {
 	shader->bind();
 	g_buffer->bind(shader->getFS());
@@ -33,8 +33,15 @@ void DeferredRender::render()
 		if(tex_uniform)
 			tex_uniform->bind(0);
 	}
+}
 
+void DeferredRender::render()
+{
 	quad->render(0);
+}
+
+void DeferredRender::end()
+{
 	g_buffer->unbind();
 
     if(tex)
