@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../Render/Material.h"
+
 #include <glm/glm.hpp>
 #include <proto/protographics.h>
 #include <memory>
@@ -18,7 +20,7 @@ namespace Scene
 
 		void setModelMatrix(const glm::mat4 &model) { this->model = model; }
 		//void setTexture(const Render::Tex2DArrayPtr &tex_array, const Render::UniformPtr &uniform, const Render::SamplerPtr &sampler);
-		//void setMaterial(const Render::MaterialPtr &material) { this->material = material; }
+		void setMaterial(const Render::MaterialPtr &material) { this->material = material; }
 
 	protected:
 		// tex
@@ -26,8 +28,7 @@ namespace Scene
 		// model matrix
 
 
-		//Render::MaterialPtr material;
-
+		Render::MaterialPtr material;
 		glm::mat4 model;
 	};
 }
