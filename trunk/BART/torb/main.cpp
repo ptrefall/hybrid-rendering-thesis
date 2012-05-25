@@ -5,7 +5,7 @@
 #include <proto/protographics.h>
 #include "ini_parser.h"
 
-#include "BARTLoader/BARTScene.h"
+#include "BARTLoader/BARTLoader.h"
 #include "Scene/SceneManager.h"
 
 int main()
@@ -23,7 +23,7 @@ int main()
 	ini::Parser config("config.ini");
 	std::string sceneDir = config.getString("load", "dir", "procedural");
 	std::string sceneMain = config.getString("load", "scene", "balls.nff");
-	BARTScene* loader = BARTScene::create(&proto, sceneDir, sceneMain);
+	BARTLoader* loader = BARTLoader::create(&proto, sceneDir, sceneMain);
 
 	Scene::SceneManager sceneMgr;
 	const auto &sceneNodes = loader->getSceneNodes();
@@ -32,11 +32,10 @@ int main()
 	proto.setFrameRate(60);
 	proto.setColor(0.75f, 0.75f, 0.75f);
 	while( proto.isWindowOpen() ) {
-		//proto.cls( bgcolor.r, bgcolor.g, bgcolor.b );
-		proto.cls( 0.25f, 0.25f, 0.25f );
+		const glm::vec3 bgColor = loader->getBgColor();
+		proto.cls( bgColor.r, bgColor.g, bgColor.b );
 
 		sceneMgr.render( proto );
-		//loader->draw();
 
 		float speed = 0.25f;
 		speed += proto.getMouseWheel() * 0.05f;
