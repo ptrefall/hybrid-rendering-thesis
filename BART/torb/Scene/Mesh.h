@@ -2,6 +2,10 @@
 
 #include "SceneNode.h"
 
+//#include "../Render/VAO.h"
+//#include "../Render/VBO.h"
+//#include "../Render/IBO.h"
+
 #include <glm/glm.hpp>
 #include <proto/protographics.h>
 #include <memory>
@@ -19,5 +23,9 @@ namespace Scene
 		void setMesh(const protowizard::MeshPtr &mesh) { this->mesh = mesh; }
 	protected:
 		protowizard::MeshPtr mesh;
+
+		//Render::VAOPtr vao;
+		//Render::VBOPtr vbo;
+		//Render::IBOPtr ibo;
 	};
 }

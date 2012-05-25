@@ -9,14 +9,14 @@ SceneManager::SceneManager()
 
 void SceneManager::render(const Render::ShaderPtr &active_program)
 {
-	for(auto node : scene)
-		node->render(active_program);
+	for(auto it = begin(scene); it!=end(scene); ++it )
+		(*it)->render(active_program);
 }
 
 void SceneManager::bindLights(const Render::ShaderPtr &active_program)
 {
-	for(auto light : lights)
-		light->bind(active_program);
+	for(auto it = begin(lights); it!=end(lights); ++it )
+		(*it)->bind(active_program);
 }
 
 void SceneManager::add(const SceneNodePtr &node)
