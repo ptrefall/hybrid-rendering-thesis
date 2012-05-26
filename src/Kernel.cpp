@@ -242,7 +242,7 @@ void Kernel::mousePressed(int button, int state, int x, int y)
 void Kernel::initScene()
 {
 	camera = Scene::FirstPersonCamera::getSingleton();
-	camera->updateProjection(width, height, 40.0f, 1.0f, 1000.0f);
+	camera->updateProjection(width, height, 40.0f, 0.1f, 1000.0f);
     //camera->init(width, height, 60.0f, 1.0f, 1000.0f);
 	//camera->setTarget(glm::vec3(10,-8,20));
 
