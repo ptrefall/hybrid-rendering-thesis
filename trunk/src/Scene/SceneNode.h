@@ -47,6 +47,6 @@ namespace Scene
 		Render::MaterialPtr material;
 
 		glm::mat4 model;
-		glm::vec3 position;
+		glm::vec3 position; // TODO remove position, now that we have a mat4?
 	};
 }

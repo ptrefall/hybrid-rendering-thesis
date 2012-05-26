@@ -23,24 +23,6 @@ struct light_t
 	glm::vec3 col;
 };
 
-//struct MaterialExt
-//{
-//	glm::vec3 amb,dif,spc;
-//	float phong_pow;
-//	float transmittance;
-//	float ior;
-//	bool isExtended;
-//
-//	MaterialExt( const glm::vec3& amb, const glm::vec3& dif, const glm::vec3& spc, 
-//		         float phong_pow, float transmittance, float ior, bool isExtended=false ) 
-//				 : amb(amb), dif(dif), spc(spc), 
-//				   phong_pow(phong_pow), transmittance(transmittance), ior(ior), isExtended(isExtended)
-//	{
-//	}
-//};
-
-//typedef std::shared_ptr<MaterialExt> MaterialExtPtr;
-
 struct sphere_t
 {
 	glm::vec3 pos;
@@ -64,27 +46,14 @@ struct poly_t
 	std::string texture;
 };
 
-/*
-struct BARTMesh
-{
-// BAD design:
-	std::vector<glm::vec3> vertCoords;
-	std::vector<glm::vec3> vertNormals;
-	std::vector<glm::vec2> texCoords;
-	MaterialExtPtr mat;
-	std::string texture;
-};
-
-
-typedef std::shared_ptr<BARTMesh> BARTMeshPtr;
-*/
-
 class InternalSceneNode;
 typedef std::shared_ptr<InternalSceneNode> InternalSceneNodePtr;
 class InternalSceneNode
 {
 public:
-	std::string name, fileScope;
+	std::string name;
+	std::string fileScope;
+	;
 	std::vector<InternalSceneNodePtr> children;
 
 	std::vector<Scene::MeshPtr> meshes;
@@ -98,8 +67,8 @@ public:
 		children.push_back(child);
 	}
 
-	void addMesh( Scene::MeshPtr& bartMesh ) {
-		meshes.push_back( bartMesh );
+	void addMesh( Scene::MeshPtr& m ) {
+		meshes.push_back(m);
 	}
 
 	void visit(int spaces) {
@@ -204,8 +173,6 @@ LoaderImpl( const std::string& sceneFolder, const std::string& mainSceneFile )
 	pushNode("root");
 	
 	loadScene();
-	printf("num scene nodes: %d \n", active.nodeCount );
-	printf("num lights: %d \n", (int)lightList.size() );
 }
 
 virtual ~LoaderImpl() {}
@@ -1861,11 +1828,12 @@ void flattenSceneGraph( const InternalSceneNodePtr &node, const glm::mat4 &paren
 	for(auto it=begin(node->meshes); it!=end(node->meshes); ++it ) {
 		const Scene::MeshPtr &pMesh = *it;
 
+		
+		// copy ctor is less obvious imo... but, saves having to write getter's.
 		//Scene::MeshPtr finalMesh = std::shared_ptr<Scene::Mesh>( new Scene::Mesh( pMesh->getVao(), pMesh->getVbo(), pMesh->getIbo() ) );
-		//finalMesh->setModelMatrix( combinedXform );
-		//sceneNodeList.push_back( finalMesh );
-		pMesh->setModelMatrix( combinedXform );
-		sceneNodeList.push_back( pMesh );
+		Scene::MeshPtr finalMesh = std::shared_ptr<Scene::Mesh>( new Scene::Mesh( (*pMesh) ) );
+		finalMesh->setModelMatrix( combinedXform ); // still need to use global xform.
+		sceneNodeList.push_back( finalMesh );
 	}
 
 	for(auto it=begin(node->children); it!=end(node->children); ++it ) {

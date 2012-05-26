@@ -17,6 +17,8 @@ namespace Scene
 	class Mesh : public SceneNode
 	{
 	public:
+		Mesh( const Mesh &copy );
+
 		Mesh(const Render::VAOPtr &vao, const Render::VBOPtr &vbo, const Render::IBOPtr &ibo);
 		
 		Mesh::Mesh(const std::vector<glm::vec3> &vertices, 
