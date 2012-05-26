@@ -22,6 +22,7 @@ namespace Scene
 		void bindLights(const Render::ShaderPtr &active_program);
 
 		void add(const SceneNodePtr &node);
+		void addList(const std::vector<SceneNodePtr> &nodeList);
 		void add(const LightPtr &light);
 
 	private:

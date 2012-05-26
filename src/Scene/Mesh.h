@@ -24,7 +24,7 @@ namespace Scene
 	       const std::vector<glm::vec2> &tex_coords, 
 		   const std::vector<unsigned int> &indices);
 
-		virtual void render(const Render::ShaderPtr &active_program);
+		void render(const Render::ShaderPtr &active_program) override;
 	
 		Render::VAOPtr getVao() { return vao; }
 		Render::VBOPtr getVbo() { return vbo; }

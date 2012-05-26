@@ -24,6 +24,11 @@ void SceneManager::add(const SceneNodePtr &node)
 	scene.push_back(node);
 }
 
+void SceneManager::addList(const std::vector<SceneNodePtr> &nodeList)
+{
+	scene.insert( scene.end(), nodeList.begin(), nodeList.end() );
+}
+
 void SceneManager::add(const LightPtr &light)
 {
 	lights.push_back(light);

@@ -47,11 +47,6 @@ Mesh::Mesh(const std::vector<glm::vec3> &vertices,
 
 void Mesh::render(const Render::ShaderPtr &active_program)
 {
-	//proto.setColor( material->ambient + material->diffuse + material->specular );
-	//proto.setOrientation( model );
-	//proto.drawMesh( mesh, true );
-	
-
   auto &proj = FirstPersonCamera::getSingleton()->getProjection();
   auto &view = FirstPersonCamera::getSingleton()->getViewMatrix();
 

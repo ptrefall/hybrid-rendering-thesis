@@ -79,22 +79,22 @@ struct BARTMesh
 typedef std::shared_ptr<BARTMesh> BARTMeshPtr;
 */
 
-class SceneNode;
-typedef std::shared_ptr<SceneNode> SceneNodePtr;
-class SceneNode
+class InternalSceneNode;
+typedef std::shared_ptr<InternalSceneNode> InternalSceneNodePtr;
+class InternalSceneNode
 {
 public:
 	std::string name, fileScope;
-	std::vector<SceneNodePtr> children;
+	std::vector<InternalSceneNodePtr> children;
 
 	std::vector<Scene::MeshPtr> meshes;
 	glm::mat4 tform;
 
-	SceneNode(const std::string& name) : name(name)
+	InternalSceneNode(const std::string& name) : name(name)
 	{
 	}
 
-	void add( SceneNodePtr child ) {
+	void add( InternalSceneNodePtr child ) {
 		children.push_back(child);
 	}
 
@@ -163,11 +163,11 @@ private:
 		std::vector<glm::vec3> triangleVertCoords;
 		std::vector<glm::vec3> triangleVertNormals;
 		std::vector<glm::vec2> triangleTexCoords;
-		std::unordered_map<std::string, SceneNodePtr> includefileToNodeMap;
+		std::unordered_map<std::string, InternalSceneNodePtr> includefileToNodeMap;
 
 		std::stack<std::string> fileScopeStack;
-		std::stack<SceneNodePtr> nodeStack;
-		SceneNodePtr sceneNode;
+		std::stack<InternalSceneNodePtr> nodeStack;
+		InternalSceneNodePtr sceneNode;
 		int nodeCount;
 	} active;
 
@@ -182,7 +182,7 @@ private:
 	glm::vec3 bgcolor;
 	
 	// Scene objects
-	AnimationList* mAnimations; // TODO. verify correctness
+	AnimationList* mAnimations;
 	std::vector<sphere_t> sphereList;
 	std::vector<cone_t> coneList;
 	std::vector<poly_t> polyList;
@@ -190,7 +190,7 @@ private:
 	std::vector<Render::MaterialPtr> materialList; // TODO, store in AssetMgr
 	
 	std::vector<Scene::SceneNodePtr> sceneNodeList;
-	SceneNodePtr sceneRoot;
+	InternalSceneNodePtr sceneRoot;
 
 public:
 LoaderImpl( const std::string& sceneFolder, const std::string& mainSceneFile )
@@ -279,7 +279,7 @@ void setupAnimParams( float start, float end, int num_frames )
 	Since .aff files are only loaded once, load the state of a node associated
 	with material state from that file
 */
-void recursiveSetMaterialState( const SceneNodePtr& node ) {
+void recursiveSetMaterialState( const InternalSceneNodePtr& node ) {
 	if ( node->meshes.size() ) {
 		recursiveSetMaterialState( node->children.front() );
 
@@ -627,28 +627,48 @@ void parseSphere(FILE *fp)
 	sphereList.push_back( sph );
 }	
 
-// TODO, perhaps find a soln that creates vert normals, and not just face normals... IQuilez homepage has a solution...
-//void calcNormals( std::vector<protowizard::Vertex_VNT>& vertices )
-//{
-//	if ( vertices.size() % 3 != 0 ) {
-//		throw "not all triangles?";
-//		return;
-//	}
-//
-//	for (size_t i=0; i<vertices.size(); i+=3) {
-//		glm::vec3 &v0 = vertices[i+0].v;
-//		glm::vec3 &v1 = vertices[i+1].v;
-//		glm::vec3 &v2 = vertices[i+2].v;
-//
-//		glm::vec3 v0v1 = v1-v0;
-//		glm::vec3 v0v2 = v2-v0;
-//		glm::vec3 n = glm::cross(v0v1, v0v2);
-//
-//		vertices[i+0].n = n;
-//		vertices[i+1].n = n;
-//		vertices[i+2].n = n;
-//	}
-//}
+
+void calcNormals( const std::vector<glm::vec3> &vertices,  
+	                    std::vector<glm::vec3> &normals )
+{
+	// Create dummy indices for ordered triangles.
+	std::vector<unsigned int> indices;
+	for (size_t i=0; i<vertices.size(); i++) {
+		indices.push_back(i);
+	}
+	calcNormals(vertices, indices, normals );
+}
+
+void calcNormals( const std::vector<glm::vec3> &vertices, 
+				  const std::vector<unsigned int> &indices, 
+	              std::vector<glm::vec3> &normals )
+{
+	if ( vertices.size() % 3 != 0 ) {
+		throw "not all triangles?";
+		return;
+	}
+
+	normals.resize( vertices.size() );
+	for (int i=0; i<normals.size(); i++ ) {
+		normals[i] = glm::vec3(0.f);
+	}
+
+	for (size_t i=0; i<indices.size()/3; i++) {
+		const glm::vec3 &v0 = vertices[indices[3*i+0]];
+		const glm::vec3 &v1 = vertices[indices[3*i+1]];
+		const glm::vec3 &v2 = vertices[indices[3*i+2]];
+
+		glm::vec3 n = glm::cross(v1 - v0, v2 - v0);
+		n = glm::normalize(n);
+		normals[indices[3*i+0]] += n;
+		normals[indices[3*i+1]] += n;
+		normals[indices[3*i+2]] += n;
+	}
+
+	for (int i=0; i<normals.size(); i++ ) {
+		normals[i] = glm::normalize(normals[i]);
+	}
+}
 
 /*----------------------------------------------------------------------
   parsePoly()
@@ -737,12 +757,14 @@ void parsePoly(FILE *fp)
 			// generate more faces. Look at Museum scene center for an example...
 			vertCoords.push_back( vertCoords[0] );
 			vertCoords.push_back( vertCoords[2] );
+
+			texCoords.push_back( texCoords[0] );
+			texCoords.push_back( texCoords[2] );
 		}
 		// Expecting triangles, so expect num verts to be divisable by 3.
 		assert( vertCoords.size() % 3 == 0 );
 		
-		
-		//TODO: calcNormals( vertices );
+		calcNormals( vertCoords, vertNormals  );
 		addPoly( vertCoords, vertNormals, texCoords );
     }
 	
@@ -782,7 +804,7 @@ void parseInclude(FILE *fp)
 	auto it = active.includefileToNodeMap.find( includeName );
 	if ( it != active.includefileToNodeMap.end() ) // seen before
 	{
-		SceneNodePtr subtreeAtInc = (*sceneNodeIt).second;
+		InternalSceneNodePtr subtreeAtInc = (*sceneNodeIt).second;
 		assert( subtreeAtInc->name == "null" );
 		active.sceneNode->add( subtreeAtInc );
 		recursiveSetMaterialState( active.sceneNode );
@@ -1430,7 +1452,7 @@ void endXform()
 
 void pushNode(const std::string& name, const glm::mat4& localTransform = glm::mat4(1.f) ) 
 {
-	SceneNodePtr newNode = SceneNodePtr( new SceneNode(name) );
+	InternalSceneNodePtr newNode = InternalSceneNodePtr( new InternalSceneNode(name) );
 
 	if ( name == "root" ) active.fileScopeStack.push("root");
 	std::string includeName = active.fileScopeStack.top();
@@ -1699,7 +1721,35 @@ void parseMesh(FILE *fp)
    /* add a mesh here
     * e.g.,viAddMesh(verts,num_verts,norms,num_norms,txts,num_txts,texturename,indices,num_tris);
     */
-   	addMesh(verts, norms, txts, indices);
+   // TODO use opengl indexed
+	size_t coordIdx = 0;
+	std::vector<glm::vec3> vertCoords;
+	std::vector<glm::vec3> vertNormals;
+	std::vector<glm::vec2> texCoords;
+	std::vector<unsigned int> fakeIndices;
+	for (int i=0; i<num_tris*3; i++){
+		glm::vec3 n0;
+		glm::vec2 t0;
+
+		// incrementing base index if optional data exists [tex] [norm] vert []-means optional
+		if ( txts.size() > 0 ) {
+			t0 = txts[ indices[coordIdx++] ]; 
+		}
+		if ( norms.size() > 0 ) {
+			n0 = norms[ indices[coordIdx++] ]; 
+		}
+		glm::vec3 v0 = verts[ indices[coordIdx++] ];
+
+
+		//protowizard::Vertex_VNT vtx( v0, n0, t0 );
+		//vertices.push_back(vtx);
+		vertCoords.push_back(v0);
+		vertNormals.push_back(n0);
+		texCoords.push_back(t0);
+		fakeIndices.push_back(i);
+	}
+
+	addMesh(vertCoords, vertNormals, texCoords, fakeIndices);
 }
 
 
@@ -1805,16 +1855,17 @@ void traverseScene()
 	}
 }
 
-void flattenSceneGraph( const SceneNodePtr &node, const glm::mat4 &parentXform )
+void flattenSceneGraph( const InternalSceneNodePtr &node, const glm::mat4 &parentXform )
 {
 	glm::mat4 combinedXform = parentXform * node->tform; // local xform then global xform
 	for(auto it=begin(node->meshes); it!=end(node->meshes); ++it ) {
 		const Scene::MeshPtr &pMesh = *it;
 
-		Scene::MeshPtr finalMesh = std::shared_ptr<Scene::Mesh>( new Scene::Mesh( pMesh->getVao(), pMesh->getVbo(), pMesh->getIbo() ) );
-		finalMesh->setModelMatrix( combinedXform );
-		// TODO finalMesh->setMaterial(  );
-		sceneNodeList.push_back( finalMesh );
+		//Scene::MeshPtr finalMesh = std::shared_ptr<Scene::Mesh>( new Scene::Mesh( pMesh->getVao(), pMesh->getVbo(), pMesh->getIbo() ) );
+		//finalMesh->setModelMatrix( combinedXform );
+		//sceneNodeList.push_back( finalMesh );
+		pMesh->setModelMatrix( combinedXform );
+		sceneNodeList.push_back( pMesh );
 	}
 
 	for(auto it=begin(node->children); it!=end(node->children); ++it ) {
