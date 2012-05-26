@@ -14,9 +14,8 @@ Light::Light(unsigned int lightId)
 	data = std::make_shared<Data>(lightId);
 
 	auto cam = FirstPersonCamera::getSingleton();
-	auto &proj = cam->getProjection();
 	auto &view = cam->getViewMatrix();
-	data->viewspace_position = vec3((proj * view) * vec4(position, 1.0));
+	data->viewspace_position = vec3(view * vec4(position, 1.0));
 
 
 	{
@@ -29,10 +28,9 @@ Light::Light(unsigned int lightId)
 void Light::setPosition(const glm::vec3 &position)
 {
 	auto cam = FirstPersonCamera::getSingleton();
-	auto &proj = cam->getProjection();
 	auto &view = cam->getViewMatrix();
 
-	data->viewspace_position = vec3((proj * view) * vec4(position, 1.0));
+	data->viewspace_position = vec3(view * vec4(position, 1.0));
 }
 
 void Light::bind(const Render::ShaderPtr &active_program)
