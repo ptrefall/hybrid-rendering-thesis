@@ -4,6 +4,13 @@
 #include "BARTLoader\animation.h"
 #include "..\Scene\Mesh.h"
 
+#include "..\Parser\BART\ParseComment.h"
+#include "..\Parser\BART\ParseViewpoint.h"
+#include "..\Parser\BART\ParseLight.h"
+#include "..\Parser\BART\ParseBackground.h"
+#include "..\Parser\BART\ParseFill.h"
+#include "..\Parser\BART\ParseCone.h"
+
 #include <glm/glm.hpp>
 #include "glm/ext.hpp"
 
@@ -111,22 +118,23 @@ void BARTLoader2::parseFile(const std::string &file_path)
 			continue;
 		case '#':   /* comment */
 		case '%':   /* comment */
-			parseComment(f.get()); /* ok */
+			Parser::BART::ParseComment::parse(f.get()); /* ok */
 			break;
 		case 'v':   /* view point */
-			parseViewpoint(f.get()); /* ok */
+			Parser::BART::ParseViewpoint::parse(f.get(), cam); /* ok */
 			break;
 		case 'l':   /* light source */
-			parseLight(f.get()); /* ok */
+			Parser::BART::ParseLight::parse(f.get(), lightList); /* ok */
 			break;
 		case 'b':   /* background color */
-			parseBackground(f.get()); /* ok */
+			Parser::BART::ParseBackground::parse(f.get(), bgcolor); /* ok */
 			break;
 		case 'f':   /* fill material */
-			parseFill(f.get()); /* ok */
+			Parser::BART::ParseFill::parse(f.get(), materialList); /* ok */
+			active.extMaterial = materialList[materialList.size()-1];
 			break;
 		case 'c':   /* cylinder or cone */
-			parseCone(f.get()); /* ok */
+			Parser::BART::ParseCone::parse(f.get(), active.extMaterial, coneList); /* ok */
 			break;
 		case 's':   /* sphere */
 			parseSphere(f.get()); /* ok */
@@ -162,285 +170,6 @@ void BARTLoader2::parseFile(const std::string &file_path)
 			throw std::runtime_error("unknown NFF primitive code: " + ch);
 		}
 	}
-}
-
-/*----------------------------------------------------------------------
-	parseComment()
-	Description:
-	"#" [ string ]
-	or 
-	"%" [ string ]
-
-	Format:
-	# [ string ]
-	or
-	% [ string ]
-
-	As soon as a "#" (or "%") character is detected, the rest of the line is
-	considered a comment. 
-----------------------------------------------------------------------*/
-void BARTLoader2::parseComment(FILE* f)
-{
-	char str[1000];
-	fgets(str, 1000, f);
-}
-
-/*----------------------------------------------------------------------
-  parseViewpoint()
-  Description:
-    "v"
-    "from" Fx Fy Fz
-    "at" Ax Ay Az
-    "up" Ux Uy Uz
-    "angle" angle
-    "hither" hither
-    "resolution" xres yres
-
-  Format:
-
-    v
-    from %g %g %g
-    at %g %g %g
-    up %g %g %g
-    angle %g
-    hither %g
-    resolution %d %d
-
-  The parameters are:
-
-    From:  the eye location in XYZ.
-    At:    a position to be at the center of the image, in XYZ world
-	   coordinates.  A.k.a. "lookat".
-    Up:    a vector defining which direction is up, as an XYZ vector.
-    Angle: in degrees, defined as from the center of top pixel row to
-	   bottom pixel row and left column to right column.
-           In AFF, if the width is different from the height, then
-           we interpret the Angle as the FOV in the y-direction (from top to bottom),
-           and we set the aspect ratio to width/height.
-    Resolution: in pixels, in x and in y.
-
-  Note that no assumptions are made about normalizing the data (e.g. the
-  from-at distance does not have to be 1).  Also, vectors are not
-  required to be perpendicular to each other.
-
-  For all databases some viewing parameters are always the same:
-    Yon is "at infinity."
-    Aspect ratio is 1.0.
-
-  A view entity must be defined before any objects are defined (this
-  requirement is so that NFF files can be used by hidden surface machines).
-----------------------------------------------------------------------*/
-void BARTLoader2::parseViewpoint(FILE *fp)
-{
-   float hither;
-   int resx;
-   int resy;
-	
-   if(fscanf(fp, " from %f %f %f", &cam.from.x, &cam.from.y, &cam.from.z) != 3)
-	   throw std::runtime_error("Parser view syntax error");
-   
-   if(fscanf(fp, " at %f %f %f", &cam.target.x, &cam.target.y, &cam.target.z) != 3)
-      throw std::runtime_error("Parser view syntax error");
-   
-   if(fscanf(fp, " up %f %f %f", &cam.up.x, &cam.up.y, &cam.up.z) != 3)
-      throw std::runtime_error("Parser view syntax error");
-   
-   if(fscanf(fp, " angle %f", &cam.fov) != 1)
-      throw std::runtime_error("Parser view syntax error");
-   
-   if(fscanf(fp, " hither %f", &hither) !=1)
-      throw std::runtime_error("Parser view syntax error");
-   if(hither<0.0001) hither=1.0f;
-      
-   if(fscanf(fp, " resolution %d %d", &resx, &resy) !=2)
-      throw std::runtime_error("Parser view syntax error");
-}
-
-/*----------------------------------------------------------------------
-  parseLight()
-  Positional light.  A light is defined by XYZ position and an optional color.
-  For animated lights we need to be able to identify light sources. We do
-  this by giving them a name.
-  Description:
-    "l" X Y Z [R G B]
-    "la" name X Y Z [R G B]   #animated light
-  Format:
-    l %g %g %g [%g %g %g]
-    la %s %g %g %g [%g %g %g]
-
-    All light entities must be defined before any objects are defined (this
-    requirement is so that NFF files can be used by hidden surface machines).
-    Lights have a non-zero intensity of no particular value [this definition
-    may change soon, with the addition of an intensity and/or color].
-    The name of an animated light must not contain any white spaces.
-----------------------------------------------------------------------*/
-void BARTLoader2::parseLight(FILE *fp)
-{
-   glm::vec3 pos;
-   glm::vec3 col;
-   char name[100];
-   strcpy(name,"");
-
-   int is_animated = getc(fp);
-   if(is_animated != 'a')
-   {
-      ungetc(is_animated, fp);
-      is_animated=0;
-   }
-
-   if(is_animated)  /* if it's an animated light, read its name */
-      fscanf(fp,"%s",name);
-
-   if(fscanf(fp, "%f %f %f ",&pos.x, &pos.y, &pos.z) != 3)
-	   throw std::runtime_error("Light source position syntax error");
-
-   /* read optional color of light */
-   int num=fscanf(fp, "%f %f %f ",&col.r, &col.g, &col.b);
-   if(num==0)
-	   col = glm::vec3(1.0f);
-   else if(num!=3)
-      throw std::runtime_error("Light source color syntax error");
-
-   /* add light source here:
-    * e.g. viAddLight(name,pos,col);
-    */
-   addLight(std::string(name),pos,col);
-}
-
-/*----------------------------------------------------------------------
-	parseBackground()
-	Background color.  A color is simply RGB with values between 0 and 1
-	Description:
-	"b" R G B
-
-	Format:
-	b %g %g %g
-
-	If no background color is set, assume RGB = {0,0,0}.
-----------------------------------------------------------------------*/
-void BARTLoader2::parseBackground(FILE* f)
-{
-	if(fscanf(f, "%f %f %f",&bgcolor.r, &bgcolor.g, &bgcolor.b) != 3)
-		throw std::runtime_error("background color syntax error");
-}
-
-/*----------------------------------------------------------------------
-  parseFill()
-  Fill color and shading parameters. 
-  Description:
-     "f" red green blue Kd Ks Shine T index_of_refraction
-     "fm" amb_r amb_g amb_b
-          diff_r diff_g diff_b
-          spec_r spec_g spec_b
-          Shine T index_of_refraction
-  Format:
-    f %g %g %g %g %g %g %g %g
-    fm %g %g %g  %g %g %g  %g %g %g  %g %g %g
-
-    RGB is in terms of 0.0 to 1.0.
-
-    Kd is the diffuse component, Ks the specular, Shine is the Phong cosine
-    power for highlights, T is transmittance (fraction of light passed per
-    unit).  Usually, 0 <= Kd <= 1 and 0 <= Ks <= 1, though it is not required
-    that Kd + Ks == 1.  Note that transmitting objects ( T > 0 ) are considered
-    to have two sides for algorithms that need these (normally objects have
-    one side).
-
-    The "fm" (fill material) version (not part of NFF) is a simple
-    extension of the material description: it involves RGB for
-    the ambient, the diffuse, and the specular component (instead of RGB,
-    Ks, Ld) plus Shine, T, and index_of_refraction.
-
-    The fill color is used to color the objects following it until a new color
-    is assigned.
-----------------------------------------------------------------------*/
-void BARTLoader2::parseFill(FILE *fp)
-{
-	float kd, ks, phong_pow, t, ior;
-	glm::vec3 col;
-	int moreparams;
-
-	moreparams = getc(fp);
-	if(moreparams != 'm')
-	{
-		ungetc(moreparams, fp);
-		moreparams = 0;
-	}
-
-	if(moreparams)  /* parse the extended material description */
-	{
-		glm::vec3 amb,dif,spc;
-		if(fscanf(fp,"%f %f %f",&amb.x, &amb.y, &amb.z) != 3)
-			throw std::runtime_error("fill material ambient syntax error");
-		if(fscanf(fp,"%f %f %f",&dif.x, &dif.y, &dif.z) != 3)
-			throw std::runtime_error("fill material diffuse syntax error");
-		if(fscanf(fp,"%f %f %f",&spc.x, &spc.y, &spc.z) != 3)
-			throw std::runtime_error("fill material specular syntax error");
-		if (fscanf(fp, "%f %f %f", &phong_pow, &t, &ior) != 3)
-			throw std::runtime_error("fill material (phong, transmittance, IOR) syntax error");
-
-		/* add your extended material here
-		* e.g., viAddExtendedMaterial(amb,dif,spc,4.0*phong_pow,t,ior);
-		*/
-		addMaterial( amb, dif, spc, phong_pow, t, ior );
-	}
-	else   /* parse the old NFF description of a material */
-	{
-		if (fscanf(fp, "%f %f %f",&col.x, &col.y, &col.z) != 3)
-			throw std::runtime_error("fill color syntax error");
-       
-		if (fscanf(fp, "%f %f %f %f %f", &kd, &ks, &phong_pow, &t, &ior) != 5)
-			throw std::runtime_error("fill material syntax error");
-       
-		/* add the normal NFF material here 
-		* e.g., viAddMaterial(col,kd,ks,4.0*phong_pow,t,ior);
-		*/
-		// TODO is it correct to use kd and ks just as attenuations?
-		addMaterial( glm::vec3(kd), col, glm::vec3(ks), phong_pow, t, ior );
-	}
-}
-
-/*----------------------------------------------------------------------
-  parseCone()
-  Cylinder or cone.  A cylinder is defined as having a radius and an axis
-    defined by two points, which also define the top and bottom edge of the
-    cylinder.  A cone is defined similarly, the difference being that the apex
-    and base radii are different.  The apex radius is defined as being smaller
-    than the base radius.  Note that the surface exists without endcaps.  The
-    cone or cylinder description:
-
-    "c"
-    base.x base.y base.z base_radius
-    apex.x apex.y apex.z apex_radius
-
-  Format:
-    c
-    %g %g %g %g
-    %g %g %g %g
-
-    A negative value for both radii means that only the inside of the object is
-    visible (objects are normally considered one sided, with the outside
-    visible).  Note that the base and apex cannot be coincident for a cylinder
-    or cone.
-----------------------------------------------------------------------*/
-void BARTLoader2::parseCone(FILE *fp)
-{
-	glm::vec3 base_pt;
-	glm::vec3 apex_pt;
-	float r0,r1;
-       
-	if(fscanf(fp, " %f %f %f %f %f %f %f %f", &base_pt.x,&base_pt.y, &base_pt.z,&r0,
-	     &apex_pt.x,&apex_pt.y, &apex_pt.z, &r1) !=8)
-       throw std::runtime_error("cylinder or cone syntax error\n");
-
-    if(r0 < 0.0)
-    {
-       r0 = -r0;
-       r1 = -r1;
-    }
-
-    cone_t cone = {base_pt, apex_pt, r0, r1, active.extMaterial};
-	coneList.push_back( cone );
 }
 
 /*----------------------------------------------------------------------
@@ -1315,20 +1044,6 @@ void BARTLoader2::parseMesh(FILE *fp)
 // ADD OPERATORS
 ////////
 ////////
-
-void BARTLoader2::addLight( const std::string name, const glm::vec3& pos, const glm::vec3& col ) 
-{
-	light_t l = {name, pos, col};
-	lightList.push_back( l );
-}
-
-void BARTLoader2::addMaterial( const glm::vec3& amb, const glm::vec3& dif, const glm::vec3& spc,
-	              float phong_pow, float transmittance, float ior )
-{
-	Render::MaterialParams params( 0, amb, dif, spc, phong_pow, transmittance, ior );
-	active.extMaterial = std::make_shared<Render::Material>( params );
-	materialList.push_back( active.extMaterial );
-}
 
 void BARTLoader2::addPoly( const std::vector<glm::vec3> &vertCoords,
               const std::vector<glm::vec3> &vertNormals,

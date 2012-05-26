@@ -18,6 +18,36 @@ namespace Scene
 
 namespace File
 {
+	namespace BART
+	{
+		struct camera_def
+		{
+			glm::vec3 from, target, up;
+			float fov;
+
+			camera_def() {
+				from = glm::vec3(0.f, 0.f, 0.f);
+				target = glm::vec3(0.f, 0.f, 1.f);
+				up = glm::vec3(0.f, 1.f, 0.f);
+				fov = 60.f;
+			}
+		};
+
+		struct light_t
+		{
+			std::string name;
+			glm::vec3 pos;
+			glm::vec3 col;
+		};
+
+		struct cone_t
+		{
+			glm::vec3 a,b;
+			float r1,r2;
+			Render::MaterialPtr mat;
+		};
+	}
+
 	class BARTLoader2;
 	typedef std::shared_ptr<BARTLoader2> BARTLoader2Ptr;
 
@@ -45,12 +75,6 @@ namespace File
 		void popNode();
 		
 		void parseFile(const std::string &file_path);
-		void parseComment(FILE* f);
-		void parseViewpoint(FILE *fp);
-		void parseLight(FILE *fp);
-		void parseBackground(FILE* f);
-		void parseFill(FILE *fp);
-		void parseCone(FILE *fp);
 		void parseSphere(FILE *fp);
 		void parsePoly(FILE *fp);
 		void parseInclude(FILE *fp);
@@ -66,8 +90,6 @@ namespace File
 		void parseAnimatedTriangle(FILE *fp);
 		void parseAnimParams(FILE *fp);
 
-		void addLight( const std::string name, const glm::vec3& pos, const glm::vec3& col );
-		void addMaterial( const glm::vec3& amb, const glm::vec3& dif, const glm::vec3& spc, float phong_pow, float transmittance, float ior );
 		void addPoly( const std::vector<glm::vec3> &vertCoords, const std::vector<glm::vec3> &vertNormals, const std::vector<glm::vec2> &texCoords );
 		void addTexturedTrianglePatch( const std::string& texturename, glm::vec3* verts, glm::vec3* norms, glm::vec2* uv );
 		void addTexturedTriangle( const std::string& texturename, glm::vec3* verts, glm::vec2* uv );
@@ -103,18 +125,7 @@ namespace File
 			glm::mat4 tform;
 		};
 
-		struct camera_def
-		{
-			glm::vec3 from, target, up;
-			float fov;
-
-			camera_def() {
-				from = glm::vec3(0.f, 0.f, 0.f);
-				target = glm::vec3(0.f, 0.f, 1.f);
-				up = glm::vec3(0.f, 1.f, 0.f);
-				fov = 60.f;
-			}
-		} cam;
+		BART::camera_def cam;
 
 		// Loader/parser temporaries. Become stored into scene objects
 		struct active_def
@@ -154,24 +165,10 @@ namespace File
 		// Global scene parameters
 		glm::vec3 bgcolor;
 
-		struct light_t
-		{
-			std::string name;
-			glm::vec3 pos;
-			glm::vec3 col;
-		};
-
 		struct sphere_t
 		{
 			glm::vec3 pos;
 			float radius;
-			Render::MaterialPtr mat;
-		};
-
-		struct cone_t
-		{
-			glm::vec3 a,b;
-			float r1,r2;
 			Render::MaterialPtr mat;
 		};
 
@@ -187,9 +184,9 @@ namespace File
 		// Scene objects
 		AnimationList* mAnimations;
 		std::vector<sphere_t> sphereList;
-		std::vector<cone_t> coneList;
+		std::vector<BART::cone_t> coneList;
 		std::vector<poly_t> polyList;
-		std::vector<light_t> lightList;
+		std::vector<BART::light_t> lightList;
 		std::vector<Render::MaterialPtr> materialList; // TODO, store in AssetMgr
 
 		std::vector<Scene::SceneNodePtr> sceneNodeList;
