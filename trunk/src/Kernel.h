@@ -91,6 +91,8 @@ private:
 	Kernel();
 
 	std::string resource_dir;
+	std::string scene_dir;
+	std::string scene_file;
 
 	int width;
 	int height;
