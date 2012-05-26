@@ -1,6 +1,7 @@
 #include "ParseViewpoint.h"
 
 #include "..\..\File\BARTLoader2.h"
+#include "..\..\Render\Material.h"
 
 #include <stdexcept>
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Render/Material.h"
+#include <glm\glm.hpp>
 
 #include <memory>
 #include <string>
@@ -9,6 +9,11 @@
 #include <unordered_map>
 
 struct AnimationList;
+
+namespace Render
+{
+	class Material; typedef std::shared_ptr<Material> MaterialPtr;
+}
 
 namespace Scene
 {
@@ -20,6 +25,14 @@ namespace File
 {
 	namespace BART
 	{
+		static void eatWhitespace(FILE *f)
+		{
+		   char ch=getc(f);
+		   while(ch==' ' || ch=='\t' || ch=='\n' || ch=='\f' || ch=='\r')
+			  ch=getc(f);
+		   ungetc(ch,f);
+		}
+
 		class InternalSceneNode;
 		typedef std::shared_ptr<InternalSceneNode> InternalSceneNodePtr;
 		class InternalSceneNode
@@ -50,17 +63,15 @@ namespace File
 			}
 		};
 
+		enum eTransformType{ STATIC_TRANSFORM, ANIMATED_TRANSFORM };
+
 		struct active_def
 		{
 			std::string tformName;
 			glm::mat4 tformMatrix;
 			std::stack<glm::mat4> tformStack;
 			// Keep track of transform hiearchy so we know when to pop a static tform
-			struct tformtype
-			{
-				enum eTransformType{ STATIC_TRANSFORM, ANIMATED_TRANSFORM };
-			};
-			std::stack<tformtype::eTransformType> tformTypeStack;
+			std::stack<eTransformType> tformTypeStack;
 		
 			Render::MaterialPtr extMaterial; // found in .aff-s
 			std::string texture;
@@ -106,6 +117,13 @@ namespace File
 			Render::MaterialPtr mat;
 			std::string texture;
 		};
+
+		struct anim_def
+		{
+			float startTime;
+			float endTime;
+			int numkeys;
+		};
 	}
 
 	class BARTLoader2;
@@ -128,48 +146,21 @@ namespace File
 		///////////////////////////////////
 		// MISC INTERNAL PARSING FUNCTIONS
 		///////////////////////////////////
-		void pushNode(const std::string& name, const glm::mat4& localTransform = glm::mat4(1.f) );
+		void pushNode(const std::string& name, const glm::mat4& localTransform );
 		void popNode();
 		
 		void parseFile(const std::string &file_path);
 		void parseInclude(FILE *fp);
-		void parseXform(FILE *f);
-		void endXform();
-		void parseA(FILE *f);
-		void parseKeyFrames(FILE *fp);
-		void parseMesh(FILE *fp);
-
-		void parseAnimParams(FILE *fp);
-
-		void addTexturedTrianglePatch( const std::string& texturename, glm::vec3* verts, glm::vec3* norms, glm::vec2* uv );
-		void addTexturedTriangle( const std::string& texturename, glm::vec3* verts, glm::vec2* uv );
-		void addMesh( const std::vector<glm::vec3> &vertCoords, const std::vector<glm::vec3> &vertNormals, const std::vector<glm::vec2> &texCoords, const std::vector<unsigned int> &indices );
 
 		void recursiveSetMaterialState( const BART::InternalSceneNodePtr& node );
-		void setupAnimParams( float start, float end, int num_frames );
 		void flattenSceneGraph( const BART::InternalSceneNodePtr &node, const glm::mat4 &parentXform );
-		
-		void getVectors(FILE *fp,char *type, std::vector<glm::vec3>& vecs);
-		void getTextureCoords(FILE *fp,char *texturename,std::vector<glm::vec2>& txts);
-		void getTriangles(FILE *fp,int *num_tris,std::vector<unsigned int>& indices, bool hasNorms, bool hasTexCoords);
-
-		static void eatWhitespace(FILE *f);
 
 		///////////////////////////////////
 		// MISC INTERNAL PARSING DATA
 		///////////////////////////////////
-
 		BART::camera_def cam;
-
-		// Loader/parser temporaries. Become stored into scene objects
-		BART::active_def active;
-
-		struct anim_def
-		{
-			float startTime;
-			float endTime;
-			int numkeys;
-		} anim;
+		BART::active_def active; // Loader/parser temporaries. Become stored into scene objects
+		BART::anim_def anim;
 
 		// Global scene parameters
 		glm::vec3 bgcolor;
