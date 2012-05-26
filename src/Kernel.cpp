@@ -8,7 +8,7 @@
 #include "File\ShaderLoader.h"
 #include "File\TextureLoader.h"
 #include "File\MaterialLoader.h"
-#include "File\BARTLoader\BARTLoader.h"
+#include "File\BARTLoader2.h"
 #include "Scene\SceneManager.h"
 #include "Scene\Cube.h"
 #include "Scene\Light.h"
@@ -99,10 +99,6 @@ void Kernel::config(const std::string &resource_dir)
 	game_mode = parser.getInt("Modes", "game", ENGINE_DEFAULT_GAME_MODE);
 	opengl_major_version = parser.getInt("OpenGL", "major_version", ENGINE_OPENGL_VERSION_MAJOR);
 	opengl_minor_version = parser.getInt("OpenGL", "minor_version", ENGINE_OPENGL_VERSION_MINOR);
-	
-	ini::Parser config(resource_dir + "ini\\scene.ini");
-	scene_dir = resource_dir + config.getString("load", "dir", resource_dir + "\\bart_scenes\\procedural");
-	scene_file = config.getString("load", "scene", "balls.nff");
 }
 
 void Kernel::init(int argc, char** argv)
@@ -122,6 +118,7 @@ void Kernel::init(int argc, char** argv)
 	shader_loader = std::make_shared<File::ShaderLoader>(resource_dir+"shaders\\");
 	tex_loader = std::make_shared<File::TextureLoader>(resource_dir+"textures\\");
 	mat_loader = std::make_shared<File::MaterialLoader>(resource_dir+"materials\\");
+	bart_loader = std::make_shared<File::BARTLoader2>(resource_dir+"bart_scenes\\");
 
 
 	//////////////////////////////////////////
@@ -312,10 +309,13 @@ void Kernel::initScene()
 		}
 	}
 
-	
-	File::BARTLoader* loader = File::BARTLoader::create(scene_dir, scene_file);
-	std::vector<Scene::SceneNodePtr> nodes = loader->getSceneNodes();
-	for(auto it=begin(nodes); it!=end(nodes); ++it){
+	ini::Parser config(resource_dir + "ini\\scene.ini");
+	auto scene_dir = config.getString("load", "dir", "procedural\\");
+	auto scene_file = config.getString("load", "scene", "balls.nff");
+
+	std::vector<Scene::SceneNodePtr> nodes = bart_loader->load(scene_dir, scene_file);
+	for(auto it=begin(nodes); it!=end(nodes); ++it)
+	{
 		Scene::SceneNodePtr &node = *it;
 		node->setMVP(	g_buffer->getMVP());
 		node->setMV(	g_buffer->getMV());
@@ -324,5 +324,4 @@ void Kernel::initScene()
 		//node->setMaterial(basic_cube_mat);
 	}
 	scene->addList( nodes );
-	delete loader;
 }
