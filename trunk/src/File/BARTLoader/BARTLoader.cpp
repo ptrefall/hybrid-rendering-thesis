@@ -14,7 +14,8 @@
 
 #include "../../Scene/Mesh.h"
 
-using namespace File;
+namespace File
+{
 
 struct light_t
 {
@@ -1856,3 +1857,4 @@ BARTLoader* BARTLoader::create(const std::string& sceneFolder, const std::string
 	return new LoaderImpl(sceneFolder, mainSceneFile);
 }
 
+} //end namespace

@@ -20,6 +20,7 @@ namespace File
 	class ShaderLoader; typedef std::shared_ptr<ShaderLoader> ShaderLoaderPtr;
 	class TextureLoader; typedef std::shared_ptr<TextureLoader> TextureLoaderPtr;
 	class MaterialLoader; typedef std::shared_ptr<MaterialLoader> MaterialLoaderPtr;
+	class BARTLoader2; typedef std::shared_ptr<BARTLoader2> BARTLoader2Ptr;
 }
 namespace Scene
 {
@@ -78,6 +79,7 @@ public:
 	File::ShaderLoaderPtr getShaderLoader() const { return shader_loader; }
 	File::TextureLoaderPtr getTextureLoader() const { return tex_loader; }
 	File::MaterialLoaderPtr getMaterialLoader() const { return mat_loader; }
+	File::BARTLoader2Ptr getBARTLoader() const { return bart_loader; }
 	Scene::SceneManagerPtr getSceneManager() const { return scene; }
 	Scene::FirstPersonCameraPtr getActiveCamera() const { return camera; }
 
@@ -91,8 +93,6 @@ private:
 	Kernel();
 
 	std::string resource_dir;
-	std::string scene_dir;
-	std::string scene_file;
 
 	int width;
 	int height;
@@ -115,6 +115,7 @@ private:
 	File::ShaderLoaderPtr shader_loader;
 	File::TextureLoaderPtr tex_loader;
 	File::MaterialLoaderPtr mat_loader;
+	File::BARTLoader2Ptr bart_loader;
 	Scene::SceneManagerPtr scene;
     Scene::FirstPersonCameraPtr camera;
 	
