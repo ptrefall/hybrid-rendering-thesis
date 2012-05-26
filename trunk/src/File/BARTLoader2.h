@@ -20,96 +20,8 @@ namespace File
 {
 	namespace BART
 	{
-		struct camera_def
-		{
-			glm::vec3 from, target, up;
-			float fov;
-
-			camera_def() {
-				from = glm::vec3(0.f, 0.f, 0.f);
-				target = glm::vec3(0.f, 0.f, 1.f);
-				up = glm::vec3(0.f, 1.f, 0.f);
-				fov = 60.f;
-			}
-		};
-
-		struct light_t
-		{
-			std::string name;
-			glm::vec3 pos;
-			glm::vec3 col;
-		};
-
-		struct cone_t
-		{
-			glm::vec3 a,b;
-			float r1,r2;
-			Render::MaterialPtr mat;
-		};
-	}
-
-	class BARTLoader2;
-	typedef std::shared_ptr<BARTLoader2> BARTLoader2Ptr;
-
-	class BARTLoader2
-	{
-	public:
-		BARTLoader2(const std::string &base_dir);
-		
-		std::vector<Scene::SceneNodePtr> load(const std::string& sceneFolder, const std::string& mainSceneFile);
-
-	private:
-		std::string base_dir;
-
-		unsigned int detailLevel;
-		std::string sceneFolder;
-		std::string mainSceneFile;
-
 		class InternalSceneNode;
 		typedef std::shared_ptr<InternalSceneNode> InternalSceneNodePtr;
-
-		///////////////////////////////////
-		// MISC INTERNAL PARSING FUNCTIONS
-		///////////////////////////////////
-		void pushNode(const std::string& name, const glm::mat4& localTransform = glm::mat4(1.f) );
-		void popNode();
-		
-		void parseFile(const std::string &file_path);
-		void parseSphere(FILE *fp);
-		void parsePoly(FILE *fp);
-		void parseInclude(FILE *fp);
-		void parseDetailLevel(FILE *fp);
-		void parseTextureStuff(FILE *fp);
-		void parseXform(FILE *f);
-		void endXform();
-		void parseA(FILE *f);
-		void parseKeyFrames(FILE *fp);
-		void parseMesh(FILE *fp);
-
-		void parseTexturedTriangle(FILE *fp);
-		void parseAnimatedTriangle(FILE *fp);
-		void parseAnimParams(FILE *fp);
-
-		void addPoly( const std::vector<glm::vec3> &vertCoords, const std::vector<glm::vec3> &vertNormals, const std::vector<glm::vec2> &texCoords );
-		void addTexturedTrianglePatch( const std::string& texturename, glm::vec3* verts, glm::vec3* norms, glm::vec2* uv );
-		void addTexturedTriangle( const std::string& texturename, glm::vec3* verts, glm::vec2* uv );
-		void addMesh( const std::vector<glm::vec3> &vertCoords, const std::vector<glm::vec3> &vertNormals, const std::vector<glm::vec2> &texCoords, const std::vector<unsigned int> &indices );
-
-		void calcNormals( const std::vector<glm::vec3> &vertices, std::vector<glm::vec3> &normals );
-		void calcNormals( const std::vector<glm::vec3> &vertices, const std::vector<unsigned int> &indices, std::vector<glm::vec3> &normals );
-		void recursiveSetMaterialState( const InternalSceneNodePtr& node );
-		void setupAnimParams( float start, float end, int num_frames );
-		void flattenSceneGraph( const InternalSceneNodePtr &node, const glm::mat4 &parentXform );
-		
-		void getVectors(FILE *fp,char *type, std::vector<glm::vec3>& vecs);
-		void getTextureCoords(FILE *fp,char *texturename,std::vector<glm::vec2>& txts);
-		void getTriangles(FILE *fp,int *num_tris,std::vector<unsigned int>& indices, bool hasNorms, bool hasTexCoords);
-
-		static void eatWhitespace(FILE *f);
-
-		///////////////////////////////////
-		// MISC INTERNAL PARSING DATA
-		///////////////////////////////////
 		class InternalSceneNode
 		{
 		public:
@@ -125,9 +37,19 @@ namespace File
 			glm::mat4 tform;
 		};
 
-		BART::camera_def cam;
+		struct camera_def
+		{
+			glm::vec3 from, target, up;
+			float fov;
 
-		// Loader/parser temporaries. Become stored into scene objects
+			camera_def() {
+				from = glm::vec3(0.f, 0.f, 0.f);
+				target = glm::vec3(0.f, 0.f, 1.f);
+				up = glm::vec3(0.f, 1.f, 0.f);
+				fov = 60.f;
+			}
+		};
+
 		struct active_def
 		{
 			std::string tformName;
@@ -153,17 +75,21 @@ namespace File
 			std::stack<InternalSceneNodePtr> nodeStack;
 			InternalSceneNodePtr sceneNode;
 			int nodeCount;
-		} active;
+		};
 
-		struct anim_def
+		struct light_t
 		{
-			float startTime;
-			float endTime;
-			int numkeys;
-		} anim;
+			std::string name;
+			glm::vec3 pos;
+			glm::vec3 col;
+		};
 
-		// Global scene parameters
-		glm::vec3 bgcolor;
+		struct cone_t
+		{
+			glm::vec3 a,b;
+			float r1,r2;
+			Render::MaterialPtr mat;
+		};
 
 		struct sphere_t
 		{
@@ -180,16 +106,83 @@ namespace File
 			Render::MaterialPtr mat;
 			std::string texture;
 		};
+	}
+
+	class BARTLoader2;
+	typedef std::shared_ptr<BARTLoader2> BARTLoader2Ptr;
+
+	class BARTLoader2
+	{
+	public:
+		BARTLoader2(const std::string &base_dir);
+		
+		std::vector<Scene::SceneNodePtr> load(const std::string& sceneFolder, const std::string& mainSceneFile);
+
+	private:
+		std::string base_dir;
+
+		unsigned int detailLevel;
+		std::string sceneFolder;
+		std::string mainSceneFile;
+
+		///////////////////////////////////
+		// MISC INTERNAL PARSING FUNCTIONS
+		///////////////////////////////////
+		void pushNode(const std::string& name, const glm::mat4& localTransform = glm::mat4(1.f) );
+		void popNode();
+		
+		void parseFile(const std::string &file_path);
+		void parseInclude(FILE *fp);
+		void parseXform(FILE *f);
+		void endXform();
+		void parseA(FILE *f);
+		void parseKeyFrames(FILE *fp);
+		void parseMesh(FILE *fp);
+
+		void parseAnimParams(FILE *fp);
+
+		void addTexturedTrianglePatch( const std::string& texturename, glm::vec3* verts, glm::vec3* norms, glm::vec2* uv );
+		void addTexturedTriangle( const std::string& texturename, glm::vec3* verts, glm::vec2* uv );
+		void addMesh( const std::vector<glm::vec3> &vertCoords, const std::vector<glm::vec3> &vertNormals, const std::vector<glm::vec2> &texCoords, const std::vector<unsigned int> &indices );
+
+		void recursiveSetMaterialState( const BART::InternalSceneNodePtr& node );
+		void setupAnimParams( float start, float end, int num_frames );
+		void flattenSceneGraph( const BART::InternalSceneNodePtr &node, const glm::mat4 &parentXform );
+		
+		void getVectors(FILE *fp,char *type, std::vector<glm::vec3>& vecs);
+		void getTextureCoords(FILE *fp,char *texturename,std::vector<glm::vec2>& txts);
+		void getTriangles(FILE *fp,int *num_tris,std::vector<unsigned int>& indices, bool hasNorms, bool hasTexCoords);
+
+		static void eatWhitespace(FILE *f);
+
+		///////////////////////////////////
+		// MISC INTERNAL PARSING DATA
+		///////////////////////////////////
+
+		BART::camera_def cam;
+
+		// Loader/parser temporaries. Become stored into scene objects
+		BART::active_def active;
+
+		struct anim_def
+		{
+			float startTime;
+			float endTime;
+			int numkeys;
+		} anim;
+
+		// Global scene parameters
+		glm::vec3 bgcolor;
 	
 		// Scene objects
 		AnimationList* mAnimations;
-		std::vector<sphere_t> sphereList;
+		std::vector<BART::sphere_t> sphereList;
 		std::vector<BART::cone_t> coneList;
-		std::vector<poly_t> polyList;
+		std::vector<BART::poly_t> polyList;
 		std::vector<BART::light_t> lightList;
 		std::vector<Render::MaterialPtr> materialList; // TODO, store in AssetMgr
 
 		std::vector<Scene::SceneNodePtr> sceneNodeList;
-		InternalSceneNodePtr sceneRoot;
+		BART::InternalSceneNodePtr sceneRoot;
 	};
 }

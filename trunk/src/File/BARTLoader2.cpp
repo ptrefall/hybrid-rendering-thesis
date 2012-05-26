@@ -10,6 +10,10 @@
 #include "..\Parser\BART\ParseBackground.h"
 #include "..\Parser\BART\ParseFill.h"
 #include "..\Parser\BART\ParseCone.h"
+#include "..\Parser\BART\ParseSphere.h"
+#include "..\Parser\BART\ParsePoly.h"
+#include "..\Parser\BART\ParseDetailLevel.h"
+#include "..\Parser\BART\ParseTextureStuff.h"
 
 #include <glm/glm.hpp>
 #include "glm/ext.hpp"
@@ -46,7 +50,7 @@ std::vector<Scene::SceneNodePtr> BARTLoader2::load(const std::string& sceneFolde
 
 void BARTLoader2::pushNode(const std::string& name, const glm::mat4& localTransform ) 
 {
-	auto newNode = std::make_shared<InternalSceneNode>(name);
+	auto newNode = std::make_shared<BART::InternalSceneNode>(name);
 
 	if ( name == "root" ) 
 		active.fileScopeStack.push("root");
@@ -130,26 +134,25 @@ void BARTLoader2::parseFile(const std::string &file_path)
 			Parser::BART::ParseBackground::parse(f.get(), bgcolor); /* ok */
 			break;
 		case 'f':   /* fill material */
-			Parser::BART::ParseFill::parse(f.get(), materialList); /* ok */
-			active.extMaterial = materialList[materialList.size()-1];
+			Parser::BART::ParseFill::parse(f.get(), materialList, active); /* ok */
 			break;
 		case 'c':   /* cylinder or cone */
-			Parser::BART::ParseCone::parse(f.get(), active.extMaterial, coneList); /* ok */
+			Parser::BART::ParseCone::parse(f.get(), active.extMaterial, coneList); /* ok */ 
 			break;
 		case 's':   /* sphere */
-			parseSphere(f.get()); /* ok */
+			Parser::BART::ParseSphere::parse(f.get(), active.extMaterial, sphereList); /* ok */
 			break;
 		case 'p':   /* polygon or patch */
-			parsePoly(f.get());
+			Parser::BART::ParsePoly::parse(f.get());
 			break;
 		case 'i':   /* include another file */
 			parseInclude(f.get());  /* ok */
 			break;
 		case 'd':   /* detail level of file (used to exclude objects from rendering) */
-			parseDetailLevel(f.get()); /* ok */
+			Parser::BART::ParseDetailLevel::parse(f.get(), detailLevel); /* ok */
 			break;
 		case 't':  /* textured triangle, or texture tripatch, or animated triangle */
-			parseTextureStuff(f.get());
+			Parser::BART::ParseTextureStuff::parse(f.get(), base_dir, sceneFolder, active);
 			break;
 		case 'x':  /* transform */
 			parseXform(f.get());
@@ -170,130 +173,6 @@ void BARTLoader2::parseFile(const std::string &file_path)
 			throw std::runtime_error("unknown NFF primitive code: " + ch);
 		}
 	}
-}
-
-/*----------------------------------------------------------------------
-  parseSphere()
-  Sphere.  A sphere is defined by a radius and center position:
-  
-    "s" center.x center.y center.z radius
-
-Format:
-    s %g %g %g %g
-
-    If the radius is negative, then only the sphere's inside is visible
-    (objects are normally considered one sided, with the outside visible).
-----------------------------------------------------------------------*/
-void BARTLoader2::parseSphere(FILE *fp)
-{
-    float radius;
-    glm::vec3 center;
-	
-    if(fscanf(fp, "%f %f %f %f", &center.x, &center.y, &center.z, &radius) != 4)
-       throw std::runtime_error("sphere syntax error");
-
-	sphere_t sph = {center, radius, active.extMaterial};
-	sphereList.push_back( sph );
-}
-
-/*----------------------------------------------------------------------
-  parsePoly()
-  Polygon.  A polygon is defined by a set of vertices.  With these databases,
-    a polygon is defined to have all points coplanar.  A polygon has only
-    one side, with the order of the vertices being counterclockwise as you
-    face the polygon (right-handed coordinate system).  The first two edges
-    must form a non-zero convex angle, so that the normal and side visibility
-    can be determined. 
-  Description:
-
-    "p" total_vertices
-    vert1.x vert1.y vert1.z
-    [etc. for total_vertices vertices]
-
-Format:
-    p %d
-    [ %g %g %g ] <-- for total_vertices vertices
-----------------------------------------------------------------------
-  Polygonal patch.  A patch is defined by a set of vertices and their normals.
-    With these databases, a patch is defined to have all points coplanar.
-    A patch has only one side, with the order of the vertices being
-    counterclockwise as you face the patch (right-handed coordinate system).
-    The first two edges must form a non-zero convex angle, so that the normal
-    and side visibility can be determined.  Description:
-
-    "pp" total_vertices
-    vert1.x vert1.y vert1.z norm1.x norm1.y norm1.z
-    [etc. for total_vertices vertices]
-
-Format:
-    pp %d
-    [ %g %g %g %g %g %g ] <-- for total_vertices vertices
-----------------------------------------------------------------------*/
-void BARTLoader2::parsePoly(FILE *fp)
-{
-   std::vector<glm::vec3> vertCoords;
-   std::vector<glm::vec3> vertNormals;
-   std::vector<glm::vec2> texCoords;
-
-
-   int ispatch = getc(fp);
-   if(ispatch != 'p')
-   {
-      ungetc(ispatch, fp);
-      ispatch = 0;
-   }
-   
-   int nverts;
-   if(fscanf(fp, "%d", &nverts) != 1)
-		throw std::runtime_error("polygon or patch syntax error");
-	
-	vertCoords.resize( nverts );
-	vertNormals.resize( nverts );
-	texCoords.resize( nverts );
-
-    /* read all the vertices */
-    for(int q=0; q<nverts; q++)
-    {
-		glm::vec3 &vertPos = vertCoords[q];
-		if(fscanf(fp, " %f %f %f",&vertPos.x, &vertPos.y, &vertPos.z) != 3)
-			throw std::runtime_error("polygon or patch syntax error");
-       
-		if(ispatch)
-		{
-			glm::vec3 &vertNormal = vertNormals[q];
-			if(fscanf(fp, " %f %f %f",&vertNormal.x, &vertNormal.y, &vertNormal.z) != 3)
-				throw std::runtime_error("polygon or patch syntax error");
-		}
-    }
-
-    if(ispatch)
-    {
-		//add a polygon patch here
-		//e.g.,  viAddPolyPatch(nverts,verts,norms);	
-		addPoly( vertCoords, vertNormals, texCoords );
-    }
-    else
-    {
-		// add a polygon here
-		// e.g., viAddPolygon(nverts,verts);
-	
-		if ( vertCoords.size() == 4 )
-		{
-			// TODO: does this happen? yes. polygons require som strange parsing. need to
-			// generate more faces. Look at Museum scene center for an example...
-			vertCoords.push_back( vertCoords[0] );
-			vertCoords.push_back( vertCoords[2] );
-
-			texCoords.push_back( texCoords[0] );
-			texCoords.push_back( texCoords[2] );
-		}
-		// Expecting triangles, so expect num verts to be divisable by 3.
-		if( vertCoords.size() % 3 != 0 )
-			throw std::runtime_error("polygon or patch vertex count was not dividable by 3!");
-		
-		calcNormals( vertCoords, vertNormals  );
-		addPoly( vertCoords, vertNormals, texCoords );
-    }
 }
 
 /*----------------------------------------------------------------------
@@ -321,7 +200,7 @@ void BARTLoader2::parseInclude(FILE *fp)
 	auto it = active.includefileToNodeMap.find( includeName );
 	if ( it != active.includefileToNodeMap.end() ) // seen before
 	{
-		InternalSceneNodePtr subtreeAtInc = (*sceneNodeIt).second;
+		auto subtreeAtInc = (*sceneNodeIt).second;
 		assert( subtreeAtInc->name == "null" );
 		active.sceneNode->add( subtreeAtInc );
 		recursiveSetMaterialState( active.sceneNode );
@@ -348,217 +227,6 @@ void BARTLoader2::parseInclude(FILE *fp)
 		else
 			std::cout << "Skipping include file: " << filename << std::endl;
 	}
-}
-
-/*----------------------------------------------------------------------
-  parseDetailLevel()
-  Include another file (typically containing geometry)
-  Description:  
-    "d" detail_level
-
-Format:
-    d %d
-
-    The detail level (DL) number is used to exclude objects
-    from the scene so that different a scene can have different
-    complexities (number of primitives in them).
-    The include command (i) is
-    the only one that have a detail number.
-    If the detail level of an included file
-    is less or equal to DL then that object is included, else
-    we skip it. 
-    Is 0 (zero) by default.
-----------------------------------------------------------------------*/
-void BARTLoader2::parseDetailLevel(FILE *fp)
-{
-   if(fscanf(fp,"%d",&detailLevel)!=1)
-	   throw std::runtime_error("Error: could not parse detail level.");
-}
-
-/*----------------------------------------------------------------------
-  parseTextureStuff()
-  Decide if we got a texture with starts with "t " or a 
-  textured triangle (or tri patch), which starts with "tt"
-  Currently, we removed the "t"
-----------------------------------------------------------------------*/
-void BARTLoader2::parseTextureStuff(FILE *fp)
-{
-	int is_triangle=getc(fp);
-	if(is_triangle=='t')
-	{
-		parseTexturedTriangle(fp);
-	}
-	else if(is_triangle=='p')
-	{
-		is_triangle=getc(fp);
-		if(is_triangle=='a')    /*tpa = triangle, patch, animated */
-		{
-			parseAnimatedTriangle(fp);
-		}
-	}
-	else
-	{
-		printf("Error: tt and ttp are valid codes (not t%c).\n",(char)is_triangle);
-		exit(1);
-	}
-}
-
-/*----------------------------------------------------------------------
-  parseTexturedTriangle()
-  A triangle with texture coordinates at each vertex.
-  Can also be a textured triangle patch (with normals at each vertex).
-  Description:  
-    "tt" texturename
-         vert0.x vert0.y vert0.z texcoord0.u texcoord0.v
-         vert1.x vert1.y vert1.z texcoord1.u texcoord1.v
-         vert2.x vert2.y vert2.z texcoord2.u texcoord2.v
-    "ttp" texturename
-          vert0.x vert0.y vert0.z norm0.x norm0.y norm0.z texcoord0.u texcoord0.v
-          vert1.x vert1.y vert1.z norm1.x norm1.y norm1.z texcoord1.u texcoord1.v
-          vert2.x vert2.y vert2.z norm2.x norm2.y norm2.z texcoord2.u texcoord2.v
-
-
-Format:
-    tt %s
-       %g %g %g %g %g
-       %g %g %g %g %g
-       %g %g %g %g %g
-
-    ttp %s 
-        %g %g %g %g %g %g %g %g
-        %g %g %g %g %g %g %g %g
-        %g %g %g %g %g %g %g %g
-
-    The texture name may not include any white spaces.
-    Note that the texturing works like OpenGL REPEAT mode.
-----------------------------------------------------------------------*/
-void BARTLoader2::parseTexturedTriangle(FILE *fp)
-{
-	glm::vec3 verts[3];
-	glm::vec3 norms[3];
-	glm::vec2 uv[3];
-	char texturename[100];
-
-	int is_patch=getc(fp);
-	if(is_patch!='p')
-	{
-		ungetc(is_patch,fp);
-		is_patch=0;
-	}
-   
-	fscanf(fp,"%s",texturename);
-	std::string texName = std::string(texturename);
-	texName = base_dir + sceneFolder + texName.substr(0,texName.size()-3) + "dds";
-
-	if ( texName != active.texture && active.triangleVertCoords.size() > 0 ) {
-		// TODO make a triangle params struct mayhaps? With a ::clear method.
-		addPoly( active.triangleVertCoords, active.triangleVertNormals, active.triangleTexCoords );
-		active.triangleVertCoords.clear();
-		active.triangleVertNormals.clear();
-		active.triangleTexCoords.clear();
-	}
-
-	for(int q=0;q<3;q++)
-	{
-		if(fscanf(fp," %f %f %f",&verts[q].x,&verts[q].y,&verts[q].z)!=3)
-			throw std::runtime_error("Error: could not parse textured triangle");
-
-		if(is_patch)
-		{
-			if(fscanf(fp," %f %f %f",&norms[q].x,&norms[q].y,&norms[q].z)!=3)
-				throw std::runtime_error("Error: could not parse textured triangle");
-		}
-
-		if(fscanf(fp," %f %f ",&uv[q].x,&uv[q].y)!=2)
-			throw std::runtime_error("Error: could not parse textured triangle");
-	}
-
-	//add a textured triangle patch here e.g., viAddTexturedTriPatch(texturename,verts,norms,tu,tv);
-	if(is_patch) addTexturedTrianglePatch( texName, verts, norms, uv );
-
-	// add a textured triangle here e.g.,  viAddTexturedTriangle(texturename,verts,tu,tv);
-	else addTexturedTriangle( texName, verts, uv );
-}
-
-/*----------------------------------------------------------------------
-  parseAnimatedTriangle()
-  an animated triangle patch
-  Description:  
-    "tpa" texture_name filename
-
-Format:
-    tpa %d
-        %g
-        %g %g %g  %g %g %g 
-        %g %g %g  %g %g %g 
-        %g %g %g  %g %g %g 
-	%g
-        %g %g %g  %g %g %g 
-        %g %g %g  %g %g %g 
-        %g %g %g  %g %g %g 
-        .
-        .
-        .
-       
-    tpa num_times
-        time0
-        vert0_time0.x vert0_time0.y vert0_time0.z norm0_time0.x norm0_time0.y norm0_time0.y 
-        vert1_time0.x vert1_time0.y vert1_time0.z norm1_time0.x norm1_time0.y norm1_time0.y 
-        vert2_time0.x vert2_time0.y vert2_time0.z norm2_time0.x norm2_time0.y norm2_time0.y 
-        time1
-        vert0_time1.x vert0_time1.y vert0_time1.z norm0_time1.x norm0_time1.y norm0_time1.y 
-        vert1_time1.x vert1_time1.y vert1_time1.z norm1_time1.x norm1_time1.y norm1_time1.y 
-        vert2_time1.x vert2_time1.y vert2_time1.z norm2_time1.x norm2_time1.y norm2_time1.y 
-        .
-        .
-        .
-
-	
-   Definition: this animated triangle patch depends on the time;
-     1) if time<time0 then use the vertices and normals from time0,
-        i.e., use the first triangle patch in the list
-     2) if time>time_{num_times-1} then use the vertices and normals
-        from time_{num_times-1}, i.e., the last triangle patch in
-        the list.
-     3) otherwise find two subsequent triangle patches with times time_a
-        and time_b, such that time_a <= time <= time_b. Then interpolate
-        linearly between these two triangle patches to find the 
-        animated triangle patch. See viGetAnimatedTriangle() in render.c
-----------------------------------------------------------------------*/
-
-void BARTLoader2::parseAnimatedTriangle(FILE *fp)
-{
-   int num_times;
-   fscanf(fp,"%d",&num_times);
-
-   float *times = new float[num_times];
-   glm::vec3 *verts = new glm::vec3[3*num_times];
-   glm::vec3 *norms = new glm::vec3[3*num_times];
-
-	for(int q=0;q<num_times;q++)
-	{
-		if(fscanf(fp," %f",&times[q])!=1)
-			throw std::runtime_error("Error: could not parse animated triangle (tpa)");
-
-		for(int w=0;w<3;w++)
-		{
-			if(fscanf(fp," %f %f %f",&verts[q*3+w].x,&verts[q*3+w].y,&verts[q*3+w].z)!=3)
-				throw std::runtime_error("Error: could not parse animated triangle (tpa)");
-	 
-			if(fscanf(fp," %f %f %f",&norms[q*3+w].x,&norms[q*3+w].y,&norms[q*3+w].z)!=3)
-				throw std::runtime_error("Error: could not parse animated triangle (tpa)");
-		}
-	}
-
-	//TODO: Use these variables for something?
-
-	delete[] times;
-	delete[] verts;
-	delete[] norms;
-
-   /* add a animated triangle here
-    * e.g., viAddAnimatedTriangle(num_times,times,verts,norms); 
-    */
 }
 
 /*----------------------------------------------------------------------
@@ -625,7 +293,7 @@ void BARTLoader2::parseXform(FILE *f)
 		thisTransform = glm::rotate( thisTransform, deg, rot );
 		thisTransform = glm::scale( thisTransform, scale );
 
-		active.tformTypeStack.push( active_def::tformtype::STATIC_TRANSFORM );
+		active.tformTypeStack.push( BART::active_def::tformtype::STATIC_TRANSFORM );
 		active.tformStack.push( active.tformMatrix );
 		active.tformMatrix *= thisTransform;
 
@@ -645,7 +313,7 @@ void BARTLoader2::parseXform(FILE *f)
 		* e.g., viAddXform(name);
 		*/
 		active.tformName = std::string(name);
-		active.tformTypeStack.push( active_def::tformtype::ANIMATED_TRANSFORM );
+		active.tformTypeStack.push( BART::active_def::tformtype::ANIMATED_TRANSFORM );
 
 		pushNode( active.tformName );	
 	}
@@ -653,7 +321,7 @@ void BARTLoader2::parseXform(FILE *f)
 }
 void BARTLoader2::endXform()
 {
-	if ( active.tformTypeStack.top() == active_def::tformtype::STATIC_TRANSFORM )
+	if ( active.tformTypeStack.top() == BART::active_def::tformtype::STATIC_TRANSFORM )
 	{
 		if ( active.tformStack.size() == 0 ) 
 			throw std::runtime_error("no more to pop from matrix stack... will underflow...");
@@ -1045,16 +713,6 @@ void BARTLoader2::parseMesh(FILE *fp)
 ////////
 ////////
 
-void BARTLoader2::addPoly( const std::vector<glm::vec3> &vertCoords,
-              const std::vector<glm::vec3> &vertNormals,
-              const std::vector<glm::vec2> &texCoords )
-{
-	// TODO
-	//Scene::MeshPtr mesh = std::make_shared<Scene::Mesh>( vertCoords, vertNormals, texCoords );
-	//poly_t p = {mesh, active.tformMatrix, active.extMaterial, active.texture};
-	//polyList.push_back(p);
-}
-
 void BARTLoader2::addTexturedTrianglePatch( const std::string& texturename, glm::vec3* verts, glm::vec3* norms, glm::vec2* uv )
 {
 	active.texture = std::string(texturename);
@@ -1103,50 +761,12 @@ void BARTLoader2::addMesh(	const std::vector<glm::vec3> &vertCoords,
 ///////
 ///////
 
-void BARTLoader2::calcNormals( const std::vector<glm::vec3> &vertices, std::vector<glm::vec3> &normals )
-{
-	// Create dummy indices for ordered triangles.
-	std::vector<unsigned int> indices;
-	for (size_t i=0; i<vertices.size(); i++)
-		indices.push_back(i);
-
-	calcNormals(vertices, indices, normals );
-}
-
-void BARTLoader2::calcNormals(	const std::vector<glm::vec3> &vertices, 
-								const std::vector<unsigned int> &indices, 
-								std::vector<glm::vec3> &normals )
-{
-	if ( vertices.size() % 3 != 0 )
-		throw std::runtime_error("not all triangles?");
-
-	normals.resize( vertices.size() );
-	for (int i=0; i<normals.size(); i++ )
-		normals[i] = glm::vec3(0.f);
-
-	for (size_t i=0; i<indices.size()/3; i++) 
-	{
-		const glm::vec3 &v0 = vertices[indices[3*i+0]];
-		const glm::vec3 &v1 = vertices[indices[3*i+1]];
-		const glm::vec3 &v2 = vertices[indices[3*i+2]];
-
-		glm::vec3 n = glm::cross(v1 - v0, v2 - v0);
-		n = glm::normalize(n);
-		normals[indices[3*i+0]] += n;
-		normals[indices[3*i+1]] += n;
-		normals[indices[3*i+2]] += n;
-	}
-
-	for (int i=0; i<normals.size(); i++ )
-		normals[i] = glm::normalize(normals[i]);
-}
-
 /* 
 	needed for robots/city2.aff
 	Since .aff files are only loaded once, load the state of a node associated
 	with material state from that file
 */
-void BARTLoader2::recursiveSetMaterialState( const InternalSceneNodePtr& node ) 
+void BARTLoader2::recursiveSetMaterialState( const BART::InternalSceneNodePtr& node ) 
 {
 	if ( node->meshes.size() ) {
 		recursiveSetMaterialState( node->children.front() );
@@ -1173,7 +793,7 @@ void BARTLoader2::setupAnimParams( float start, float end, int num_frames )
 	anim.numkeys = num_frames;
 }
 
-void BARTLoader2::flattenSceneGraph( const InternalSceneNodePtr &node, const glm::mat4 &parentXform )
+void BARTLoader2::flattenSceneGraph( const BART::InternalSceneNodePtr &node, const glm::mat4 &parentXform )
 {
 	glm::mat4 combinedXform = parentXform * node->tform; // local xform then global xform
 	for(auto it=begin(node->meshes); it!=end(node->meshes); ++it )
@@ -1318,22 +938,22 @@ void BARTLoader2::eatWhitespace(FILE *f)
 ////////////////////////////////////////////////////
 ////////////////////////////////////////////////////
 
-BARTLoader2::InternalSceneNode::InternalSceneNode(const std::string& name) 
+File::BART::InternalSceneNode::InternalSceneNode(const std::string& name) 
 	: name(name)
 {
 }
 
-void BARTLoader2::InternalSceneNode::add( InternalSceneNodePtr child ) 
+void File::BART::InternalSceneNode::add( InternalSceneNodePtr child ) 
 {
 	children.push_back(child);
 }
 
-void BARTLoader2::InternalSceneNode::addMesh( Scene::MeshPtr& m ) 
+void File::BART::InternalSceneNode::addMesh( Scene::MeshPtr& m ) 
 {
 	meshes.push_back(m);
 }
 
-void BARTLoader2::InternalSceneNode::visit(int spaces) 
+void File::BART::InternalSceneNode::visit(int spaces) 
 {
 	for(int i=0; i<spaces; i++)
 		std::cout << " ";

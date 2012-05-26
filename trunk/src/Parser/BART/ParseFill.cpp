@@ -2,6 +2,8 @@
 
 #include "..\..\Render\Material.h"
 
+#include "..\..\File\BARTLoader2.h"
+
 #include <stdexcept>
 
 using namespace Parser;
@@ -37,7 +39,7 @@ using namespace BART;
     The fill color is used to color the objects following it until a new color
     is assigned.
 ----------------------------------------------------------------------*/
-void ParseFill::parse(FILE *fp, std::vector<Render::MaterialPtr> &materials)
+void ParseFill::parse(FILE *fp, std::vector<Render::MaterialPtr> &materials, File::BART::active_def &active)
 {
 	float kd, ks, phong_pow, t, ior;
 	glm::vec3 col;
@@ -65,7 +67,7 @@ void ParseFill::parse(FILE *fp, std::vector<Render::MaterialPtr> &materials)
 		/* add your extended material here
 		* e.g., viAddExtendedMaterial(amb,dif,spc,4.0*phong_pow,t,ior);
 		*/
-		addMaterial( amb, dif, spc, phong_pow, t, ior, materials );
+		addMaterial( amb, dif, spc, phong_pow, t, ior, materials, active );
 	}
 	else   /* parse the old NFF description of a material */
 	{
@@ -78,13 +80,15 @@ void ParseFill::parse(FILE *fp, std::vector<Render::MaterialPtr> &materials)
 		* e.g., viAddMaterial(col,kd,ks,4.0*phong_pow,t,ior);
 		*/
 		// TODO is it correct to use kd and ks just as attenuations?
-		addMaterial( glm::vec3(kd), col, glm::vec3(ks), phong_pow, t, ior, materials );
+		addMaterial( glm::vec3(kd), col, glm::vec3(ks), phong_pow, t, ior, materials, active );
 	}
 }
 
 void ParseFill::addMaterial( const glm::vec3& amb, const glm::vec3& dif, const glm::vec3& spc,
-	              float phong_pow, float transmittance, float ior, std::vector<Render::MaterialPtr> &materials )
+	              float phong_pow, float transmittance, float ior, std::vector<Render::MaterialPtr> &materials, 
+				  File::BART::active_def &active )
 {
 	Render::MaterialParams params( 0, amb, dif, spc, phong_pow, transmittance, ior );
-	materials.push_back( std::make_shared<Render::Material>( params ) );
+	active.extMaterial = std::make_shared<Render::Material>( params );
+	materials.push_back( active.extMaterial );
 }
