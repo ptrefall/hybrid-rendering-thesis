@@ -24,40 +24,22 @@ void FirstPersonCamera::Shutdown()
 
 
 FirstPersonCamera::FirstPersonCamera() 
-/*    : projection ( glm::mat4(1.f) )
-    ,view( glm::mat4(1.f) )
-    ,pos( glm::vec3(0.f) )
-    ,cameraStrafe( glm::vec3(1.f, 0.f, 0.f) )
-    ,cameraUp ( glm::vec3(0.f, 1.f, 0.f) )
-    ,cameraForward ( glm::vec3(0.f, 0.f, 1.f) )
-    ,vFov (45.f)
-    ,far_dist (1.f)
-    ,near_dist (1000.f)
-    ,movementUnitsPerSecond (50.f)
-    ,mouseDegreesPerSecond(10.f)
-    ,hang (0.f)
-    ,vang (0.f)
-    ,oldmousx (0.f)
-    ,oldmousy (0.f)*/ 
+    : projection ( glm::mat4(1.f) )
+	,view( glm::mat4(1.f) )
+	,pos( glm::vec3(0.f) )
+	,cameraStrafe( glm::vec3(1.f, 0.f, 0.f) )
+	,cameraUp ( glm::vec3(0.f, 1.f, 0.f) )
+	,cameraForward ( glm::vec3(0.f, 0.f, 1.f) )
+	,vFov (45.f)
+	,near_dist (1.f)
+	,far_dist (1000.f)
+	,movementUnitsPerSecond (5.f)
+	,mouseDegreesPerSecond(10.f)
+	,hang (0.f)
+	,vang (0.f)
+	,oldmousx (0.f)
+	,oldmousy (0.f)
 {
-    projection = glm::mat4(1.f);
-    view = glm::mat4(1.f);
-	pos = glm::vec3(0.f);
-	cameraStrafe = glm::vec3(1.f, 0.f, 0.f);
-    cameraUp= glm::vec3(0.f, 1.f, 0.f);
-    cameraForward = glm::vec3(0.f, 0.f, 1.f);
-	vFov = 45.f;
-	near_dist = 1.f;
-	far_dist = 1000.f;
-    movementUnitsPerSecond = 50.f;
-    mouseDegreesPerSecond = 10.f;
-    hang = 0.f;
-    vang = 0.f;
-	oldmousx = 0.f;
-	oldmousy = 0.f;
-
-    pos = glm::vec3(0,0,-45);
-    hang = glm::radians( 35.f );
 }
 
 const glm::mat4 &FirstPersonCamera::updateProjection(unsigned int w, unsigned int h, float vFov, float near, float far)
@@ -71,13 +53,6 @@ void FirstPersonCamera::lookAt( const glm::vec3& pos, const glm::vec3& target, c
 	setPos(pos);
 	view = glm::lookAt( pos, target, up );
 }
-
-//void FirstPersonCamera::quat_code()
-//{
-//	glm::quat q_rotate;
-//	q_rotate = glm::rotate( q_rotate, hang, glm::vec3( 0, 1, 0 ) );
-//	q_rotate = glm::rotate( q_rotate, -vang, glm::vec3( 1, 0, 0
-//}
 
 void FirstPersonCamera::update(bool left_key, bool right_key, bool back_key, bool forwards_key,
 	float mouse_x, float mouse_y, bool mouse_is_down, float delta )
@@ -120,23 +95,6 @@ void FirstPersonCamera::update(bool left_key, bool right_key, bool back_key, boo
     cameraForward = lookDir;
 
     view = glm::lookAt( pos, pos+lookDir, up );
-
-    if ( 0 ) {
-        glm::vec3 iStr = glm::vec3(view[0].x, view[1].x, view[2].x);
-        glm::vec3 iHei = glm::vec3(view[0].y, view[1].y, view[2].y);
-        glm::vec3 iFor = glm::vec3(view[0].z, view[1].z, view[2].z);
-        glm::vec3 iPos = glm::vec3(view[3].x, view[3].y, view[3].z);
-        printf("\n");
-        printf("%.1f %.1f %.1f\n", cameraStrafe.x, cameraStrafe.y, cameraStrafe.z);
-        printf("%.1f %.1f %.1f\n", cameraUp.x, cameraUp.y, cameraUp.z);
-        printf("%.1f %.1f %.1f\n", cameraForward.x, cameraForward.y, cameraForward.z);
-        printf("%.1f %.1f %.1f\n", pos.x, pos.y, pos.z);
-        printf("\n");
-        printf("%.1f %.1f %.1f\n", iStr.x, iStr.y, iStr.z);
-        printf("%.1f %.1f %.1f\n", iHei.x, iHei.y, iHei.z);
-        printf("%.1f %.1f %.1f\n", iFor.x, iFor.y, iFor.z);
-        printf("%.1f %.1f %.1f\n", iPos.x, iPos.y, iPos.z);
-    }
 
 	//glm::mat4 rmx = glm::rotate( glm::mat4(1.0f), vang, cameraStrafe );
 	//glm::mat4 rmy = glm::rotate( glm::mat4(1.0f), hang, cameraUp );

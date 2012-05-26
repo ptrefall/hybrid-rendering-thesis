@@ -321,7 +321,7 @@ void Kernel::initScene()
 		node->setMV(	g_buffer->getMV());
 		node->setN_WRI(	g_buffer->getN_WRI());
 		node->setTexture(array_tex, tex_sampler, array_sampler);
-		node->setMaterial(basic_cube_mat);
+		//node->setMaterial(basic_cube_mat);
 	}
 	scene->addList( nodes );
 	delete loader;

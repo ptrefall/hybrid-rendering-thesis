@@ -13,6 +13,15 @@
 using namespace Scene;
 using namespace glm;
 
+Mesh::Mesh( const Mesh &copy )
+{
+	this->vao = copy.vao;
+	this->vbo = copy.vbo;
+	this->ibo = copy.ibo;
+	this->model = copy.model;
+	this->material = copy.material;
+}
+
 Mesh::Mesh(const Render::VAOPtr &vao, const Render::VBOPtr &vbo, const Render::IBOPtr &ibo)
 	: vao(vao), vbo(vbo), ibo(ibo)
 {
