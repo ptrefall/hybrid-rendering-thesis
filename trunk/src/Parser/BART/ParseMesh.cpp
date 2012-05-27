@@ -1,14 +1,19 @@
 #include "ParseMesh.h"
 
 #include "..\..\File\BARTLoader2.h"
+#include "..\..\File\AssetManager.h"
 #include "..\..\Scene\Mesh.h"
+#include "..\..\Kernel.h"
+#include "..\..\Render\GBuffer.h"
 
 #include <sstream>
+#include <memory>
 
 using namespace Parser;
 using namespace BART;
 
-void ParseMesh::parse(FILE *fp, const std::string &base_dir, const std::string &sceneFolder, File::BART::active_def &active)
+
+void ParseMesh::parse(FILE *fp, const std::string &base_dir, const std::string &sceneFolder, File::BART::active_def &active, const File::AssetManagerPtr &asset_manager)
 {
    char str[200];
    int num_tris = 0;
@@ -81,7 +86,7 @@ void ParseMesh::parse(FILE *fp, const std::string &base_dir, const std::string &
 		fakeIndices.push_back(i);
 	}
 
-	addMesh(vertCoords, vertNormals, texCoords, fakeIndices, active);
+	addMesh(vertCoords, vertNormals, texCoords, fakeIndices, active, asset_manager);
 }
 
 void ParseMesh::getVectors(FILE *fp,char *type, std::vector<glm::vec3>& vecs)
@@ -120,6 +125,7 @@ void ParseMesh::getTextureCoords(FILE *fp,char *texturename,std::vector<glm::vec
 			ss << "Error: could not read " << num_txts << " texturecoords of mesh.";
 			throw std::runtime_error(ss.str());   
 		}	 
+		tex.y *= -1.f; // Flip y-for GL
 		txts.push_back( tex );
 	}      
 }
@@ -186,17 +192,28 @@ void ParseMesh::addMesh(	const std::vector<glm::vec3> &vertCoords,
 							const std::vector<glm::vec3> &vertNormals,
 							const std::vector<glm::vec2> &texCoords,
 							const std::vector<unsigned int> &indices, 
-							File::BART::active_def &active)
+							File::BART::active_def &active,
+							const File::AssetManagerPtr &asset_manager)
 {
 	if( active.sceneNode->name == "root" )
 		throw std::runtime_error("Active SceneNode was root when parsing mesh!");
 
 	auto mesh = std::make_shared<Scene::Mesh>( vertCoords, vertNormals, texCoords, indices );
+	
+	if ( active.texture != "" ) {
+		Render::UniformPtr tex_sampler = std::make_shared<Render::Uniform>(Kernel::getSingleton()->getGBuffer()->getShader()->getFS(), "diffuse_tex");
+		auto tex2d = asset_manager->getTex2DAbsolutePath( active.texture, true );
+		Render::SamplerPtr dummy_sampler; // TODO
+		//auto tex2d = asset_manager->getTex2DAbsolutePath( active.texture ); 
+		//mesh->setTexture( tex2d, nullptr, nullptr );
 
-	// TODO, load texture from. Save in a map.
-	// could also just save all tex path's, then load all at once, and assign
-	// Tex2DPtr's in end. 
-	// active.texture
+		// TODO, load texture from. Save in a map.
+		// could also just save all tex path's, then load all at once, and assign
+		// Tex2DPtr's in end. 
+		// active.texture
+		mesh->setTexture( tex2d, tex_sampler, dummy_sampler ); 
+	}
+
 	mesh->setMaterial( active.extMaterial );
 	active.sceneNode->addMesh( mesh );
 }

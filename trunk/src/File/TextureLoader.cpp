@@ -18,6 +18,15 @@ TextureLoader::TextureLoader(const std::string &base_dir)
 	ilInit();
 }
 
+Render::Tex2DPtr TextureLoader::loadAbsolutePath(const std::string &filename, bool isRepeated)
+{
+	return load(filename, isRepeated ? GL_REPEAT : GL_CLAMP_TO_EDGE );
+}
+Render::Tex2DPtr TextureLoader::loadRelativePath(const std::string &filename, bool isRepeated)
+{
+	return load(base_dir+filename, isRepeated ? GL_REPEAT : GL_CLAMP_TO_EDGE );
+}
+
 Render::Tex2DPtr TextureLoader::load(const std::string &filename, unsigned int wrap_mode)
 {
 	unsigned int il_handle = 0;
@@ -93,7 +102,7 @@ TextureLoader::internal_tex_data TextureLoader::internal_load(unsigned int &il_h
     ilGenImages(1, &il_handle);
 
     ilBindImage(il_handle);
-    int success = ilLoadImage((base_dir+filename).c_str());
+    int success = ilLoadImage(filename.c_str());
     if(!success)
     {
             ILenum err = ilGetError();
