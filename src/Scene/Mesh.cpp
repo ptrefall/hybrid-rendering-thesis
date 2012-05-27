@@ -20,6 +20,7 @@ Mesh::Mesh( const Mesh &copy )
 	this->ibo = copy.ibo;
 	this->model = copy.model;
 	this->material = copy.material;
+	this->tex = copy.tex;
 }
 
 Mesh::Mesh(const Render::VAOPtr &vao, const Render::VBOPtr &vbo, const Render::IBOPtr &ibo)

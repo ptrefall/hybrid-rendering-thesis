@@ -9,10 +9,12 @@ namespace File
 	class BARTLoader2;
 	typedef std::shared_ptr<BARTLoader2> BARTLoader2Ptr;
 
+	class AssetManager; typedef std::shared_ptr<AssetManager> AssetManagerPtr;
+
 	class BARTLoader2
 	{
 	public:
-		BARTLoader2(const std::string &base_dir);
+		BARTLoader2(const AssetManagerPtr &asset_manager, const std::string &base_dir);
 		
 		std::vector<Scene::SceneNodePtr> load(const std::string& sceneFolder, const std::string& mainSceneFile);
 
@@ -22,6 +24,8 @@ namespace File
 		unsigned int detailLevel;
 		std::string sceneFolder;
 		std::string mainSceneFile;
+
+		AssetManagerPtr asset_manager;
 
 		///////////////////////////////////
 		// MISC INTERNAL PARSING FUNCTIONS

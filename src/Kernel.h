@@ -17,8 +17,8 @@ namespace Raytracer
 }
 namespace File
 {
+	class AssetManager; typedef std::shared_ptr<AssetManager> AssetManagerPtr;
 	class ShaderLoader; typedef std::shared_ptr<ShaderLoader> ShaderLoaderPtr;
-	class TextureLoader; typedef std::shared_ptr<TextureLoader> TextureLoaderPtr;
 	class MaterialLoader; typedef std::shared_ptr<MaterialLoader> MaterialLoaderPtr;
 	class BARTLoader2; typedef std::shared_ptr<BARTLoader2> BARTLoader2Ptr;
 }
@@ -77,7 +77,6 @@ public:
 	Render::DeferredRenderPtr getRenderer() const { return renderer; }
 	Raytracer::OptixRenderPtr getRaytracer() const { return raytracer; }
 	File::ShaderLoaderPtr getShaderLoader() const { return shader_loader; }
-	File::TextureLoaderPtr getTextureLoader() const { return tex_loader; }
 	File::MaterialLoaderPtr getMaterialLoader() const { return mat_loader; }
 	File::BARTLoader2Ptr getBARTLoader() const { return bart_loader; }
 	Scene::SceneManagerPtr getSceneManager() const { return scene; }
@@ -112,8 +111,8 @@ private:
 	Render::GBufferPtr g_buffer;
 	Render::DeferredRenderPtr renderer;
     Raytracer::OptixRenderPtr raytracer;
+	File::AssetManagerPtr asset_manager;
 	File::ShaderLoaderPtr shader_loader;
-	File::TextureLoaderPtr tex_loader;
 	File::MaterialLoaderPtr mat_loader;
 	File::BARTLoader2Ptr bart_loader;
 	Scene::SceneManagerPtr scene;

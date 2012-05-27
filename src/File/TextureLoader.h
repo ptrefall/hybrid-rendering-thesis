@@ -16,12 +16,15 @@ namespace File
 	public:
 		TextureLoader(const std::string &base_dir);
 
-		Render::Tex2DPtr load(const std::string &filename, unsigned int wrap_mode = GL_CLAMP_TO_EDGE);
+		Render::Tex2DPtr loadAbsolutePath(const std::string &filename, bool isRepeated = false);
+		Render::Tex2DPtr loadRelativePath(const std::string &filename, bool isRepeated = false);
 		Render::Tex2DArrayPtr load_array(const std::string &filename, unsigned int width, unsigned int height, unsigned int slice_count_width, unsigned int slice_count_height, unsigned int wrap_mode = GL_CLAMP_TO_EDGE);
 
 		//void save(const Render::Tex2DPtr &tex, const std::string &location);
 
 	private:
+		Render::Tex2DPtr load(const std::string &filename, unsigned int wrap_mode = GL_CLAMP_TO_EDGE);
+
 		struct internal_tex_data
 		{
 			int bpp;

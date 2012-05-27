@@ -5,8 +5,8 @@
 #include "Render\GBuffer.h"
 #include "Render\Shader.h"
 #include "Raytracer\OptixRender.h"
+#include "File\AssetManager.h"
 #include "File\ShaderLoader.h"
-#include "File\TextureLoader.h"
 #include "File\MaterialLoader.h"
 #include "File\BARTLoader2.h"
 #include "Scene\SceneManager.h"
@@ -59,10 +59,11 @@ Kernel::~Kernel()
 	long scene_count = scene.use_count();
 	scene.reset();
 
+	
+	long asset_manager_count = asset_manager.use_count();
+	asset_manager.reset();
 	long shader_loader_count = shader_loader.use_count();
 	shader_loader.reset();
-	long tex_loader_count = tex_loader.use_count();
-	tex_loader.reset();
 	long mat_loader_count = mat_loader.use_count();
 	mat_loader.reset();
 
@@ -115,11 +116,10 @@ void Kernel::init(int argc, char** argv)
 	//////////////////////////////////////////
 	// FILE SYSTEM INITIALIZING
 	//////////////////////////////////////////
+	asset_manager = std::make_shared<File::AssetManager>(resource_dir);
 	shader_loader = std::make_shared<File::ShaderLoader>(resource_dir+"shaders\\");
-	tex_loader = std::make_shared<File::TextureLoader>(resource_dir+"textures\\");
 	mat_loader = std::make_shared<File::MaterialLoader>(resource_dir+"materials\\");
-	bart_loader = std::make_shared<File::BARTLoader2>(resource_dir+"bart_scenes\\");
-
+	bart_loader = std::make_shared<File::BARTLoader2>(asset_manager, resource_dir+"bart_scenes\\");
 
 	//////////////////////////////////////////
 	// DEFERRED RENDERER INITIALIZING
@@ -175,9 +175,6 @@ void Kernel::render()
 		scene->bindLights(renderer->getShader());
 		renderer->render();
 	renderer->end();
-
-
-	//tex_loader->save(nullptr, resource_dir+"screens\\MRT.png");
 }
 
 void Kernel::reshape(int w, int h)
@@ -246,17 +243,12 @@ void Kernel::initScene()
 	Scene::LightPtr light = std::make_shared<Scene::Light>(0);
 	light->setPosition(glm::vec3(0,0,0));
 
-	//auto cube_tex = tex_loader->load("cube.jpg", GL_REPEAT);
-
-	//auto array_tex = tex_loader->load_array("array.png", 16, 16, 2, 2, GL_REPEAT);
-	auto array_tex = tex_loader->load("cube.jpg");
-	auto array2_tex = tex_loader->load("array.png");
+	auto array_tex = asset_manager->getTex2DRelativePath("cube.jpg", false);
+	auto array2_tex = asset_manager->getTex2DRelativePath("array.png", false);
 	Render::UniformPtr tex_sampler = std::make_shared<Render::Uniform>(g_buffer->getShader()->getFS(), "diffuse_tex");
 	Render::SamplerPtr array_sampler;// = std::make_shared<Render::Sampler>();
 
     renderer->setRayTexture(raytracer->getRenderTexture(), tex_sampler);
-
-	//tex_loader->save(array2_tex, resource_dir+"screens\\array.png");
 
 	auto basic_cube_mat = renderer->addMaterial(mat_loader->load("basic_cube.mat"));
 	auto red_cube_mat = renderer->addMaterial(mat_loader->load("red_cube.mat"));
@@ -320,8 +312,7 @@ void Kernel::initScene()
 		node->setMVP(	g_buffer->getMVP());
 		node->setMV(	g_buffer->getMV());
 		node->setN_WRI(	g_buffer->getN_WRI());
-		node->setTexture(array_tex, tex_sampler, array_sampler);
-		//node->setMaterial(basic_cube_mat);
+		//node->setTexture(array_tex, tex_sampler, array_sampler);
 	}
 	scene->addList( nodes );
 }

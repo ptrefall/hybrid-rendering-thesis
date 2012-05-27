@@ -4,17 +4,17 @@
 #include <vector>
 #include <stdio.h>
 
-namespace File { namespace BART
-{
-	struct active_def;
-}}
+namespace File { 
+	namespace BART{ struct active_def; }
+	class AssetManager; typedef std::shared_ptr<AssetManager> AssetManagerPtr;
+}
 
 namespace Parser { namespace BART
 {
 	class ParseMesh
 	{
 	public:
-		static void parse(FILE* f, const std::string &base_dir, const std::string &sceneFolder, File::BART::active_def &active);
+		static void parse(FILE* f, const std::string &base_dir, const std::string &sceneFolder, File::BART::active_def &active, const File::AssetManagerPtr &asset_manager);
 
 	private:
 		static void getVectors(FILE *fp,char *type, std::vector<glm::vec3>& vecs);
@@ -23,6 +23,9 @@ namespace Parser { namespace BART
 
 		static void addMesh(	const std::vector<glm::vec3> &vertCoords, const std::vector<glm::vec3> &vertNormals, 
 								const std::vector<glm::vec2> &texCoords, const std::vector<unsigned int> &indices, 
-								File::BART::active_def &active );
+								File::BART::active_def &active,
+								const File::AssetManagerPtr &asset_manager);
+
+		
 	};
 }}

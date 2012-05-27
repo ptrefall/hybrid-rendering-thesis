@@ -21,8 +21,8 @@
 
 using namespace File;
 
-BARTLoader2::BARTLoader2(const std::string &base_dir)
-	: base_dir(base_dir)
+BARTLoader2::BARTLoader2(const AssetManagerPtr &asset_manager, const std::string &base_dir)
+	: asset_manager(asset_manager), base_dir(base_dir)
 {
 }
 
@@ -158,7 +158,7 @@ void BARTLoader2::parseFile(const std::string &file_path)
 			Parser::BART::ParseKeyFrames::parse(f.get(), mAnimations);
 			break;
 		case 'm':  /* triangle mesh */
-			Parser::BART::ParseMesh::parse(f.get(), base_dir, sceneFolder, active);
+			Parser::BART::ParseMesh::parse(f.get(), base_dir, sceneFolder, active, asset_manager);
 			break;
 		default:    /* unknown */
 			throw std::runtime_error("unknown NFF primitive code: " + ch);
