@@ -59,3 +59,23 @@ std::string ShaderLoader::loadContents(const std::string &filename)
 	fclose(fh);
 	return return_text;
 }
+
+void ShaderLoader::push_bind(const Render::ShaderPtr &shader)
+{
+	boundShaderStack.push(shader);
+	shader->bind();
+}
+
+void ShaderLoader::pop_bind()
+{
+	auto old_shader = boundShaderStack.top();
+	boundShaderStack.pop();
+	if(boundShaderStack.empty())
+	{
+		old_shader->unbind();
+		return;
+	}
+
+	auto shader = boundShaderStack.top();
+	shader->bind();
+}

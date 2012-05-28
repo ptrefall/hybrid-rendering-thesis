@@ -3,6 +3,7 @@
 #include <glm\glm.hpp>
 #include <vector>
 #include <stdio.h>
+#include <memory>
 
 namespace File { 
 	namespace BART{ struct active_def; }
