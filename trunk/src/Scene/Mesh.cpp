@@ -20,7 +20,8 @@ Mesh::Mesh( const Mesh &copy )
 	this->ibo = copy.ibo;
 	this->model = copy.model;
 	this->material = copy.material;
-	this->tex = copy.tex;
+	for(auto it=copy.textures.begin(); it!=copy.textures.end(); ++it)
+		setTexture(it->first, it->second.first, it->second.second, nullptr);
 }
 
 Mesh::Mesh(const Render::VAOPtr &vao, const Render::VBOPtr &vbo, const Render::IBOPtr &ibo)
@@ -68,14 +69,11 @@ void Mesh::render(const Render::ShaderPtr &active_program)
   mv->bind(modelView);
   n_wri->bind(normal);
 
-	if(tex)
+	for(auto it=textures.begin(); it!=textures.end(); ++it)
 	{
-		glActiveTexture(GL_TEXTURE0);
-		tex->bind();
-		if(tex_sampler)
-			tex_sampler->bind(0);
-		if(tex_uniform)
-			tex_uniform->bind(0);
+		glActiveTexture(GL_TEXTURE0+it->first);
+		it->second.first->bind();
+		it->second.second->bind((int)it->first);
 	}
 	
 	if(material)
@@ -85,6 +83,9 @@ void Mesh::render(const Render::ShaderPtr &active_program)
 
 	glDrawElements(GL_TRIANGLES, ibo->size(), GL_UNSIGNED_INT, BUFFER_OFFSET(0));
 	
-	if(tex)
-		tex->unbind();
+	for(auto it=textures.begin(); it!=textures.end(); ++it)
+	{
+		glActiveTexture(GL_TEXTURE0+it->first);
+		it->second.first->unbind();
+	}
 }

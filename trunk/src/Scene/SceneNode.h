@@ -10,6 +10,7 @@
 #include <glm/glm.hpp>
 
 #include <memory>
+#include <unordered_map>
 
 namespace Scene
 {
@@ -29,9 +30,12 @@ namespace Scene
 
 		void setModelMatrix(const glm::mat4 &model) { this->model = model; }
 		virtual void setPosition(const glm::vec3 &position) { this->position = position; }
+		virtual void setScale(const glm::vec3 &scale) { this->scale = scale; }
 
-		void setTexture(const Render::Tex2DPtr &tex, const Render::UniformPtr &uniform, const Render::SamplerPtr &sampler);
-		void setTexture(const Render::Tex2DArrayPtr &tex_array, const Render::UniformPtr &uniform, const Render::SamplerPtr &sampler);
+		void setTexture(int slot, const Render::Tex2DPtr &tex, const Render::UniformPtr &uniform, const Render::SamplerPtr &sampler);
+		virtual void setTexture(int slot, const Render::Tex2DPtr &tex, const std::string &uni_name) {}
+		void setTexture(int slot, const Render::Tex2DArrayPtr &tex_array, const Render::UniformPtr &uniform, const Render::SamplerPtr &sampler);
+
 		void setMaterial(const Render::MaterialPtr &material) { this->material = material; }
 
 	protected:
@@ -39,7 +43,7 @@ namespace Scene
 		Render::UniformPtr mv;
 		Render::UniformPtr n_wri;
 
-		Render::Tex2DPtr tex;
+		std::unordered_map<int, std::pair<Render::Tex2DPtr, Render::UniformPtr>> textures;
 		Render::Tex2DArrayPtr tex_array;
 		Render::UniformPtr tex_uniform;
 		Render::SamplerPtr tex_sampler;
@@ -48,5 +52,6 @@ namespace Scene
 
 		glm::mat4 model;
 		glm::vec3 position; // TODO remove position, now that we have a mat4?
+		glm::vec3 scale;
 	};
 }
