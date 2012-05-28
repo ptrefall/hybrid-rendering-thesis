@@ -44,7 +44,7 @@ void GBuffer::begin()
     glClearColor(0.f,1.f,0.f,1.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
-	shader->bind();
+	shader_loader->push_bind(shader);
 	fbo->bind();
 
     glClearColor(0.f,0.f,0.f,1.f);
@@ -65,7 +65,7 @@ void GBuffer::begin()
 
 void GBuffer::end()
 {
-	shader->unbind();
+	shader_loader->pop_bind();
 	fbo->unbind();
 	glViewportIndexedf(0,0,0,(float)temp_w,(float)temp_h);
 }

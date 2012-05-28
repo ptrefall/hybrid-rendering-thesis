@@ -15,7 +15,7 @@ DeferredRender::DeferredRender(const GBufferPtr &g_buffer, const File::ShaderLoa
 
 void DeferredRender::begin()
 {
-	shader->bind();
+	shader_loader->push_bind(shader);
 	g_buffer->bind(shader->getFS());
 
 	camPos->bind(Scene::FirstPersonCamera::getSingleton()->getPos());
@@ -46,6 +46,8 @@ void DeferredRender::end()
 
     if(tex)
 		tex->unbind();
+
+	shader_loader->pop_bind();
 }
 
 void DeferredRender::reshape(unsigned int w, unsigned int h) 

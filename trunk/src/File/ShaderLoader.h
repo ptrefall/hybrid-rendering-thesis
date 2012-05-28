@@ -4,6 +4,7 @@
 
 #include <memory>
 #include <string>
+#include <stack>
 
 namespace File
 {
@@ -17,8 +18,12 @@ namespace File
 
 		Render::ShaderPtr load(const std::string &vs_filename, const std::string &gs_filename = std::string(), const std::string &fs_filename = std::string());
 
+		void push_bind(const Render::ShaderPtr &shader);
+		void pop_bind();
+
 	private:
 		std::string loadContents(const std::string &filename);
 		std::string base_dir;
+		std::stack<Render::ShaderPtr> boundShaderStack;
 	};
 }
