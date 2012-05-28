@@ -211,7 +211,7 @@ void ParseMesh::addMesh(	const std::vector<glm::vec3> &vertCoords,
 		// could also just save all tex path's, then load all at once, and assign
 		// Tex2DPtr's in end. 
 		// active.texture
-		mesh->setTexture( tex2d, tex_sampler, dummy_sampler ); 
+		mesh->setTexture(0, tex2d, tex_sampler, dummy_sampler ); 
 	}
 
 	mesh->setMaterial( active.extMaterial );

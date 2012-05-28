@@ -259,7 +259,7 @@ void Kernel::initScene()
 		cube->setMVP(	g_buffer->getMVP());
 		cube->setMV(	g_buffer->getMV());
 		cube->setN_WRI(	g_buffer->getN_WRI());
-		cube->setTexture(raytracer->getRenderTexture(), tex_sampler, array_sampler);
+		cube->setTexture(0, raytracer->getRenderTexture(), tex_sampler, array_sampler);
 		cube->setMaterial(basic_cube_mat);
 		scene->add(cube);
 		cube->setPosition( glm::vec3(5,5,-20) );
@@ -270,7 +270,7 @@ void Kernel::initScene()
 		cube2->setMVP(	g_buffer->getMVP());
 		cube2->setMV(	g_buffer->getMV());
 		cube2->setN_WRI(	g_buffer->getN_WRI());
-		cube2->setTexture(array2_tex, tex_sampler, array_sampler);
+		cube2->setTexture(0, array2_tex, tex_sampler, array_sampler);
 		cube2->setMaterial(red_cube_mat);
 		scene->add(cube2);
 		cube2->setPosition( glm::vec3(5,3,-20) );
@@ -293,7 +293,7 @@ void Kernel::initScene()
 				cube3->setMVP(	g_buffer->getMVP());
 				cube3->setMV(	g_buffer->getMV());
 				cube3->setN_WRI(	g_buffer->getN_WRI());
-				cube3->setTexture(array_tex, tex_sampler, array_sampler);
+				cube3->setTexture(0, array_tex, tex_sampler, array_sampler);
 				cube3->setMaterial(blue_cube_mat);
 				scene->add(cube3);
 				cube3->setPosition( glm::vec3(x,y,z) );
