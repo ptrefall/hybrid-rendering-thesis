@@ -6,7 +6,6 @@
 
 uniform sampler2D diffuse_tex;
 uniform sampler2D normal_tex;
-uniform sampler2D light_tex;
 
 uniform float material_id;
 
@@ -27,12 +26,11 @@ layout(location = NORMAL, 	index = 0) 	out vec4 out_Normal;
 vec4 Diffuse();
 vec3 Position();
 vec3 Normal();
-float Light();
 
 void main( void )
 {	
 	out_Diffuse		= Diffuse();
-	out_Position	= vec4(Position(), Light());
+	out_Position	= vec4(Position(), 1.0);
 	out_Normal		= vec4(Normal(),material_id);
 }
 
@@ -55,9 +53,4 @@ vec3 Normal()
 	vec3 Normal_ts = texture(normal_tex, Vertex.texcoord).rgb * 2.0 - 1.0;					//tangent space
 	vec3 Normal_vs = Normal_ts.x * frontTangent_vs - Normal_ts.y * frontBitangent_vs + Normal_ts.z * frontNormal_vs; //Tangent space to View space
 	return normalize(Normal_vs);
-}
-
-float Light()
-{
-	return texture(light_tex, Vertex.texcoord).r;
 }
