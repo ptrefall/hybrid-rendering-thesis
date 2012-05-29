@@ -25,13 +25,13 @@ public:
 
 	float getVerticalAngle() { return vang; }
 
-	glm::vec3 getStrafeDirection() { return glm::vec3(view[0].x, view[1].x, view[2].x); }
+	glm::vec3 getStrafeDirection() { return glm::vec3(world_to_view[0].x, world_to_view[1].x, world_to_view[2].x); }
 
-	glm::vec3 getUpDirection() { return glm::vec3(view[0].y, view[1].y, view[2].y); }
+	glm::vec3 getUpDirection() { return glm::vec3(world_to_view[0].y, world_to_view[1].y, world_to_view[2].y); }
 
 	glm::vec3 getLookDirection()  { 
         // compensate for glm::lookAt reversing zDir as of GL convention
-        return -glm::vec3(view[0].z, view[1].z, view[2].z); 
+        return -glm::vec3(world_to_view[0].z, world_to_view[1].z, world_to_view[2].z); 
     }
 
 	void setCameraBasis( const glm::vec3& cameraStrafe, const glm::vec3& cameraUp, const glm::vec3& cameraForward )
@@ -54,14 +54,16 @@ public:
     const glm::vec3 &getPos() const { return pos; }
 
 	const glm::mat4 &updateProjection(unsigned int w, unsigned int h, float vFov, float near, float far);
-	const glm::mat4 &getProjection() const { return projection; }
-    const glm::mat4 &getViewMatrix() const { return view; }
+	const glm::mat4 &getViewToClipMatrix() const { return view_to_clip; }
+    const glm::mat4 &getWorldToViewMatrix() const { return world_to_view; }
+
+	void setSpeed(float speed) { movementUnitsPerSecond = speed; }
 
 private:
 	static FirstPersonCameraPtr singleton;
 
-	glm::mat4 projection;
-    glm::mat4 view;
+	glm::mat4 view_to_clip;
+    glm::mat4 world_to_view;
 	
 	glm::vec3 pos;
 	glm::vec3 cameraStrafe;

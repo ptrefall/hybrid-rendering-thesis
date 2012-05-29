@@ -13,24 +13,20 @@ Light::Light(unsigned int lightId)
 {
 	data = std::make_shared<Data>(lightId);
 
-	auto cam = FirstPersonCamera::getSingleton();
-	auto &view = cam->getViewMatrix();
-	data->viewspace_position = vec3(view * vec4(position, 1.0));
-
+	auto &world_to_view = FirstPersonCamera::getSingleton()->getWorldToViewMatrix();
+	data->viewspace_position = vec3((world_to_view) * vec4(position, 1.0f));
 
 	{
 		std::stringstream ss;
-		ss << "light[" << lightId << "].position";
+		ss << "light[" << lightId << "].position_vs";
 		uni_position = std::make_shared<Render::Uniform>(ss.str());
 	}
 }
 
 void Light::setPosition(const glm::vec3 &position)
 {
-	auto cam = FirstPersonCamera::getSingleton();
-	auto &view = cam->getViewMatrix();
-
-	data->viewspace_position = vec3(view * vec4(position, 1.0));
+	auto &world_to_view = FirstPersonCamera::getSingleton()->getWorldToViewMatrix();
+	data->viewspace_position = vec3((world_to_view) * vec4(position, 1.0f));
 }
 
 void Light::bind(const Render::ShaderPtr &active_program)

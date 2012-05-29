@@ -10,7 +10,7 @@ DeferredRender::DeferredRender(const GBufferPtr &g_buffer, const File::ShaderLoa
 {
 	quad = std::make_shared<Scene::Quad>(w,h);
 	shader = shader_loader->load("deferredRendering.vs", std::string(), "deferredRendering.fs");
-	camPos = std::make_shared<Uniform>(shader->getFS(), "CamPos");
+	camPos = std::make_shared<Uniform>(shader->getFS(), "CamPos_vs");
 }
 
 void DeferredRender::begin()
@@ -18,7 +18,7 @@ void DeferredRender::begin()
 	shader_loader->push_bind(shader);
 	g_buffer->bind(shader->getFS());
 
-	camPos->bind(Scene::FirstPersonCamera::getSingleton()->getPos());
+	camPos->bind(glm::vec3(Scene::FirstPersonCamera::getSingleton()->getWorldToViewMatrix() * glm::vec4(Scene::FirstPersonCamera::getSingleton()->getPos(), 1.0)));
 
 	if(materials.empty() == false)
 	{
@@ -28,7 +28,7 @@ void DeferredRender::begin()
 
     if(tex)
 	{
-		glActiveTexture(GL_TEXTURE0 + 0);
+		glActiveTexture(GL_TEXTURE0);
 		tex->bind();
 		if(tex_uniform)
 			tex_uniform->bind(0);

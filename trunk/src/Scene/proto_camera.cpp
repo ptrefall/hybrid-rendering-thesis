@@ -24,8 +24,8 @@ void FirstPersonCamera::Shutdown()
 
 
 FirstPersonCamera::FirstPersonCamera() 
-    : projection ( glm::mat4(1.f) )
-	,view( glm::mat4(1.f) )
+    : view_to_clip ( glm::mat4(1.f) )
+	,world_to_view( glm::mat4(1.f) )
 	,pos( glm::vec3(0.f) )
 	,cameraStrafe( glm::vec3(1.f, 0.f, 0.f) )
 	,cameraUp ( glm::vec3(0.f, 1.f, 0.f) )
@@ -44,14 +44,14 @@ FirstPersonCamera::FirstPersonCamera()
 
 const glm::mat4 &FirstPersonCamera::updateProjection(unsigned int w, unsigned int h, float vFov, float near, float far)
 {
-	projection = glm::perspective<float>(vFov, w/(float)h, near, far);
-	return projection;
+	view_to_clip = glm::perspective<float>(vFov, w/(float)h, near, far);
+	return view_to_clip;
 }
 
 void FirstPersonCamera::lookAt( const glm::vec3& pos, const glm::vec3& target, const glm::vec3& up )
 {
 	setPos(pos);
-	view = glm::lookAt( pos, target, up );
+	world_to_view = glm::lookAt( pos, target, up );
 }
 
 void FirstPersonCamera::update(bool left_key, bool right_key, bool back_key, bool forwards_key,
@@ -94,7 +94,7 @@ void FirstPersonCamera::update(bool left_key, bool right_key, bool back_key, boo
     cameraUp = up;
     cameraForward = lookDir;
 
-    view = glm::lookAt( pos, pos+lookDir, up );
+    world_to_view = glm::lookAt( pos, pos+lookDir, up );
 
 	//glm::mat4 rmx = glm::rotate( glm::mat4(1.0f), vang, cameraStrafe );
 	//glm::mat4 rmy = glm::rotate( glm::mat4(1.0f), hang, cameraUp );

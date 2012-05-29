@@ -254,7 +254,7 @@ void BARTLoader2::flattenSceneGraph( const BART::InternalSceneNodePtr &node, con
 		// copy ctor is less obvious imo... but, saves having to write getter's.
 		//Scene::MeshPtr finalMesh = std::shared_ptr<Scene::Mesh>( new Scene::Mesh( pMesh->getVao(), pMesh->getVbo(), pMesh->getIbo() ) );
 		auto finalMesh = std::make_shared<Scene::Mesh>(*pMesh.get());
-		finalMesh->setModelMatrix( combinedXform ); // still need to use global xform.
+		finalMesh->setObjectToWorldMatrix( combinedXform ); // still need to use global xform.
 		sceneNodeList.push_back( finalMesh );
 	}
 

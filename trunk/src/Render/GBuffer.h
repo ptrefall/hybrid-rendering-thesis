@@ -25,11 +25,13 @@ namespace Render
 
 		void reshape(unsigned int w, unsigned int h);
 
-		UniformPtr getMVP() const { return mvp; }
-		UniformPtr getMV() const { return mv; }
-		UniformPtr getN_WRI() const { return n_wri; }
+		UniformPtr getObjectToWorldUniform() const {	return uni_object_to_world; }
+		UniformPtr getWorldToViewUniform() const {		return uni_world_to_view; }
+		UniformPtr getViewToClipUniform() const {		return uni_view_to_clip; }
+		UniformPtr getNormalToViewUniform() const {	return uni_normal_to_view; }
 
 		ShaderPtr getShader() const { return shader; }
+		FBOPtr getFBO() const { return fbo; }
 
 	private:
 		unsigned int w;
@@ -42,8 +44,9 @@ namespace Render
 		File::ShaderLoaderPtr shader_loader;
 		ShaderPtr shader;
 
-		UniformPtr mvp;
-		UniformPtr mv;
-		UniformPtr n_wri;
+		Render::UniformPtr uni_object_to_world;
+		Render::UniformPtr uni_world_to_view;
+		Render::UniformPtr uni_view_to_clip;
+		Render::UniformPtr uni_normal_to_view;
 	};
 }
