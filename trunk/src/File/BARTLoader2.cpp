@@ -1,7 +1,7 @@
 #include "BARTLoader2.h"
 
 #include "..\Parser\INIParser.h"
-#include "..\Scene\Mesh.h"
+#include "..\Scene\BARTMesh.h"
 #include "..\Render\Material.h"
 
 #include "..\Parser\BART\ParseComment.h"
@@ -230,7 +230,7 @@ void BARTLoader2::recursiveSetMaterialState( const BART::InternalSceneNodePtr& n
 	if ( node->meshes.size() ) {
 		recursiveSetMaterialState( node->children.front() );
 
-		const Scene::MeshPtr& leaf = node->meshes.front();
+		const Scene::BARTMeshPtr& leaf = node->meshes.front();
 		// TODO:
 		//auto it = MeshMatMap.find(leaf);
 		//if ( it != MeshMatMap.end() ) {
@@ -253,7 +253,7 @@ void BARTLoader2::flattenSceneGraph( const BART::InternalSceneNodePtr &node, con
 
 		// copy ctor is less obvious imo... but, saves having to write getter's.
 		//Scene::MeshPtr finalMesh = std::shared_ptr<Scene::Mesh>( new Scene::Mesh( pMesh->getVao(), pMesh->getVbo(), pMesh->getIbo() ) );
-		auto finalMesh = std::make_shared<Scene::Mesh>(*pMesh.get());
+		auto finalMesh = std::make_shared<Scene::BARTMesh>(*pMesh.get());
 		finalMesh->setObjectToWorldMatrix( combinedXform ); // still need to use global xform.
 		sceneNodeList.push_back( finalMesh );
 	}
@@ -278,7 +278,7 @@ void File::BART::InternalSceneNode::add( InternalSceneNodePtr child )
 	children.push_back(child);
 }
 
-void File::BART::InternalSceneNode::addMesh( Scene::MeshPtr& m ) 
+void File::BART::InternalSceneNode::addMesh( Scene::BARTMeshPtr& m ) 
 {
 	meshes.push_back(m);
 }

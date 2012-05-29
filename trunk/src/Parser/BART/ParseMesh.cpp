@@ -2,7 +2,7 @@
 
 #include "..\..\File\BARTLoader2.h"
 #include "..\..\File\AssetManager.h"
-#include "..\..\Scene\Mesh.h"
+#include "..\..\Scene\BARTMesh.h"
 #include "..\..\Kernel.h"
 #include "..\..\Render\GBuffer.h"
 
@@ -198,7 +198,7 @@ void ParseMesh::addMesh(	const std::vector<glm::vec3> &vertCoords,
 	if( active.sceneNode->name == "root" )
 		throw std::runtime_error("Active SceneNode was root when parsing mesh!");
 
-	auto mesh = std::make_shared<Scene::Mesh>( vertCoords, vertNormals, texCoords, indices );
+	auto mesh = std::make_shared<Scene::BARTMesh>( vertCoords, vertNormals, texCoords, indices );
 	
 	if ( active.texture != "" ) {
 		Render::UniformPtr tex_sampler = std::make_shared<Render::Uniform>(Kernel::getSingleton()->getGBuffer()->getShader()->getFS(), "diffuse_tex");

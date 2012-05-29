@@ -13,6 +13,8 @@ namespace Render
 		static unsigned int Position()	{ return 1; }
 		static unsigned int Normal()	{ return 2; }
 		static unsigned int TexCoord()	{ return 3; }
+		static unsigned int Tangent()	{ return 4; }
+		static unsigned int Bitangent()	{ return 5; }
 		static unsigned int FragColor()	{ return 0; }
 	};
 }

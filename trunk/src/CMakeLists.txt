@@ -27,6 +27,8 @@ project(${NAME})
 
 file(GLOB_RECURSE GL3W_HEADER ${CMAKE_SOURCE_DIR}/depends/include/GL3/*.h)
 file(GLOB_RECURSE GLUT_HEADER ${CMAKE_SOURCE_DIR}/depends/include/GL/*.h)
+file(GLOB_RECURSE ASSIMP_HEADER_H ${CMAKE_SOURCE_DIR}/depends/include/AssImp/*.h)
+file(GLOB_RECURSE ASSIMP_HEADER ${CMAKE_SOURCE_DIR}/depends/include/AssImp/*.hpp)
 file(GLOB 		  FILE_HEADER ./File/*.h)
 file(GLOB		  FILE_BART_HEADER ./File/BARTLoader/*.h)
 file(GLOB		  PARSER_HEADER ./Parser/*.h)
@@ -38,6 +40,8 @@ file(GLOB ROOT_HEADER *.h)
 
 file(GLOB_RECURSE GL3W_SOURCE ${CMAKE_SOURCE_DIR}/depends/include/GL3/*.c)
 file(GLOB_RECURSE GLUT_SOURCE ${CMAKE_SOURCE_DIR}/depends/include/GL/src/*.c)
+file(GLOB_RECURSE ASSIMP_SOURCE_C ${CMAKE_SOURCE_DIR}/depends/AssImp/*.c)
+file(GLOB_RECURSE ASSIMP_SOURCE ${CMAKE_SOURCE_DIR}/depends/AssImp/*.cpp)
 file(GLOB		  FILE_SOURCE ./File/*.cpp)
 file(GLOB		  FILE_BART_SOURCE ./File/BARTLoader/*.cpp)
 file(GLOB		  PARSER_SOURCE ./Parser/*.cpp)
@@ -49,6 +53,7 @@ file(GLOB ROOT_SOURCE *.cpp)
 
 SOURCE_GROUP("Header Files\\Depends\\Gl3w" FILES ${GL3W_HEADER})
 SOURCE_GROUP("Header Files\\Depends\\Glut" FILES ${GLUT_HEADER})
+SOURCE_GROUP("Header Files\\Depends\\AssImp" FILES ${ASSIMP_HEADER_H} ${ASSIMP_HEADER})
 SOURCE_GROUP("Header Files\\File" FILES ${FILE_HEADER})
 SOURCE_GROUP("Header Files\\File\\BARTLoader" FILES ${FILE_BART_HEADER})
 SOURCE_GROUP("Header Files\\File\\BARTLoader" FILES ${FILE_BART_HEADER})
@@ -60,6 +65,7 @@ SOURCE_GROUP("Header Files\\Scene" FILES ${SCENE_HEADER})
 
 SOURCE_GROUP("Source Files\\Depends\\Gl3w" FILES ${GL3W_SOURCE})
 SOURCE_GROUP("Source Files\\Depends\\Glut" FILES ${GLUT_SOURCE})
+SOURCE_GROUP("Source Files\\Depends\\AssImp" FILES ${ASSIMP_SOURCE_C} ${ASSIMP_SOURCE})
 SOURCE_GROUP("Source Files\\File" FILES ${FILE_SOURCE})
 SOURCE_GROUP("Source Files\\File\\BARTLoader" FILES ${FILE_BART_SOURCE})
 SOURCE_GROUP("Source Files\\Parser" FILES ${PARSER_SOURCE})
@@ -71,6 +77,8 @@ SOURCE_GROUP("Source Files\\Scene" FILES ${SCENE_SOURCE})
 set(HDRS
   ${GL3W_HEADER}
   ${GLUT_HEADER}
+  ${ASSIMP_HEADER_H} 
+  ${ASSIMP_HEADER}
   ${FILE_HEADER}
   ${FILE_BART_HEADER}
   ${PARSER_HEADER}
@@ -84,6 +92,8 @@ set(HDRS
 set(SRCS
   ${GL3W_SOURCE}
   ${GLUT_SOURCE}
+  ${ASSIMP_SOURCE_C} 
+  ${ASSIMP_SOURCE}
   ${FILE_SOURCE}
   ${FILE_BART_SOURCE}
   ${PARSER_SOURCE}
@@ -101,7 +111,7 @@ find_package(CUDA REQUIRED)
 find_package(Optix REQUIRED)
 find_package(DevIL REQUIRED)
 
-add_definitions(-DFREEGLUT_STATIC)
+ADD_DEFINITIONS(-DFREEGLUT_STATIC -DASSIMP_BUILD_BOOST_WORKAROUND -D_SCL_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS -DASSIMP_BUILD_NO_IFC_IMPORTER)
 
 target_link_libraries(${NAME}
 	OpenGL32
