@@ -15,11 +15,13 @@ using namespace Assimp;
 MeshLoader::MeshLoader(const std::string &base_dir)
 	: base_dir(base_dir)
 {
-	importer = std::make_shared<Assimp::Importer>();
+	//importer = std::make_shared<Assimp::Importer>();
+	importer = new Assimp::Importer();
 }
 
 MeshLoader::~MeshLoader()
 {
+	delete importer;
 }
 
 Scene::MeshDataPtr MeshLoader::loadMeshData(aiMesh *mesh)

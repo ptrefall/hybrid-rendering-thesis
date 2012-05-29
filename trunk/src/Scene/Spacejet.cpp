@@ -17,7 +17,7 @@ Spacejet::Spacejet(MeshDataPtr data)
 {
 }
 
-void Spacejet::init(const File::ShaderLoaderPtr &shader_loader, const Render::Tex2DPtr &lightmap)
+void Spacejet::init(const File::ShaderLoaderPtr &shader_loader)
 {
 	this->shader_loader = shader_loader;
 	spacejet_shader = shader_loader->load("deferredSpacejetShading.vs", std::string(), "deferredSpacejetShading.fs");
@@ -25,29 +25,6 @@ void Spacejet::init(const File::ShaderLoaderPtr &shader_loader, const Render::Te
 	uni_world_to_view		= std::make_shared<Render::Uniform>(spacejet_shader->getVS(), "World_to_View");
 	uni_view_to_clip		= std::make_shared<Render::Uniform>(spacejet_shader->getVS(), "View_to_Clip");
 	uni_normal_to_view		= std::make_shared<Render::Uniform>(spacejet_shader->getVS(), "Normal_to_View");
-
-	unsigned int width =	lightmap->getWidth();
-	unsigned int height =	lightmap->getHeight();
-	unsigned char *data =	lightmap->getData();
-	unsigned int dpp =		lightmap->getBpp();
-	float z = 0.0f;
-	float r = 0.0f;
-	float g = 0.0f;
-	float b = 0.0f;
-	int aux = 0;
-	unsigned int step = 1;
-
-	unsigned int lightcount = 1;
-	for(unsigned int y = 0; y < height; y += step)
-	for(unsigned int x = 0; x < width; x += step)
-	{
-		aux = dpp*(y*width + x);
-		if(data[aux] < 200)
-			continue;
-
-		auto light = std::make_shared<Scene::Light>(++lightcount);
-
-	}
 }
 
 void Spacejet::render(const Render::ShaderPtr &active_program)

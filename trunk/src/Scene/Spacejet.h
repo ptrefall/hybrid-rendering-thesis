@@ -20,7 +20,7 @@ namespace Scene
 	{
 	public:
 		Spacejet(MeshDataPtr data);
-		void init(const File::ShaderLoaderPtr &shader_loader, const Render::Tex2DPtr &lightmap);
+		void init(const File::ShaderLoaderPtr &shader_loader);
 
 		void render(const Render::ShaderPtr &active_program) override;
 

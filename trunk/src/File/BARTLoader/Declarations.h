@@ -25,9 +25,9 @@ namespace File
 	{
 		static void eatWhitespace(FILE *f)
 		{
-		   char ch=getc(f);
+		   char ch=(char)getc(f);
 		   while(ch==' ' || ch=='\t' || ch=='\n' || ch=='\f' || ch=='\r')
-			  ch=getc(f);
+			  ch=(char)getc(f);
 		   ungetc(ch,f);
 		}
 
