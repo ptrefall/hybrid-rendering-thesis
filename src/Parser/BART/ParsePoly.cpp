@@ -147,7 +147,7 @@ void ParsePoly::addPoly( const std::vector<glm::vec3> &vertCoords,
               const std::vector<glm::vec2> &texCoords )
 {
 	// TODO
-	//Scene::MeshPtr mesh = std::make_shared<Scene::Mesh>( vertCoords, vertNormals, texCoords );
+	//auto mesh = std::make_shared<Scene::BARTMesh>( vertCoords, vertNormals, texCoords );
 	//poly_t p = {mesh, active.tformMatrix, active.extMaterial, active.texture};
 	//polyList.push_back(p);
 }

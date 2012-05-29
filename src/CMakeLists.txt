@@ -40,8 +40,8 @@ file(GLOB ROOT_HEADER *.h)
 
 file(GLOB_RECURSE GL3W_SOURCE ${CMAKE_SOURCE_DIR}/depends/include/GL3/*.c)
 file(GLOB_RECURSE GLUT_SOURCE ${CMAKE_SOURCE_DIR}/depends/include/GL/src/*.c)
-file(GLOB_RECURSE ASSIMP_SOURCE_C ${CMAKE_SOURCE_DIR}/depends/AssImp/*.c)
-file(GLOB_RECURSE ASSIMP_SOURCE ${CMAKE_SOURCE_DIR}/depends/AssImp/*.cpp)
+file(GLOB_RECURSE ASSIMP_SOURCE_C ${CMAKE_SOURCE_DIR}/depends/include/AssImp/*.c)
+file(GLOB_RECURSE ASSIMP_SOURCE ${CMAKE_SOURCE_DIR}/depends/include/AssImp/*.cpp)
 file(GLOB		  FILE_SOURCE ./File/*.cpp)
 file(GLOB		  FILE_BART_SOURCE ./File/BARTLoader/*.cpp)
 file(GLOB		  PARSER_SOURCE ./Parser/*.cpp)
@@ -115,7 +115,6 @@ ADD_DEFINITIONS(-DFREEGLUT_STATIC -DASSIMP_BUILD_BOOST_WORKAROUND -D_SCL_SECURE_
 
 target_link_libraries(${NAME}
 	OpenGL32
-	WinMM
 	${CUDA_LIB}
 	${OPTIX_LIB}
 	${OPTIXU_LIB}
@@ -123,3 +122,7 @@ target_link_libraries(${NAME}
 	${ILU_LIBRARY}
 	${ILUT_LIBRARY}
 )
+
+IF(MSVC)
+	TARGET_LINK_LIBRARIES(${NAME} WinMM)
+ENDIF()

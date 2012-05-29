@@ -11,7 +11,7 @@
 #include <string>
 #include <vector>
 
-namespace Assimp { typedef std::shared_ptr<Importer> ImporterPtr; }
+//namespace Assimp { typedef std::shared_ptr<Importer> ImporterPtr; }
 
 namespace File
 {
@@ -49,6 +49,6 @@ namespace File
 		Scene::MeshDataPtr loadMeshData(aiMesh *mesh);
 
 		std::string base_dir;
-		Assimp::ImporterPtr importer;
+		Assimp::Importer *importer;
 	};
 }

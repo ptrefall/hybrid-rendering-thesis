@@ -9,10 +9,12 @@
 #include "File\ShaderLoader.h"
 #include "File\MaterialLoader.h"
 #include "File\BARTLoader2.h"
+#include "File\MeshLoader.h"
 #include "Scene\SceneManager.h"
 #include "Scene\Cube.h"
 #include "Scene\Light.h"
 #include "Scene\proto_camera.h"
+#include "Scene\Spacejet.h"
 
 #include <GL3\gl3w.h>
 
@@ -120,6 +122,7 @@ void Kernel::init(int argc, char** argv)
 	shader_loader = std::make_shared<File::ShaderLoader>(resource_dir+"shaders\\");
 	mat_loader = std::make_shared<File::MaterialLoader>(resource_dir+"materials\\");
 	bart_loader = std::make_shared<File::BARTLoader2>(asset_manager, resource_dir+"bart_scenes\\");
+	mesh_loader = std::make_shared<File::MeshLoader>(resource_dir+"models\\");
 
 	//////////////////////////////////////////
 	// DEFERRED RENDERER INITIALIZING
@@ -153,7 +156,7 @@ void Kernel::run(int start_time, std::function<void()> main_loop_body)
 
 void Kernel::update(float dt)
 {
-	camera->update(keystatus['a'], keystatus['d'], keystatus['s'], keystatus['w'], mouse.coords.x, mouse.coords.y, mouse.leftPressed, dt);
+	camera->update(keystatus['a'], keystatus['d'], keystatus['s'], keystatus['w'], (float)mouse.coords.x, (float)mouse.coords.y, mouse.leftPressed, dt);
 }
 
 void Kernel::render()
@@ -243,9 +246,15 @@ void Kernel::initScene()
 	Scene::LightPtr light = std::make_shared<Scene::Light>(0);
 	light->setPosition(glm::vec3(0,0,0));
 
+	auto spacejet_tex = asset_manager->getTex2DRelativePath("FEROX_DI.tga", false);
+	auto spacejet_normal_tex = asset_manager->getTex2DRelativePath("FEROX_BU.tga", false);
+
 	auto array_tex = asset_manager->getTex2DRelativePath("cube.jpg", false);
 	auto array2_tex = asset_manager->getTex2DRelativePath("array.png", false);
+	
 	Render::UniformPtr tex_sampler = std::make_shared<Render::Uniform>(g_buffer->getShader()->getFS(), "diffuse_tex");
+	Render::UniformPtr norm_sampler = std::make_shared<Render::Uniform>(g_buffer->getShader()->getFS(), "normal_tex");
+	
 	Render::SamplerPtr array_sampler;// = std::make_shared<Render::Sampler>();
 
     renderer->setRayTexture(raytracer->getRenderTexture(), tex_sampler);
@@ -253,6 +262,17 @@ void Kernel::initScene()
 	auto basic_cube_mat = renderer->addMaterial(mat_loader->load("basic_cube.mat"));
 	auto red_cube_mat = renderer->addMaterial(mat_loader->load("red_cube.mat"));
 	auto blue_cube_mat = renderer->addMaterial(mat_loader->load("blue_cube.mat"));
+
+	auto spacejet = mesh_loader->load<Scene::Spacejet>("Ferox.3DS");
+	{
+		spacejet->init(shader_loader);
+		spacejet->setTexture(0,spacejet_tex, "diffuse_tex");
+		spacejet->setTexture(1,spacejet_normal_tex, "normal_tex");
+		spacejet->setMaterial(red_cube_mat);
+		spacejet->setPosition(glm::vec3(0, 0, 20));
+		spacejet->setScale(glm::vec3(0.01f,0.01f,0.01f));
+		scene->add(spacejet);
+	}
 
 	Scene::CubePtr cube = std::make_shared<Scene::Cube>(1.0f);
 	{

@@ -21,6 +21,7 @@ namespace File
 	class ShaderLoader; typedef std::shared_ptr<ShaderLoader> ShaderLoaderPtr;
 	class MaterialLoader; typedef std::shared_ptr<MaterialLoader> MaterialLoaderPtr;
 	class BARTLoader2; typedef std::shared_ptr<BARTLoader2> BARTLoader2Ptr;
+	class MeshLoader; typedef std::shared_ptr<MeshLoader> MeshLoaderPtr;
 }
 namespace Scene
 {
@@ -79,6 +80,7 @@ public:
 	File::ShaderLoaderPtr getShaderLoader() const { return shader_loader; }
 	File::MaterialLoaderPtr getMaterialLoader() const { return mat_loader; }
 	File::BARTLoader2Ptr getBARTLoader() const { return bart_loader; }
+	File::MeshLoaderPtr getMeshLoader() const { return mesh_loader; }
 	Scene::SceneManagerPtr getSceneManager() const { return scene; }
 	Scene::FirstPersonCameraPtr getActiveCamera() const { return camera; }
 
@@ -115,6 +117,7 @@ private:
 	File::ShaderLoaderPtr shader_loader;
 	File::MaterialLoaderPtr mat_loader;
 	File::BARTLoader2Ptr bart_loader;
+	File::MeshLoaderPtr mesh_loader;
 	Scene::SceneManagerPtr scene;
     Scene::FirstPersonCameraPtr camera;
 	
