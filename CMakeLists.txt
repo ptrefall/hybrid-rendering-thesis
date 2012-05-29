@@ -72,7 +72,10 @@ elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
 endif()
 
 include_directories(
-  "${CMAKE_SOURCE_DIR}/depends/include"
+	${CMAKE_SOURCE_DIR}/depends/include/
+	${CMAKE_SOURCE_DIR}/depends/include/AssImp/src/BoostWorkaround/
+	${CMAKE_SOURCE_DIR}/depends/include/AssImp/contrib/
+	${CMAKE_SOURCE_DIR}/depends/include/AssImp/contrib/cppunit-1.12.1/include/
 )
 
 add_subdirectory(src)

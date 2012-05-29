@@ -1,38 +1,48 @@
 #pragma once
 
-#include "SceneNode.h"
-
 #include "../Render/VAO.h"
 #include "../Render/VBO.h"
 #include "../Render/IBO.h"
+
+#include "SceneNode.h"
+
+#include "../File/ShaderLoader.h"
 
 #include <glm/glm.hpp>
 #include <memory>
 
 namespace Scene
 {
+	struct MeshData
+	{
+		std::vector<float> vertices;
+		std::vector<float> normals;
+		std::vector<float> tangents;
+		std::vector<float> bitangents;
+		std::vector<float> texcoords;
+		std::vector<float> colors;
+		std::vector<unsigned int> indices;
+
+		unsigned int getBufferSize() { return sizeof(float) * (vertices.size()+normals.size()+tangents.size()+bitangents.size()+texcoords.size()+colors.size()); }
+		bool hasNormals() const { return !normals.empty(); }
+		bool hasTangents() const { return !tangents.empty(); }
+		bool hasBitangents() const { return !bitangents.empty(); }
+		bool hasTexCoords() const { return !texcoords.empty(); }
+		bool hasColors() const { return !colors.empty(); }
+	};
+	typedef std::shared_ptr<MeshData> MeshDataPtr;
+
 	class Mesh;
 	typedef std::shared_ptr<Mesh> MeshPtr;
 
 	class Mesh : public SceneNode
 	{
 	public:
-		Mesh( const Mesh &copy );
+		Mesh(MeshDataPtr data);
 
-		Mesh(const Render::VAOPtr &vao, const Render::VBOPtr &vbo, const Render::IBOPtr &ibo);
-		
-		Mesh::Mesh(const std::vector<glm::vec3> &vertices, 
-	       const std::vector<glm::vec3> &normals, 
-	       const std::vector<glm::vec2> &tex_coords, 
-		   const std::vector<unsigned int> &indices);
+		//void render(const Render::ShaderPtr &active_program) override;
 
-		void render(const Render::ShaderPtr &active_program) override;
-	
-		Render::VAOPtr getVao() { return vao; }
-		Render::VBOPtr getVbo() { return vbo; }
-		Render::IBOPtr getIbo() { return ibo; }
 	protected:
-		
 		Render::VAOPtr vao;
 		Render::VBOPtr vbo;
 		Render::IBOPtr ibo;

@@ -16,7 +16,7 @@ namespace Render
 namespace Scene
 {
 	class SceneNode; typedef std::shared_ptr<SceneNode> SceneNodePtr;
-	class Mesh; typedef std::shared_ptr<Mesh> MeshPtr;
+	class BARTMesh; typedef std::shared_ptr<BARTMesh> BARTMeshPtr;
 }
 
 namespace File
@@ -38,13 +38,13 @@ namespace File
 		public:
 			InternalSceneNode(const std::string& name);
 			void add( InternalSceneNodePtr child );
-			void addMesh( Scene::MeshPtr& m );
+			void addMesh( Scene::BARTMeshPtr& m );
 			void visit(int spaces);
 
 			std::string name;
 			std::string fileScope;
 			std::vector<InternalSceneNodePtr> children;
-			std::vector<Scene::MeshPtr> meshes;
+			std::vector<Scene::BARTMeshPtr> meshes;
 			glm::mat4 tform;
 		};
 
