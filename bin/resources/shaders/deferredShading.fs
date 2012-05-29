@@ -10,19 +10,39 @@ uniform float material_id;
 
 in block
 {
-	vec3 v; //Position in view space
-	vec3 n; //Normal in world space
-	vec2 t; //TexCoord
+	vec4 position_ws;	//world space
+	vec4 position_vs; 	//view space
+	vec3 normal_vs; 	//view space
+	vec2 texcoord;
 } Vertex;
 
 layout(location = DIFFUSE, 	index = 0) 	out vec4 out_Diffuse;
 layout(location = POSITION, index = 0) 	out vec4 out_Position;
 layout(location = NORMAL, 	index = 0) 	out vec4 out_Normal;
 
+vec4 Diffuse();
+vec3 Position();
+vec3 Normal();
+
 void main( void )
 {
-	//out_Diffuse		= vec4(1.0, 0.0, 0.0, 1.0);
-	out_Diffuse		= texture(diffuse_tex, Vertex.t);
-	out_Position	= vec4(Vertex.v.xyz,0);
-	out_Normal		= vec4(Vertex.n.xyz,material_id);
+	out_Diffuse		= Diffuse();
+	out_Position	= vec4(Position(), 1.0);
+	out_Normal		= vec4(Normal(),material_id);
+}
+
+vec4 Diffuse()
+{
+	return texture(diffuse_tex, Vertex.texcoord);
+}
+
+vec3 Position()
+{
+	return Vertex.position_vs.xyz;
+}
+
+vec3 Normal()
+{
+	vec3 frontNormal_vs = gl_FrontFacing ? Vertex.normal_vs : -Vertex.normal_vs;	//view space
+	return normalize(frontNormal_vs);
 }

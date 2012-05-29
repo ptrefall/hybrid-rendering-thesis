@@ -155,26 +155,15 @@ Cube::Cube(const float &size)
 
 void Cube::render(const Render::ShaderPtr &active_program)
 {
-	mat4 model = glm::translate( position);
-	static float var = 0.f;
-	var += 0.1f;
-	//model = glm::rotate<float>(model, var, vec3(0,1,0));
+	object_to_world = glm::translate( position);
+	auto &world_to_view = FirstPersonCamera::getSingleton()->getWorldToViewMatrix();
+	auto &view_to_clip = FirstPersonCamera::getSingleton()->getViewToClipMatrix();
+	auto normal_to_view = transpose(inverse(mat3(world_to_view * object_to_world)));
 
-	  /*static float var = 0.f;
-	  var += 1e-2;
-	  model.rotate( AngleAxisf(var,  vec3::UnitY()) );*/
-  
-
-  auto &proj = FirstPersonCamera::getSingleton()->getProjection();
-  auto &view = FirstPersonCamera::getSingleton()->getViewMatrix();
-
-  auto modelView = view * model;
-  auto modelViewProj = proj * view * model;
-  auto normal = transpose(mat3(inverse(modelView)));
-
-  mvp->bind(modelViewProj);
-  mv->bind(modelView);
-  n_wri->bind(normal);
+	uni_object_to_world->	bind(object_to_world);
+	uni_world_to_view->		bind(world_to_view);
+	uni_view_to_clip->		bind(view_to_clip);
+	uni_normal_to_view->	bind(normal_to_view);
 
 	for(auto it=textures.begin(); it!=textures.end(); ++it)
 	{
@@ -189,7 +178,7 @@ void Cube::render(const Render::ShaderPtr &active_program)
 	vao->bind();
 
 	glDrawElements(GL_TRIANGLES, ibo->size(), GL_UNSIGNED_INT, BUFFER_OFFSET(0));
-	
+
 	for(auto it=textures.begin(); it!=textures.end(); ++it)
 	{
 		glActiveTexture(GL_TEXTURE0+it->first);

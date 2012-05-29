@@ -18,7 +18,7 @@ Mesh::Mesh( const Mesh &copy )
 	this->vao = copy.vao;
 	this->vbo = copy.vbo;
 	this->ibo = copy.ibo;
-	this->model = copy.model;
+	this->object_to_world = copy.object_to_world;
 	this->material = copy.material;
 	for(auto it=copy.textures.begin(); it!=copy.textures.end(); ++it)
 		setTexture(it->first, it->second.first, it->second.second, nullptr);
@@ -58,16 +58,15 @@ Mesh::Mesh(const std::vector<glm::vec3> &vertices,
 
 void Mesh::render(const Render::ShaderPtr &active_program)
 {
-  auto &proj = FirstPersonCamera::getSingleton()->getProjection();
-  auto &view = FirstPersonCamera::getSingleton()->getViewMatrix();
+	//object_to_world = glm::translate( position);
+	auto &world_to_view = FirstPersonCamera::getSingleton()->getWorldToViewMatrix();
+	auto &view_to_clip = FirstPersonCamera::getSingleton()->getViewToClipMatrix();
+	auto normal_to_view = transpose(inverse(mat3(world_to_view * object_to_world)));
 
-  auto modelView = view * model;
-  auto modelViewProj = proj * view * model;
-  auto normal = transpose(mat3(inverse(modelView)));
-
-  mvp->bind(modelViewProj);
-  mv->bind(modelView);
-  n_wri->bind(normal);
+	uni_object_to_world->	bind(object_to_world);
+	uni_world_to_view->		bind(world_to_view);
+	uni_view_to_clip->		bind(view_to_clip);
+	uni_normal_to_view->	bind(normal_to_view);
 
 	for(auto it=textures.begin(); it!=textures.end(); ++it)
 	{

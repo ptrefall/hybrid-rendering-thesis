@@ -152,7 +152,7 @@ void OptixRender::render()
 {
   //unsigned int pbo = context["output_buffer"]->getBuffer()->getGLBOId(); // not a pbo!
 	auto camera = Scene::FirstPersonCamera::getSingleton();
-	auto &view = camera->getViewMatrix();
+	auto &world_to_view = camera->getWorldToViewMatrix();
 	auto pos = camera->getPos();
  
     float aspect_ratio = static_cast<float>(w) / static_cast<float>(h);

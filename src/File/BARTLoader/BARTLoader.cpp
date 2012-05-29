@@ -1833,7 +1833,7 @@ void flattenSceneGraph( const InternalSceneNodePtr &node, const glm::mat4 &paren
 		// copy ctor is less obvious imo... but, saves having to write getter's.
 		//Scene::MeshPtr finalMesh = std::shared_ptr<Scene::Mesh>( new Scene::Mesh( pMesh->getVao(), pMesh->getVbo(), pMesh->getIbo() ) );
 		Scene::MeshPtr finalMesh = std::shared_ptr<Scene::Mesh>( new Scene::Mesh( (*pMesh) ) );
-		finalMesh->setModelMatrix( combinedXform ); // still need to use global xform.
+		finalMesh->setObjectToWorldMatrix( combinedXform ); // still need to use global xform.
 		sceneNodeList.push_back( finalMesh );
 	}
 

@@ -256,9 +256,10 @@ void Kernel::initScene()
 
 	Scene::CubePtr cube = std::make_shared<Scene::Cube>(1.0f);
 	{
-		cube->setMVP(	g_buffer->getMVP());
-		cube->setMV(	g_buffer->getMV());
-		cube->setN_WRI(	g_buffer->getN_WRI());
+		cube->setObjectToWorldUniform(	g_buffer->getObjectToWorldUniform());
+		cube->setWorldToViewUniform(	g_buffer->getWorldToViewUniform());
+		cube->setViewToClipUniform(		g_buffer->getViewToClipUniform());
+		cube->setNormalToViewUniform(	g_buffer->getNormalToViewUniform());
 		cube->setTexture(0, raytracer->getRenderTexture(), tex_sampler, array_sampler);
 		cube->setMaterial(basic_cube_mat);
 		scene->add(cube);
@@ -267,10 +268,11 @@ void Kernel::initScene()
 
 	Scene::CubePtr cube2 = std::make_shared<Scene::Cube>(.5f);
 	{
-		cube2->setMVP(	g_buffer->getMVP());
-		cube2->setMV(	g_buffer->getMV());
-		cube2->setN_WRI(	g_buffer->getN_WRI());
-		cube2->setTexture(0, array2_tex, tex_sampler, array_sampler);
+		cube2->setObjectToWorldUniform(	g_buffer->getObjectToWorldUniform());
+		cube2->setWorldToViewUniform(	g_buffer->getWorldToViewUniform());
+		cube2->setViewToClipUniform(	g_buffer->getViewToClipUniform());
+		cube2->setNormalToViewUniform(	g_buffer->getNormalToViewUniform());
+		cube2->setTexture(0,array2_tex, tex_sampler, array_sampler);
 		cube2->setMaterial(red_cube_mat);
 		scene->add(cube2);
 		cube2->setPosition( glm::vec3(5,3,-20) );
@@ -290,9 +292,10 @@ void Kernel::initScene()
             
 			Scene::CubePtr cube3 = std::make_shared<Scene::Cube>(0.5f);
 			{
-				cube3->setMVP(	g_buffer->getMVP());
-				cube3->setMV(	g_buffer->getMV());
-				cube3->setN_WRI(	g_buffer->getN_WRI());
+				cube3->setObjectToWorldUniform(	g_buffer->getObjectToWorldUniform());
+				cube3->setWorldToViewUniform(	g_buffer->getWorldToViewUniform());
+				cube3->setViewToClipUniform(	g_buffer->getViewToClipUniform());
+				cube3->setNormalToViewUniform(	g_buffer->getNormalToViewUniform());
 				cube3->setTexture(0, array_tex, tex_sampler, array_sampler);
 				cube3->setMaterial(blue_cube_mat);
 				scene->add(cube3);
@@ -309,9 +312,10 @@ void Kernel::initScene()
 	for(auto it=begin(nodes); it!=end(nodes); ++it)
 	{
 		Scene::SceneNodePtr &node = *it;
-		node->setMVP(	g_buffer->getMVP());
-		node->setMV(	g_buffer->getMV());
-		node->setN_WRI(	g_buffer->getN_WRI());
+		node->setObjectToWorldUniform(	g_buffer->getObjectToWorldUniform());
+		node->setWorldToViewUniform(	g_buffer->getWorldToViewUniform());
+		node->setViewToClipUniform(		g_buffer->getViewToClipUniform());
+		node->setNormalToViewUniform(	g_buffer->getNormalToViewUniform());
 		//node->setTexture(array_tex, tex_sampler, array_sampler);
 	}
 	scene->addList( nodes );
