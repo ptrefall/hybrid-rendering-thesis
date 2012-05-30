@@ -284,9 +284,9 @@ void OptixRender::createTextureSamplers( optix::Context context )
 void OptixRender::addTextureSampler(optix::TextureSampler sampler, unsigned int gl_tex_handle, float max_anisotropy, const std::string &sampler_name)
 {
 	sampler = context->createTextureSamplerFromGLImage( gl_tex_handle, RT_TARGET_GL_TEXTURE_2D );
-	sampler->setWrapMode( 0, RT_WRAP_REPEAT );
-	sampler->setWrapMode( 1, RT_WRAP_REPEAT );
-	sampler->setWrapMode( 2, RT_WRAP_REPEAT );
+	sampler->setWrapMode( 0, RT_WRAP_CLAMP_TO_EDGE );
+	sampler->setWrapMode( 1, RT_WRAP_CLAMP_TO_EDGE );
+	sampler->setWrapMode( 2, RT_WRAP_CLAMP_TO_EDGE );
 	sampler->setIndexingMode( RT_TEXTURE_INDEX_NORMALIZED_COORDINATES );
 	sampler->setReadMode( RT_TEXTURE_READ_NORMALIZED_FLOAT );
 	sampler->setMaxAnisotropy( max_anisotropy );
