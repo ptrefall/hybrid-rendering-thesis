@@ -26,11 +26,11 @@ void FBO::unbind()
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void FBO::bind_rt(unsigned int active_program)
+void FBO::bind_rt(unsigned int active_program, unsigned int index_offset)
 {
 	for(auto i = 0; i < (int)render_textures.size(); i++)
 	{
-		glActiveTexture(GL_TEXTURE0 + i+1);
+		glActiveTexture(GL_TEXTURE0 + i+index_offset);
 		render_textures[i]->bind();
 		render_samplers[i]->bind(i+1, active_program);
 		//Kernel::getSingleton()->getTextureLoader()->save(render_textures[i], Kernel::getSingleton()->getResourceDir()+"screens\\MRT.png");

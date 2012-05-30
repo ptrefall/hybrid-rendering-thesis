@@ -9,8 +9,7 @@
 
 namespace Render
 {
-    class GBuffer;
-	typedef std::shared_ptr<GBuffer> GBufferPtr;
+    class GBuffer_Pass; typedef std::shared_ptr<GBuffer_Pass> GBuffer_PassPtr;
 }
 
 namespace Raytracer
@@ -21,7 +20,7 @@ namespace Raytracer
 	class OptixRender
 	{
 	public:
-		OptixRender(const Render::GBufferPtr &g_buffer, unsigned int w, unsigned int h, const std::string& baseDir);
+		OptixRender(const Render::GBuffer_PassPtr &g_buffer_pass, unsigned int w, unsigned int h, const std::string& baseDir);
 		void render();
 
 		void reshape(unsigned int w, unsigned int h);
@@ -29,7 +28,7 @@ namespace Raytracer
 		Render::Tex2DPtr getRenderTexture() const { return tex; }
 
 	private:
-        Render::GBufferPtr g_buffer;
+        Render::GBuffer_PassPtr g_buffer_pass;
 		unsigned int w;
 		unsigned int h;
         optix::Context  context; 
