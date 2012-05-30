@@ -178,6 +178,9 @@ void OptixRender::render()
 	auto raster_position = raster_fbo->getRenderTexture(1);
 	auto raster_normal = raster_fbo->getRenderTexture(2);
 	//TODO: Upload to optix!
+	/*raster_diffuse_sampler = context->createTextureSamplerFromGLImage( raster_diffuse->getHandle(), RT_TARGET_GL_TEXTURE_2D );
+	raster_position_sampler = context->createTextureSamplerFromGLImage( raster_position->getHandle(), RT_TARGET_GL_TEXTURE_2D );
+	raster_normal_sampler = context->createTextureSamplerFromGLImage( raster_normal->getHandle(), RT_TARGET_GL_TEXTURE_2D );*/
 
 	try {
 		context->launch(0, w,h);

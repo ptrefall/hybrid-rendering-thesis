@@ -45,5 +45,8 @@ namespace Raytracer
         void     createInstance( optix::Context context, optix::Geometry sphere, optix::Material material );
 		void _displayFrame( optix::Buffer buffer );
 
+		optix::TextureSampler  raster_diffuse_sampler;
+		optix::TextureSampler  raster_position_sampler;
+		optix::TextureSampler  raster_normal_sampler;
 	};
 }
