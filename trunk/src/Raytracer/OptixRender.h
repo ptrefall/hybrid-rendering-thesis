@@ -48,5 +48,6 @@ namespace Raytracer
 		optix::TextureSampler  raster_diffuse_sampler;
 		optix::TextureSampler  raster_position_sampler;
 		optix::TextureSampler  raster_normal_sampler;
+		void addTextureSampler(optix::TextureSampler &sampler, unsigned int gl_tex_handle, float max_anisotropy, const std::string &sampler_name);
 	};
 }

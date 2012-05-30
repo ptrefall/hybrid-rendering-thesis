@@ -172,16 +172,6 @@ void OptixRender::render()
     context["V"]->set3fv( glm::value_ptr(V) );
     context["W"]->set3fv( glm::value_ptr(W) );
 
-	//Upload rasterized g-buffer info here:
-	auto raster_fbo = g_buffer_pass->getFBO();
-	auto raster_diffuse = raster_fbo->getRenderTexture(0);
-	auto raster_position = raster_fbo->getRenderTexture(1);
-	auto raster_normal = raster_fbo->getRenderTexture(2);
-	//TODO: Upload to optix!
-	/*raster_diffuse_sampler = context->createTextureSamplerFromGLImage( raster_diffuse->getHandle(), RT_TARGET_GL_TEXTURE_2D );
-	raster_position_sampler = context->createTextureSamplerFromGLImage( raster_position->getHandle(), RT_TARGET_GL_TEXTURE_2D );
-	raster_normal_sampler = context->createTextureSamplerFromGLImage( raster_normal->getHandle(), RT_TARGET_GL_TEXTURE_2D );*/
-
 	try {
 		context->launch(0, w,h);
 	} catch (optix::Exception& e) {
@@ -212,6 +202,16 @@ Context OptixRender::createContext()
   Buffer buffer = context->createBuffer( RT_BUFFER_OUTPUT, RT_FORMAT_UNSIGNED_BYTE4, w, h );
 
   output_buffer->set(buffer);
+
+	//Upload rasterized g-buffer info here:
+	auto raster_fbo = g_buffer_pass->getFBO();
+	auto raster_diffuse = raster_fbo->getRenderTexture(0);
+	auto raster_position = raster_fbo->getRenderTexture(1);
+	auto raster_normal = raster_fbo->getRenderTexture(2);
+	//TODO: Upload to optix!
+	/*addTextureSampler(raster_diffuse_sampler, raster_diffuse->getHandle(), 1.0f, "raster_diffuse");
+	addTextureSampler(raster_position_sampler, raster_position->getHandle(), 1.0f, "raster_position");
+	addTextureSampler(raster_normal_sampler, raster_normal->getHandle(), 1.0f, "raster_normal");*/
 
   // Ray generation program
   std::string ptx_path( baseDir + "pinhole_camera.cu.ptx" );
@@ -277,3 +277,16 @@ void OptixRender::createInstance( Context context, Geometry sphere, Material mat
   context["top_object"]->set( geometrygroup );
 }
 
+void OptixRender::addTextureSampler(optix::TextureSampler &sampler, unsigned int gl_tex_handle, float max_anisotropy, const std::string &sampler_name)
+{
+	sampler = context->createTextureSamplerFromGLImage( gl_tex_handle, RT_TARGET_GL_TEXTURE_2D );
+	sampler->setWrapMode( 0, RT_WRAP_REPEAT );
+	sampler->setWrapMode( 1, RT_WRAP_REPEAT );
+	sampler->setWrapMode( 2, RT_WRAP_REPEAT );
+	sampler->setIndexingMode( RT_TEXTURE_INDEX_NORMALIZED_COORDINATES );
+	sampler->setReadMode( RT_TEXTURE_READ_NORMALIZED_FLOAT );
+	sampler->setMaxAnisotropy( max_anisotropy );
+	sampler->setFilteringModes( RT_FILTER_LINEAR, RT_FILTER_LINEAR, RT_FILTER_NONE );
+
+	context[sampler_name.c_str()]->setTextureSampler( sampler );
+}
