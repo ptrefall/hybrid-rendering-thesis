@@ -19,7 +19,7 @@
  * SUCH DAMAGES
  */
 
-#include <Optix/optix_world.h>
+#include "Optix/optix_world.h"
 #include "helpers.h"
 
 using namespace optix;
