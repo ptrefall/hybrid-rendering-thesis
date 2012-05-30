@@ -164,6 +164,9 @@ IF(MSVC)
 ENDIF()
 
 set(OPTIX_SCRIPT_FILES_PATH "${CMAKE_SOURCE_DIR}/bin/resources/optix/")
+set(CUDA_INCLUDE_PATH "${CMAKE_SOURCE_DIR}/depends/include/")
+set(OPTIX_INCLUDE_PATH "${CMAKE_SOURCE_DIR}/depends/include/optix")
+
 file(GLOB OPTIX_SCRIPT_FILES_CU ${OPTIX_SCRIPT_FILES_PATH}*.cu)
 set(PTX_EXT ".ptx")
 set(CUDA_COMPILER_EXEC "nvcc.exe")
@@ -171,6 +174,6 @@ foreach(CU ${OPTIX_SCRIPT_FILES_CU})
 	set(PTX ${input}${PTX_EXT})
 	add_custom_command(	TARGET ${NAME}
 						PRE_BUILD 
-						COMMAND ${CUDA_COMPILER_EXEC} ${CU} ARGS --machine 32 --ptx --include-path $ENV{CUDA_INC_PATH} --output-file ${CU}${PTX}
+						COMMAND ${CUDA_COMPILER_EXEC} ${CU} ARGS --machine 32 --ptx --include-path ${CUDA_INCLUDE_PATH} --include-path ${OPTIX_INCLUDE_PATH} --output-file ${CU}${PTX}
 						COMMENT "Compiling Optix script ${CU} to ${PTX}")
 endforeach()

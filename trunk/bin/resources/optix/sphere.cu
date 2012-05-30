@@ -33,6 +33,7 @@ template<bool use_robust_method>
 __device__
 void intersect_sphere(void)
 {
+
   float3 center = make_float3(sphere);
   float3 O = ray.origin - center;
   float3 D = ray.direction;
@@ -68,7 +69,10 @@ void intersect_sphere(void)
 
     bool check_second = true;
     if( rtPotentialIntersection( root1 + root11 ) ) {
-      shading_normal = geometric_normal = (O + (root1 + root11)*D)/radius;
+      geometric_normal = (O + (root1 + root11)*D)/radius;
+			float3 stripex = 0.5f + 0.5f * sin(geometric_normal.x*25.f)*make_float3(0.f,0.f,1.f);
+			float3 stripey = 0.5f + 0.5f * sin(geometric_normal.y*25.f)*make_float3(1.f,1.f,0.f);
+      shading_normal = stripex * .5f + stripey * .5f;
       if(rtReportIntersection(0))
         check_second = false;
     } 

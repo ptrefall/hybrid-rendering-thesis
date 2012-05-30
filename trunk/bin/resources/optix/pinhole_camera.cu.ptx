@@ -1,12 +1,12 @@
 	.version 1.4
 	.target sm_10, map_f64_to_f32
-	// compiled with C:/Program Files (x86)/NVIDIA GPU Computing Toolkit/CUDA/v4.1/bin/../open64/lib//be.exe
-	// nvopencc 4.1 built on 2012-01-13
+	// compiled with C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v4.1\\bin/../open64/lib//be.exe
+	// nvopencc 4.1 built on 2011-11-18
 
 	.func _ZN5optix16rt_undefined_useEi (.reg .u32 %ra1)
 
 	//-----------------------------------------------------------
-	// Compiling C:/Users/thegodi/AppData/Local/Temp/tmpxft_00000bd4_00000000-11_pinhole_camera.cpp3.i (C:/Users/thegodi/AppData/Local/Temp/ccBI#.a04348)
+	// Compiling C:/Users/tactix/AppData/Local/Temp/tmpxft_000018ec_00000000-11_pinhole_camera.cpp3.i (C:/Users/tactix/AppData/Local/Temp/ccBI#.a02156)
 	//-----------------------------------------------------------
 
 	//-----------------------------------------------------------
@@ -18,38 +18,38 @@
 	//  -m2	(Report advisories)
 	//-----------------------------------------------------------
 
-	.file	1	"C:/Users/thegodi/AppData/Local/Temp/tmpxft_00000bd4_00000000-10_pinhole_camera.cudafe2.gpu"
-	.file	2	"c:\program files (x86)\nvidia corporation\optix sdk 2.5.0\include\optix_device.h"
-	.file	3	"C:/Program Files (x86)/NVIDIA Corporation/OptiX SDK 2.5.0/SDK/sample5pp/pinhole_camera.cu"
-	.file	4	"c:\program files (x86)\nvidia corporation\optix sdk 2.5.0\include\internal/optix_datatypes.h"
-	.file	5	"c:\program files (x86)\nvidia corporation\optix sdk 2.5.0\include\internal\optix_defines.h"
-	.file	6	"c:\program files (x86)\microsoft visual studio 10.0\vc\include\codeanalysis\sourceannotations.h"
-	.file	7	"C:/Program Files (x86)/NVIDIA GPU Computing Toolkit/CUDA/v4.1/include\crt/device_runtime.h"
-	.file	8	"C:/Program Files (x86)/NVIDIA GPU Computing Toolkit/CUDA/v4.1/include\host_defines.h"
-	.file	9	"C:/Program Files (x86)/NVIDIA GPU Computing Toolkit/CUDA/v4.1/include\builtin_types.h"
-	.file	10	"c:\program files (x86)\nvidia gpu computing toolkit\cuda\v4.1\include\device_types.h"
-	.file	11	"c:\program files (x86)\nvidia gpu computing toolkit\cuda\v4.1\include\host_defines.h"
-	.file	12	"c:\program files (x86)\nvidia gpu computing toolkit\cuda\v4.1\include\driver_types.h"
-	.file	13	"c:\program files (x86)\nvidia gpu computing toolkit\cuda\v4.1\include\surface_types.h"
-	.file	14	"c:\program files (x86)\nvidia gpu computing toolkit\cuda\v4.1\include\texture_types.h"
-	.file	15	"c:\program files (x86)\nvidia gpu computing toolkit\cuda\v4.1\include\vector_types.h"
-	.file	16	"c:\program files (x86)\nvidia gpu computing toolkit\cuda\v4.1\include\builtin_types.h"
-	.file	17	"C:/Program Files (x86)/NVIDIA GPU Computing Toolkit/CUDA/v4.1/include\device_launch_parameters.h"
-	.file	18	"c:\program files (x86)\nvidia gpu computing toolkit\cuda\v4.1\include\crt\storage_class.h"
-	.file	19	"c:\program files (x86)\nvidia corporation\optix sdk 2.5.0\include\internal\../optix_sizet.h"
-	.file	20	"c:\program files (x86)\nvidia corporation\optix sdk 2.5.0\include\internal/optix_internal.h"
-	.file	21	"C:/Program Files (x86)/NVIDIA GPU Computing Toolkit/CUDA/v4.1/include\common_functions.h"
-	.file	22	"c:\program files (x86)\nvidia gpu computing toolkit\cuda\v4.1\include\math_functions.h"
-	.file	23	"c:\program files (x86)\nvidia gpu computing toolkit\cuda\v4.1\include\math_constants.h"
-	.file	24	"c:\program files (x86)\nvidia gpu computing toolkit\cuda\v4.1\include\device_functions.h"
-	.file	25	"c:\program files (x86)\nvidia gpu computing toolkit\cuda\v4.1\include\sm_11_atomic_functions.h"
-	.file	26	"c:\program files (x86)\nvidia gpu computing toolkit\cuda\v4.1\include\sm_12_atomic_functions.h"
-	.file	27	"c:\program files (x86)\nvidia gpu computing toolkit\cuda\v4.1\include\sm_13_double_functions.h"
-	.file	28	"c:\program files (x86)\nvidia gpu computing toolkit\cuda\v4.1\include\sm_20_atomic_functions.h"
-	.file	29	"c:\program files (x86)\nvidia gpu computing toolkit\cuda\v4.1\include\sm_20_intrinsics.h"
-	.file	30	"c:\program files (x86)\nvidia gpu computing toolkit\cuda\v4.1\include\surface_functions.h"
-	.file	31	"c:\program files (x86)\nvidia gpu computing toolkit\cuda\v4.1\include\texture_fetch_functions.h"
-	.file	32	"c:\program files (x86)\nvidia gpu computing toolkit\cuda\v4.1\include\math_functions_dbl_ptx1.h"
+	.file	1	"C:/Users/tactix/AppData/Local/Temp/tmpxft_000018ec_00000000-10_pinhole_camera.cudafe2.gpu"
+	.file	2	"f:\repos\svn\hybridrender\depends\include\optix\optix_device.h"
+	.file	3	"F:/repos/svn/hybridrender/bin/resources/optix/pinhole_camera.cu"
+	.file	4	"f:\repos\svn\hybridrender\depends\include\optix\internal/optix_datatypes.h"
+	.file	5	"f:\repos\svn\hybridrender\depends\include\optix\internal\optix_defines.h"
+	.file	6	"h:\software\msvc10\vc\include\codeanalysis\sourceannotations.h"
+	.file	7	"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v4.1\bin/../include\crt/device_runtime.h"
+	.file	8	"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v4.1\bin/../include\host_defines.h"
+	.file	9	"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v4.1\bin/../include\builtin_types.h"
+	.file	10	"c:\program files\nvidia gpu computing toolkit\cuda\v4.1\include\device_types.h"
+	.file	11	"c:\program files\nvidia gpu computing toolkit\cuda\v4.1\include\host_defines.h"
+	.file	12	"c:\program files\nvidia gpu computing toolkit\cuda\v4.1\include\driver_types.h"
+	.file	13	"c:\program files\nvidia gpu computing toolkit\cuda\v4.1\include\surface_types.h"
+	.file	14	"c:\program files\nvidia gpu computing toolkit\cuda\v4.1\include\texture_types.h"
+	.file	15	"c:\program files\nvidia gpu computing toolkit\cuda\v4.1\include\vector_types.h"
+	.file	16	"c:\program files\nvidia gpu computing toolkit\cuda\v4.1\include\builtin_types.h"
+	.file	17	"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v4.1\bin/../include\device_launch_parameters.h"
+	.file	18	"c:\program files\nvidia gpu computing toolkit\cuda\v4.1\include\crt\storage_class.h"
+	.file	19	"f:\repos\svn\hybridrender\depends\include\optix\internal\../optix_sizet.h"
+	.file	20	"f:\repos\svn\hybridrender\depends\include\optix\internal/optix_internal.h"
+	.file	21	"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v4.1\bin/../include\common_functions.h"
+	.file	22	"c:\program files\nvidia gpu computing toolkit\cuda\v4.1\include\math_functions.h"
+	.file	23	"c:\program files\nvidia gpu computing toolkit\cuda\v4.1\include\math_constants.h"
+	.file	24	"c:\program files\nvidia gpu computing toolkit\cuda\v4.1\include\device_functions.h"
+	.file	25	"c:\program files\nvidia gpu computing toolkit\cuda\v4.1\include\sm_11_atomic_functions.h"
+	.file	26	"c:\program files\nvidia gpu computing toolkit\cuda\v4.1\include\sm_12_atomic_functions.h"
+	.file	27	"c:\program files\nvidia gpu computing toolkit\cuda\v4.1\include\sm_13_double_functions.h"
+	.file	28	"c:\program files\nvidia gpu computing toolkit\cuda\v4.1\include\sm_20_atomic_functions.h"
+	.file	29	"c:\program files\nvidia gpu computing toolkit\cuda\v4.1\include\sm_20_intrinsics.h"
+	.file	30	"c:\program files\nvidia gpu computing toolkit\cuda\v4.1\include\surface_functions.h"
+	.file	31	"c:\program files\nvidia gpu computing toolkit\cuda\v4.1\include\texture_fetch_functions.h"
+	.file	32	"c:\program files\nvidia gpu computing toolkit\cuda\v4.1\include\math_functions_dbl_ptx1.h"
 
 	.global .align 16 .b8 eye[12];
 	.global .align 16 .b8 U[12];
@@ -67,7 +67,7 @@
 	.reg .u32 %ra1;
 	.reg .u32 %r<35>;
 	.reg .f32 %f<68>;
-	.local .align 4 .b8 __cuda___cuda_local_var_276092_23_non_const_prd_1660[20];
+	.local .align 4 .b8 __cuda___cuda_local_var_275869_23_non_const_prd_1660[20];
 	.loc	3	51	0
 $LDWbegin__Z14pinhole_camerav:
 	ld.global.v2.u32 	{%r1,%r2}, [launch_index+0];
@@ -77,8 +77,8 @@ $LDWbegin__Z14pinhole_camerav:
 	cvt.rn.f32.u32 	%f2, %r3;
 	cvt.rn.f32.u32 	%f3, %r2;
 	cvt.rn.f32.u32 	%f4, %r4;
-	div.approx.f32 	%f5, %f1, %f2;
-	div.approx.f32 	%f6, %f3, %f4;
+	div.full.f32 	%f5, %f1, %f2;
+	div.full.f32 	%f6, %f3, %f4;
 	add.f32 	%f7, %f5, %f5;
 	add.f32 	%f8, %f6, %f6;
 	mov.f32 	%f9, 0fbf800000;     	// -1
@@ -106,10 +106,10 @@ $LDWbegin__Z14pinhole_camerav:
 	rsqrt.approx.f32 	%f37, %f36;
 	.loc	3	63	0
 	mov.f32 	%f38, 0f3f800000;    	// 1
-	st.local.f32 	[__cuda___cuda_local_var_276092_23_non_const_prd_1660+12], %f38;
+	st.local.f32 	[__cuda___cuda_local_var_275869_23_non_const_prd_1660+12], %f38;
 	.loc	3	64	0
 	mov.s32 	%r5, 0;
-	st.local.s32 	[__cuda___cuda_local_var_276092_23_non_const_prd_1660+16], %r5;
+	st.local.s32 	[__cuda___cuda_local_var_275869_23_non_const_prd_1660+16], %r5;
 	.loc	3	66	0
 	ld.global.u32 	%r6, [top_object+0];
 	ld.global.v4.f32 	{%f39,%f40,%f41,_}, [eye+0];
@@ -120,7 +120,7 @@ $LDWbegin__Z14pinhole_camerav:
 	ld.global.u32 	%r7, [radiance_ray_type];
 	ld.global.f32 	%f45, [scene_epsilon];
 	.loc	20	97	0
-	mov.u32 	%ra1, __cuda___cuda_local_var_276092_23_non_const_prd_1660;
+	mov.u32 	%ra1, __cuda___cuda_local_var_275869_23_non_const_prd_1660;
 	call.uni _ZN5optix16rt_undefined_useEi, (%ra1);
 	.loc	20	99	0
 	mov.u32 	%r8, %r6;
@@ -134,23 +134,23 @@ $LDWbegin__Z14pinhole_camerav:
 	mov.f32 	%f52, %f45;
 	mov.f32 	%f53, 0f6c4ecb8f;    	// 1e+027
 	mov.f32 	%f54, %f53;
-	mov.u32 	%r10, __cuda___cuda_local_var_276092_23_non_const_prd_1660;
+	mov.u32 	%r10, __cuda___cuda_local_var_275869_23_non_const_prd_1660;
 	mov.u32 	%r11, %r10;
 	mov.u32 	%r12, 20;
 	mov.u32 	%r13, %r12;
 	call _rt_trace, (%r8, %f46, %f47, %f48, %f49, %f50, %f51, %r9, %f52, %f54, %r11, %r13);
 	.loc	3	75	0
-	ld.local.f32 	%f55, [__cuda___cuda_local_var_276092_23_non_const_prd_1660+8];
+	ld.local.f32 	%f55, [__cuda___cuda_local_var_275869_23_non_const_prd_1660+8];
 	cvt.sat.f32.f32 	%f56, %f55;
 	mov.f32 	%f57, 0f437ffd71;    	// 255.99
 	mul.f32 	%f58, %f56, %f57;
 	cvt.rzi.u32.f32 	%r14, %f58;
-	ld.local.f32 	%f59, [__cuda___cuda_local_var_276092_23_non_const_prd_1660+4];
+	ld.local.f32 	%f59, [__cuda___cuda_local_var_275869_23_non_const_prd_1660+4];
 	cvt.sat.f32.f32 	%f60, %f59;
 	mov.f32 	%f61, 0f437ffd71;    	// 255.99
 	mul.f32 	%f62, %f60, %f61;
 	cvt.rzi.u32.f32 	%r15, %f62;
-	ld.local.f32 	%f63, [__cuda___cuda_local_var_276092_23_non_const_prd_1660+0];
+	ld.local.f32 	%f63, [__cuda___cuda_local_var_275869_23_non_const_prd_1660+0];
 	cvt.sat.f32.f32 	%f64, %f63;
 	mov.f32 	%f65, 0f437ffd71;    	// 255.99
 	mul.f32 	%f66, %f64, %f65;
@@ -182,7 +182,7 @@ $LDWbegin__Z14pinhole_camerav:
 $LDWend__Z14pinhole_camerav:
 	} // _Z14pinhole_camerav
 	.global .align 16 .b8 bad_color[12];
-	.const .align 1 .b8 __constant773[47] = {0x43,0x61,0x75,0x67,0x68,0x74,0x20,0x65,0x78,0x63,0x65,0x70,0x74,0x69,0x6f,0x6e,0x20,0x30,0x78,0x25,0x58,0x20,0x61,0x74,0x20,0x6c,0x61,0x75,0x6e,0x63,0x68,0x20,0x69,0x6e,0x64,0x65,0x78,0x20,0x28,0x25,0x64,0x2c,0x25,0x64,0x29,0xa,0x0};
+	.const .align 1 .b8 __constant774[47] = {0x43,0x61,0x75,0x67,0x68,0x74,0x20,0x65,0x78,0x63,0x65,0x70,0x74,0x69,0x6f,0x6e,0x20,0x30,0x78,0x25,0x58,0x20,0x61,0x74,0x20,0x6c,0x61,0x75,0x6e,0x63,0x68,0x20,0x69,0x6e,0x64,0x65,0x78,0x20,0x28,0x25,0x64,0x2c,0x25,0x64,0x29,0xa,0x0};
 
 	.entry _Z9exceptionv
 	{
@@ -203,7 +203,7 @@ $LDWbegin__Z9exceptionv:
 	setp.eq.s32 	%p1, %r4, %r5;
 	@%p1 bra 	$Lt_1_11778;
 	.loc	20	237	0
-	mov.u32 	%r6, __constant773;
+	mov.u32 	%r6, __constant774;
 $Lt_1_8194:
 	.loc	20	238	0
 	add.u32 	%r6, %r6, 1;
@@ -212,9 +212,9 @@ $Lt_1_8194:
 	setp.ne.s32 	%p2, %r7, %r8;
 	@%p2 bra 	$Lt_1_8194;
 	.loc	20	293	0
-	mov.u32 	%r9, __constant773;
+	mov.u32 	%r9, __constant774;
 	mov.u32 	%r10, %r9;
-	mov.u32 	%r11, __constant773;
+	mov.u32 	%r11, __constant774;
 	sub.s32 	%r12, %r6, %r11;
 	add.s32 	%r13, %r12, 8;
 	and.b32 	%r14, %r13, -4;
