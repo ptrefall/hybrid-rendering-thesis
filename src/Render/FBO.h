@@ -25,7 +25,7 @@ namespace Render
 		void unbind();
 
 		void bind_rt(unsigned int active_program, unsigned int index_offset);
-		void unbind_rt();
+		void unbind_rt(unsigned int index_offset);
 
 		void add(unsigned int attachment, const RTPtr &render_target);
 		void add(unsigned int attachment, unsigned int texture_type, const std::string &sampler_name, const Tex2DPtr &render_texture);

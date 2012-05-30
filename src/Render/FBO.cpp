@@ -32,16 +32,16 @@ void FBO::bind_rt(unsigned int active_program, unsigned int index_offset)
 	{
 		glActiveTexture(GL_TEXTURE0 + i+index_offset);
 		render_textures[i]->bind();
-		render_samplers[i]->bind(i+1, active_program);
+		render_samplers[i]->bind(i+(int)index_offset, active_program);
 		//Kernel::getSingleton()->getTextureLoader()->save(render_textures[i], Kernel::getSingleton()->getResourceDir()+"screens\\MRT.png");
 	}
 }
 
-void FBO::unbind_rt()
+void FBO::unbind_rt(unsigned int index_offset)
 {
 	for(unsigned int i = 0; i < render_textures.size(); i++)
 	{
-		glActiveTexture(GL_TEXTURE0 + i);
+		glActiveTexture(GL_TEXTURE0 + i+index_offset);
 		render_textures[i]->unbind();
 	}
 }

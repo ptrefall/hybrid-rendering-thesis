@@ -62,8 +62,8 @@ namespace Scene
 		std::vector<LightPtr> lights;
 
 		Render::GBuffer_PassPtr g_buffer_pass;
-		Render::Final_PassPtr final_pass;
-		Render::Bloom_PassPtr bloom_pass;
 		Render::Raytrace_PassPtr raytrace_pass;
+		Render::Bloom_PassPtr bloom_pass;
+		Render::Final_PassPtr final_pass;
 	};
 }

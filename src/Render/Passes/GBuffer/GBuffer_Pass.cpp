@@ -75,14 +75,14 @@ void GBuffer_Pass::end()
 	glDrawBuffers(1, buffers);
 }
 
-void GBuffer_Pass::bind(unsigned int active_program)
+void GBuffer_Pass::bind(unsigned int active_program, unsigned int index_offset)
 {
-	fbo->bind_rt(active_program, 1);
+	fbo->bind_rt(active_program, index_offset);
 }
 
-void GBuffer_Pass::unbind()
+void GBuffer_Pass::unbind(unsigned int index_offset)
 {
-	fbo->unbind_rt();
+	fbo->unbind_rt(index_offset);
 }
 
 void GBuffer_Pass::reshape(unsigned int w, unsigned int h) 
