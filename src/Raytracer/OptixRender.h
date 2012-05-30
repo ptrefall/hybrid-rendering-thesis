@@ -42,12 +42,13 @@ namespace Raytracer
         optix::Context  createContext();
         optix::Material createMaterial( optix::Context context );
         optix::Geometry createGeometry( optix::Context context );
+		void createTextureSamplers( optix::Context context );
         void     createInstance( optix::Context context, optix::Geometry sphere, optix::Material material );
 		void _displayFrame( optix::Buffer buffer );
 
 		optix::TextureSampler  raster_diffuse_sampler;
 		optix::TextureSampler  raster_position_sampler;
 		optix::TextureSampler  raster_normal_sampler;
-		void addTextureSampler(optix::TextureSampler &sampler, unsigned int gl_tex_handle, float max_anisotropy, const std::string &sampler_name);
+		void addTextureSampler(optix::TextureSampler sampler, unsigned int gl_tex_handle, float max_anisotropy, const std::string &sampler_name);
 	};
 }

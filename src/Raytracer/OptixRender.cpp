@@ -27,6 +27,7 @@ OptixRender::OptixRender(const Render::GBuffer_PassPtr &g_buffer_pass, unsigned 
     sphere   = createGeometry( context );
     material = createMaterial( context );
     createInstance( context, sphere, material );
+	//createTextureSamplers( context );
     
     // Run
 	try{
@@ -203,16 +204,6 @@ Context OptixRender::createContext()
 
   output_buffer->set(buffer);
 
-	//Upload rasterized g-buffer info here:
-	auto raster_fbo = g_buffer_pass->getFBO();
-	auto raster_diffuse = raster_fbo->getRenderTexture(0);
-	auto raster_position = raster_fbo->getRenderTexture(1);
-	auto raster_normal = raster_fbo->getRenderTexture(2);
-	//TODO: Upload to optix!
-	/*addTextureSampler(raster_diffuse_sampler, raster_diffuse->getHandle(), 1.0f, "raster_diffuse");
-	addTextureSampler(raster_position_sampler, raster_position->getHandle(), 1.0f, "raster_position");
-	addTextureSampler(raster_normal_sampler, raster_normal->getHandle(), 1.0f, "raster_normal");*/
-
   // Ray generation program
   std::string ptx_path( baseDir + "pinhole_camera.cu.ptx" );
   try{
@@ -277,7 +268,20 @@ void OptixRender::createInstance( Context context, Geometry sphere, Material mat
   context["top_object"]->set( geometrygroup );
 }
 
-void OptixRender::addTextureSampler(optix::TextureSampler &sampler, unsigned int gl_tex_handle, float max_anisotropy, const std::string &sampler_name)
+void OptixRender::createTextureSamplers( optix::Context context )
+{
+	//Upload rasterized g-buffer info here:
+	auto raster_fbo = g_buffer_pass->getFBO();
+	auto raster_diffuse = raster_fbo->getRenderTexture(0);
+	auto raster_position = raster_fbo->getRenderTexture(1);
+	auto raster_normal = raster_fbo->getRenderTexture(2);
+	//TODO: Upload to optix!
+	addTextureSampler(raster_diffuse_sampler, raster_diffuse->getHandle(), 1.0f, "raster_diffuse");
+	addTextureSampler(raster_position_sampler, raster_position->getHandle(), 1.0f, "raster_position");
+	addTextureSampler(raster_normal_sampler, raster_normal->getHandle(), 1.0f, "raster_normal");
+}
+
+void OptixRender::addTextureSampler(optix::TextureSampler sampler, unsigned int gl_tex_handle, float max_anisotropy, const std::string &sampler_name)
 {
 	sampler = context->createTextureSamplerFromGLImage( gl_tex_handle, RT_TARGET_GL_TEXTURE_2D );
 	sampler->setWrapMode( 0, RT_WRAP_REPEAT );
