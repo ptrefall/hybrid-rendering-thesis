@@ -162,3 +162,15 @@ target_link_libraries(${NAME}
 IF(MSVC)
 	TARGET_LINK_LIBRARIES(${NAME} WinMM)
 ENDIF()
+
+set(OPTIX_SCRIPT_FILES_PATH "${CMAKE_SOURCE_DIR}/bin/resources/optix/")
+file(GLOB OPTIX_SCRIPT_FILES_CU ${OPTIX_SCRIPT_FILES_PATH}*.cu)
+set(PTX_EXT ".ptx")
+set(CUDA_COMPILER_EXEC "nvcc.exe")
+foreach(CU ${OPTIX_SCRIPT_FILES_CU})
+	set(PTX ${input}${PTX_EXT})
+	add_custom_command(	TARGET ${NAME}
+						PRE_BUILD 
+						COMMAND ${CUDA_COMPILER_EXEC} ${CU} ARGS --machine 32 --ptx --include-path $ENV{CUDA_INC_PATH} --output-file ${CU}${PTX}
+						COMMENT "Compiling Optix script ${CU} to ${PTX}")
+endforeach()
