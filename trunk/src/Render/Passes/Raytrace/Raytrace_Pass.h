@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../../Uniform.h"
+
 #include <memory>
 #include <vector>
 
@@ -25,8 +27,8 @@ namespace Render
 		void render();
 		void end();
 
-		void bind(unsigned int active_program);
-		void unbind();
+		void bind(unsigned int active_program, unsigned int index_offset);
+		void unbind(unsigned int index_offset);
 
 		void reshape(unsigned int w, unsigned int h);
 	private:
@@ -35,5 +37,7 @@ namespace Render
 
 		unsigned int w;
 		unsigned int h;
+
+		Render::UniformPtr raytrace_tex_uniform;
 	};
 }

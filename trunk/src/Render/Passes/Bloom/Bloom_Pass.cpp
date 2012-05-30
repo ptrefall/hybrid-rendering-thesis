@@ -69,7 +69,7 @@ void Bloom_Pass::render_blur_steps()
 		GLenum buffers[] = { GL_COLOR_ATTACHMENT0 };
 		glDrawBuffers(1, buffers);
 		quad->render(0);
-		fbo_extraction->unbind_rt();
+		fbo_extraction->unbind_rt(0);
 		shader_loader->pop_bind();
 	} fbo_blur_vertical->unbind();
 
@@ -83,7 +83,7 @@ void Bloom_Pass::render_blur_steps()
 		GLenum buffers[] = { GL_COLOR_ATTACHMENT0 };
 		glDrawBuffers(1, buffers);
 		quad->render(0);
-		fbo_blur_vertical->unbind_rt();
+		fbo_blur_vertical->unbind_rt(0);
 		shader_loader->pop_bind();
 	} fbo_blur_horizontal->unbind();
 }
@@ -95,7 +95,7 @@ void Bloom_Pass::render_final_step()
 	GLenum buffers[] = { GL_COLOR_ATTACHMENT0 };
 	glDrawBuffers(1, buffers);
 	quad->render(0);
-	fbo_blur_horizontal->unbind_rt();
+	fbo_blur_horizontal->unbind_rt(0);
 	shader_loader->pop_bind();
 }
 

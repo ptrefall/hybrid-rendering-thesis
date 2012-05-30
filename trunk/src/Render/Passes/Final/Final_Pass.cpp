@@ -1,12 +1,14 @@
 #include "Final_Pass.h"
 
 #include "../GBuffer/GBuffer_Pass.h"
+#include "../Raytrace/Raytrace_Pass.h"
 #include "../../../Scene/proto_camera.h"
 
 using namespace Render;
 
-Final_Pass::Final_Pass(const GBuffer_PassPtr &g_buffer_pass, const File::ShaderLoaderPtr &shader_loader, unsigned int w, unsigned int h)
-	: g_buffer_pass(g_buffer_pass), shader_loader(shader_loader), w(w), h(h)
+Final_Pass::Final_Pass(const GBuffer_PassPtr &g_buffer_pass, const Raytrace_PassPtr &raytrace_pass,
+					   const File::ShaderLoaderPtr &shader_loader, unsigned int w, unsigned int h)
+	: g_buffer_pass(g_buffer_pass), raytrace_pass(raytrace_pass), shader_loader(shader_loader), w(w), h(h)
 {
 	////////////////////////////////////////
 	// LOAD FBO
@@ -36,7 +38,8 @@ void Final_Pass::begin()
 	//glClearColor(0.f,0.f,0.f,1.f);
     //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
-	g_buffer_pass->bind(shader->getFS());
+	raytrace_pass->bind(shader->getFS(), 0);
+	g_buffer_pass->bind(shader->getFS(), 1);
 
 	camPos->bind(glm::vec3(Scene::FirstPersonCamera::getSingleton()->getWorldToViewMatrix() * glm::vec4(Scene::FirstPersonCamera::getSingleton()->getPos(), 1.0)));
 
@@ -44,14 +47,6 @@ void Final_Pass::begin()
 	{
 		for(auto it=materials.begin(); it!=materials.end(); ++it) //for(auto &material : materials)
 			(*it)->bind_data(shader->getFS());
-	}
-
-    if(tex)
-	{
-		glActiveTexture(GL_TEXTURE0);
-		tex->bind();
-		if(tex_uniform)
-			tex_uniform->bind(0);
 	}
 
 	/*GLint nViewport[4];
@@ -74,10 +69,8 @@ void Final_Pass::end()
 	shader_loader->pop_bind();
 	//fbo->unbind();
 
-	g_buffer_pass->unbind();
-
-    if(tex)
-		tex->unbind();
+	raytrace_pass->unbind(0);
+	g_buffer_pass->unbind(1);
 
 	//glViewportIndexedf(0,0,0,(float)temp_w,(float)temp_h);
 
@@ -92,7 +85,7 @@ void Final_Pass::bind(unsigned int active_program)
 
 void Final_Pass::unbind()
 {
-	fbo->unbind_rt();
+	fbo->unbind_rt(0);
 }
 
 void Final_Pass::reshape(unsigned int w, unsigned int h) 

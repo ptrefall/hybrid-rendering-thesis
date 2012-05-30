@@ -24,7 +24,7 @@ SceneManager::SceneManager(const File::ShaderLoaderPtr &shader_loader, unsigned 
 	g_buffer_pass = std::make_shared<Render::GBuffer_Pass>(shader_loader, width, height);
 	raytrace_pass = std::make_shared<Render::Raytrace_Pass>(g_buffer_pass, width, height, resource_dir);
 	//bloom_pass = std::make_shared<Render::Bloom_Pass>(final_pass, shader_loader, width, height);
-	final_pass = std::make_shared<Render::Final_Pass>(g_buffer_pass, shader_loader, width, height);
+	final_pass = std::make_shared<Render::Final_Pass>(g_buffer_pass, raytrace_pass, shader_loader, width, height);
 }
 
 SceneManager::~SceneManager()

@@ -16,13 +16,16 @@ namespace Render
 	class GBuffer_Pass;
 	typedef std::shared_ptr<GBuffer_Pass> GBuffer_PassPtr;
 
+	class Raytrace_Pass;
+	typedef std::shared_ptr<Raytrace_Pass> Raytrace_PassPtr;
+
 	class Final_Pass;
 	typedef std::shared_ptr<Final_Pass> Final_PassPtr;
 
 	class Final_Pass
 	{
 	public:
-		Final_Pass(const GBuffer_PassPtr &g_buffer_pass, const File::ShaderLoaderPtr &shader_loader, unsigned int w, unsigned int h);
+		Final_Pass(const GBuffer_PassPtr &g_buffer_pass, const Raytrace_PassPtr &raytrace_pass, const File::ShaderLoaderPtr &shader_loader, unsigned int w, unsigned int h);
 		
 		void begin();
 		void render();
@@ -43,6 +46,8 @@ namespace Render
 		unsigned int h;
 
 		GBuffer_PassPtr g_buffer_pass;
+		Raytrace_PassPtr raytrace_pass;
+
 		File::ShaderLoaderPtr shader_loader;
 		ShaderPtr shader;
 		UniformPtr camPos;

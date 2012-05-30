@@ -20,8 +20,8 @@ namespace Render
 		void begin();
 		void end();
 
-		void bind(unsigned int active_program);
-		void unbind();
+		void bind(unsigned int active_program, unsigned int index_offset);
+		void unbind(unsigned int index_offset);
 
 		void reshape(unsigned int w, unsigned int h);
 
