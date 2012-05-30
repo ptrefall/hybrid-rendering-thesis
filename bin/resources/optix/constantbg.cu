@@ -19,7 +19,7 @@
  * SUCH DAMAGES
  */
 
-#include "..\..\..\..\hybridrender\depends\include\Optix\optix_world.h"
+#include "optix_world.h"
 
 rtDeclareVariable(float3, bg_color, , );
 

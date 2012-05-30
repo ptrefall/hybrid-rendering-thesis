@@ -1,12 +1,12 @@
 	.version 1.4
 	.target sm_10, map_f64_to_f32
-	// compiled with C:/Program Files (x86)/NVIDIA GPU Computing Toolkit/CUDA/v4.1/bin/../open64/lib//be.exe
-	// nvopencc 4.1 built on 2012-01-13
+	// compiled with C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v4.1\\bin/../open64/lib//be.exe
+	// nvopencc 4.1 built on 2011-11-18
 
 	.func _ZN5optix16rt_undefined_useEi (.reg .u32 %ra1)
 
 	//-----------------------------------------------------------
-	// Compiling C:/Users/thegodi/AppData/Local/Temp/tmpxft_00001530_00000000-11_normal_shader.cpp3.i (C:/Users/thegodi/AppData/Local/Temp/ccBI#.a04040)
+	// Compiling C:/Users/tactix/AppData/Local/Temp/tmpxft_000018d0_00000000-11_normal_shader.cpp3.i (C:/Users/tactix/AppData/Local/Temp/ccBI#.a05892)
 	//-----------------------------------------------------------
 
 	//-----------------------------------------------------------
@@ -18,36 +18,36 @@
 	//  -m2	(Report advisories)
 	//-----------------------------------------------------------
 
-	.file	1	"C:/Users/thegodi/AppData/Local/Temp/tmpxft_00001530_00000000-10_normal_shader.cudafe2.gpu"
-	.file	2	"c:\program files (x86)\nvidia corporation\optix sdk 2.5.0\include\internal\optix_defines.h"
-	.file	3	"C:/Program Files (x86)/NVIDIA Corporation/OptiX SDK 2.5.0/SDK/sample5pp/normal_shader.cu"
-	.file	4	"c:\program files (x86)\microsoft visual studio 10.0\vc\include\codeanalysis\sourceannotations.h"
-	.file	5	"C:/Program Files (x86)/NVIDIA GPU Computing Toolkit/CUDA/v4.1/include\crt/device_runtime.h"
-	.file	6	"C:/Program Files (x86)/NVIDIA GPU Computing Toolkit/CUDA/v4.1/include\host_defines.h"
-	.file	7	"C:/Program Files (x86)/NVIDIA GPU Computing Toolkit/CUDA/v4.1/include\builtin_types.h"
-	.file	8	"c:\program files (x86)\nvidia gpu computing toolkit\cuda\v4.1\include\device_types.h"
-	.file	9	"c:\program files (x86)\nvidia gpu computing toolkit\cuda\v4.1\include\host_defines.h"
-	.file	10	"c:\program files (x86)\nvidia gpu computing toolkit\cuda\v4.1\include\driver_types.h"
-	.file	11	"c:\program files (x86)\nvidia gpu computing toolkit\cuda\v4.1\include\surface_types.h"
-	.file	12	"c:\program files (x86)\nvidia gpu computing toolkit\cuda\v4.1\include\texture_types.h"
-	.file	13	"c:\program files (x86)\nvidia gpu computing toolkit\cuda\v4.1\include\vector_types.h"
-	.file	14	"c:\program files (x86)\nvidia gpu computing toolkit\cuda\v4.1\include\builtin_types.h"
-	.file	15	"C:/Program Files (x86)/NVIDIA GPU Computing Toolkit/CUDA/v4.1/include\device_launch_parameters.h"
-	.file	16	"c:\program files (x86)\nvidia gpu computing toolkit\cuda\v4.1\include\crt\storage_class.h"
-	.file	17	"c:\program files (x86)\nvidia corporation\optix sdk 2.5.0\include\internal/optix_internal.h"
-	.file	18	"c:\program files (x86)\nvidia corporation\optix sdk 2.5.0\include\optix_device.h"
-	.file	19	"C:/Program Files (x86)/NVIDIA GPU Computing Toolkit/CUDA/v4.1/include\common_functions.h"
-	.file	20	"c:\program files (x86)\nvidia gpu computing toolkit\cuda\v4.1\include\math_functions.h"
-	.file	21	"c:\program files (x86)\nvidia gpu computing toolkit\cuda\v4.1\include\math_constants.h"
-	.file	22	"c:\program files (x86)\nvidia gpu computing toolkit\cuda\v4.1\include\device_functions.h"
-	.file	23	"c:\program files (x86)\nvidia gpu computing toolkit\cuda\v4.1\include\sm_11_atomic_functions.h"
-	.file	24	"c:\program files (x86)\nvidia gpu computing toolkit\cuda\v4.1\include\sm_12_atomic_functions.h"
-	.file	25	"c:\program files (x86)\nvidia gpu computing toolkit\cuda\v4.1\include\sm_13_double_functions.h"
-	.file	26	"c:\program files (x86)\nvidia gpu computing toolkit\cuda\v4.1\include\sm_20_atomic_functions.h"
-	.file	27	"c:\program files (x86)\nvidia gpu computing toolkit\cuda\v4.1\include\sm_20_intrinsics.h"
-	.file	28	"c:\program files (x86)\nvidia gpu computing toolkit\cuda\v4.1\include\surface_functions.h"
-	.file	29	"c:\program files (x86)\nvidia gpu computing toolkit\cuda\v4.1\include\texture_fetch_functions.h"
-	.file	30	"c:\program files (x86)\nvidia gpu computing toolkit\cuda\v4.1\include\math_functions_dbl_ptx1.h"
+	.file	1	"C:/Users/tactix/AppData/Local/Temp/tmpxft_000018d0_00000000-10_normal_shader.cudafe2.gpu"
+	.file	2	"f:\repos\svn\hybridrender\depends\include\optix\internal\optix_defines.h"
+	.file	3	"F:/repos/svn/hybridrender/bin/resources/optix/normal_shader.cu"
+	.file	4	"h:\software\msvc10\vc\include\codeanalysis\sourceannotations.h"
+	.file	5	"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v4.1\bin/../include\crt/device_runtime.h"
+	.file	6	"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v4.1\bin/../include\host_defines.h"
+	.file	7	"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v4.1\bin/../include\builtin_types.h"
+	.file	8	"c:\program files\nvidia gpu computing toolkit\cuda\v4.1\include\device_types.h"
+	.file	9	"c:\program files\nvidia gpu computing toolkit\cuda\v4.1\include\host_defines.h"
+	.file	10	"c:\program files\nvidia gpu computing toolkit\cuda\v4.1\include\driver_types.h"
+	.file	11	"c:\program files\nvidia gpu computing toolkit\cuda\v4.1\include\surface_types.h"
+	.file	12	"c:\program files\nvidia gpu computing toolkit\cuda\v4.1\include\texture_types.h"
+	.file	13	"c:\program files\nvidia gpu computing toolkit\cuda\v4.1\include\vector_types.h"
+	.file	14	"c:\program files\nvidia gpu computing toolkit\cuda\v4.1\include\builtin_types.h"
+	.file	15	"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v4.1\bin/../include\device_launch_parameters.h"
+	.file	16	"c:\program files\nvidia gpu computing toolkit\cuda\v4.1\include\crt\storage_class.h"
+	.file	17	"f:\repos\svn\hybridrender\depends\include\optix\internal/optix_internal.h"
+	.file	18	"f:\repos\svn\hybridrender\depends\include\optix\optix_device.h"
+	.file	19	"C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v4.1\bin/../include\common_functions.h"
+	.file	20	"c:\program files\nvidia gpu computing toolkit\cuda\v4.1\include\math_functions.h"
+	.file	21	"c:\program files\nvidia gpu computing toolkit\cuda\v4.1\include\math_constants.h"
+	.file	22	"c:\program files\nvidia gpu computing toolkit\cuda\v4.1\include\device_functions.h"
+	.file	23	"c:\program files\nvidia gpu computing toolkit\cuda\v4.1\include\sm_11_atomic_functions.h"
+	.file	24	"c:\program files\nvidia gpu computing toolkit\cuda\v4.1\include\sm_12_atomic_functions.h"
+	.file	25	"c:\program files\nvidia gpu computing toolkit\cuda\v4.1\include\sm_13_double_functions.h"
+	.file	26	"c:\program files\nvidia gpu computing toolkit\cuda\v4.1\include\sm_20_atomic_functions.h"
+	.file	27	"c:\program files\nvidia gpu computing toolkit\cuda\v4.1\include\sm_20_intrinsics.h"
+	.file	28	"c:\program files\nvidia gpu computing toolkit\cuda\v4.1\include\surface_functions.h"
+	.file	29	"c:\program files\nvidia gpu computing toolkit\cuda\v4.1\include\texture_fetch_functions.h"
+	.file	30	"c:\program files\nvidia gpu computing toolkit\cuda\v4.1\include\math_functions_dbl_ptx1.h"
 
 	.global .align 16 .b8 prd_shadow[12];
 
