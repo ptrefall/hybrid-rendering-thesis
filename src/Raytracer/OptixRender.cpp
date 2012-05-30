@@ -172,6 +172,13 @@ void OptixRender::render()
     context["V"]->set3fv( glm::value_ptr(V) );
     context["W"]->set3fv( glm::value_ptr(W) );
 
+	//Upload rasterized g-buffer info here:
+	auto raster_fbo = g_buffer_pass->getFBO();
+	auto raster_diffuse = raster_fbo->getRenderTexture(0);
+	auto raster_position = raster_fbo->getRenderTexture(1);
+	auto raster_normal = raster_fbo->getRenderTexture(2);
+	//TODO: Upload to optix!
+
 	try {
 		context->launch(0, w,h);
 	} catch (optix::Exception& e) {

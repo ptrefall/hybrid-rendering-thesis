@@ -14,6 +14,7 @@ Raytrace_Pass::Raytrace_Pass(const GBuffer_PassPtr &g_buffer_pass, unsigned int 
 
 void Raytrace_Pass::begin()
 {
+	glFlush();
 }
 
 void Raytrace_Pass::render()
