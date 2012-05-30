@@ -32,6 +32,8 @@ namespace Render
 
 		void check();
 
+		Tex2DPtr getRenderTexture(unsigned int index) const { return render_textures[index]; }
+
 	private:
 		unsigned int handle;
 
