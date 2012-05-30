@@ -3,6 +3,8 @@
 //#include "../Kernel.h"
 //#include "../File/TextureLoader.h"
 
+#include "../Render/Passes/GBuffer/GBuffer_Pass.h"
+
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 #include <iostream>
@@ -10,8 +12,8 @@
 using namespace Raytracer;
 using namespace optix;
 
-OptixRender::OptixRender(const Render::GBufferPtr &g_buffer, unsigned int w, unsigned int h, const std::string& baseDir)
-	: g_buffer(g_buffer), w(w), h(h), baseDir(baseDir)
+OptixRender::OptixRender(const Render::GBuffer_PassPtr &g_buffer_pass, unsigned int w, unsigned int h, const std::string& baseDir)
+	: g_buffer_pass(g_buffer_pass), w(w), h(h), baseDir(baseDir)
 {
     GLenum error = glGetError();
 	tex = std::make_shared<Render::Tex2D>();

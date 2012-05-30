@@ -1,20 +1,14 @@
 #include "Kernel.h"
 #include "Parser\INIParser.h"
 
-#include "Render\DeferredRender.h"
-#include "Render\GBuffer.h"
 #include "Render\Shader.h"
-#include "Raytracer\OptixRender.h"
 #include "File\AssetManager.h"
 #include "File\ShaderLoader.h"
 #include "File\MaterialLoader.h"
 #include "File\BARTLoader2.h"
 #include "File\MeshLoader.h"
 #include "Scene\SceneManager.h"
-#include "Scene\Cube.h"
-#include "Scene\Light.h"
 #include "Scene\proto_camera.h"
-#include "Scene\Spacejet.h"
 
 #include <GL3\gl3w.h>
 
@@ -49,19 +43,9 @@ Kernel::Kernel()
 
 Kernel::~Kernel()
 {
-	long renderer_count = renderer.use_count();
-	renderer.reset();
-
-	long raytracer_count = raytracer.use_count();
-	raytracer.reset();
-
-	long g_buffer_count = g_buffer.use_count();
-	g_buffer.reset();
-
 	long scene_count = scene.use_count();
 	scene.reset();
 
-	
 	long asset_manager_count = asset_manager.use_count();
 	asset_manager.reset();
 	long shader_loader_count = shader_loader.use_count();
@@ -125,21 +109,12 @@ void Kernel::init(int argc, char** argv)
 	mesh_loader = std::make_shared<File::MeshLoader>(resource_dir+"models\\");
 
 	//////////////////////////////////////////
-	// DEFERRED RENDERER INITIALIZING
-	//////////////////////////////////////////
-	g_buffer = std::make_shared<Render::GBuffer>(shader_loader, width, height);
-	renderer = std::make_shared<Render::DeferredRender>(g_buffer, shader_loader, width, height);
-
-    //////////////////////////////////////////
-	// DEFERRED RENDERER INITIALIZING
-	//////////////////////////////////////////
-    raytracer = std::make_shared<Raytracer::OptixRender>(g_buffer, width, height, resource_dir + "optix\\");
-
-	//////////////////////////////////////////
 	// SCENE INITIALIZING
 	//////////////////////////////////////////
-	scene = std::make_shared<Scene::SceneManager>();
-	initScene();
+	scene = std::make_shared<Scene::SceneManager>(shader_loader, width, height, resource_dir);
+	scene->initScene(asset_manager, mat_loader, mesh_loader, bart_loader);
+	
+	camera = Scene::FirstPersonCamera::getSingleton();
 }
 
 void Kernel::run(int start_time, std::function<void()> main_loop_body)
@@ -164,28 +139,14 @@ void Kernel::render()
 	glClearColor(0.f,0.f,0.f,1.f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
-    //Raytrace
-    raytracer->render();
-
-	//Rasterize
-	glEnable(GL_DEPTH_TEST);
-	g_buffer->begin();
-		scene->render(g_buffer->getShader());
-	g_buffer->end();
-	glDisable(GL_DEPTH_TEST);
-
-	renderer->begin();
-		scene->bindLights(renderer->getShader());
-		renderer->render();
-	renderer->end();
+	scene->render();
 }
 
 void Kernel::reshape(int w, int h)
 {
 	glViewportIndexedf(0,0.0f, 0.0f, (float)w, (float)h);
 
-	g_buffer->reshape(w,h);
-	renderer->reshape(w,h);
+	scene->reshape(w,h);
 }
 
 void Kernel::inputKeyDown(unsigned char key, int x, int y)
@@ -193,8 +154,6 @@ void Kernel::inputKeyDown(unsigned char key, int x, int y)
 	//ESCAPE KEY
 	if(key == 27)
 		exit();
-	else if(key == 'r')
-		renderer->reloadShaders();
 
 	keystatus[key] = true;
 	//mouse.coords = glm::ivec2(x,y);
@@ -234,109 +193,4 @@ void Kernel::mousePressed(int button, int state, int x, int y)
 	}
 
 	//mouse.coords = glm::ivec2(x,y);
-}
-
-void Kernel::initScene()
-{
-	camera = Scene::FirstPersonCamera::getSingleton();
-	camera->updateProjection(width, height, 40.0f, 0.1f, 1000.0f);
-    //camera->init(width, height, 60.0f, 1.0f, 1000.0f);
-	//camera->setTarget(glm::vec3(10,-8,20));
-
-	Scene::LightPtr light = std::make_shared<Scene::Light>(0);
-	light->setPosition(glm::vec3(0,0,0));
-
-	auto spacejet_tex = asset_manager->getTex2DRelativePath("FEROX_DI.tga", false);
-	auto spacejet_normal_tex = asset_manager->getTex2DRelativePath("FEROX_BU.tga", false);
-
-	auto array_tex = asset_manager->getTex2DRelativePath("cube.jpg", false);
-	auto array2_tex = asset_manager->getTex2DRelativePath("array.png", false);
-	
-	Render::UniformPtr tex_sampler = std::make_shared<Render::Uniform>(g_buffer->getShader()->getFS(), "diffuse_tex");
-	Render::UniformPtr norm_sampler = std::make_shared<Render::Uniform>(g_buffer->getShader()->getFS(), "normal_tex");
-	
-	Render::SamplerPtr array_sampler;// = std::make_shared<Render::Sampler>();
-
-    renderer->setRayTexture(raytracer->getRenderTexture(), tex_sampler);
-
-	auto basic_cube_mat = renderer->addMaterial(mat_loader->load("basic_cube.mat"));
-	auto red_cube_mat = renderer->addMaterial(mat_loader->load("red_cube.mat"));
-	auto blue_cube_mat = renderer->addMaterial(mat_loader->load("blue_cube.mat"));
-
-	auto spacejet = mesh_loader->load<Scene::Spacejet>("Ferox.3DS");
-	{
-		spacejet->init(shader_loader);
-		spacejet->setTexture(0,spacejet_tex, "diffuse_tex");
-		spacejet->setTexture(1,spacejet_normal_tex, "normal_tex");
-		spacejet->setMaterial(red_cube_mat);
-		spacejet->setPosition(glm::vec3(0, 0, 20));
-		spacejet->setScale(glm::vec3(0.01f,0.01f,0.01f));
-		scene->add(spacejet);
-	}
-
-	Scene::CubePtr cube = std::make_shared<Scene::Cube>(1.0f);
-	{
-		cube->setObjectToWorldUniform(	g_buffer->getObjectToWorldUniform());
-		cube->setWorldToViewUniform(	g_buffer->getWorldToViewUniform());
-		cube->setViewToClipUniform(		g_buffer->getViewToClipUniform());
-		cube->setNormalToViewUniform(	g_buffer->getNormalToViewUniform());
-		cube->setTexture(0, raytracer->getRenderTexture(), tex_sampler, array_sampler);
-		cube->setMaterial(basic_cube_mat);
-		scene->add(cube);
-		cube->setPosition( glm::vec3(5,5,-20) );
-	}
-
-	Scene::CubePtr cube2 = std::make_shared<Scene::Cube>(.5f);
-	{
-		cube2->setObjectToWorldUniform(	g_buffer->getObjectToWorldUniform());
-		cube2->setWorldToViewUniform(	g_buffer->getWorldToViewUniform());
-		cube2->setViewToClipUniform(	g_buffer->getViewToClipUniform());
-		cube2->setNormalToViewUniform(	g_buffer->getNormalToViewUniform());
-		cube2->setTexture(0,array2_tex, tex_sampler, array_sampler);
-		cube2->setMaterial(red_cube_mat);
-		scene->add(cube2);
-		cube2->setPosition( glm::vec3(5,3,-20) );
-	}
-
-    const int sideBySide = 25;
-    const float fSideBySide = float(sideBySide);
-	for ( int i=0; i<sideBySide; i++ ) {
-		for ( int j=0; j<sideBySide; j++ ) {
-            const float u = -.5f + i/fSideBySide;
-            const float v = -.5f + j/fSideBySide;
-            float freq = 2.f * 6.28f;
-            float distOrigin = sqrt(u*u + v*v);
-            const float x = fSideBySide*u;
-            const float y = 1.5f * cos(distOrigin * freq) - 10.f;
-			const float z = fSideBySide*v;
-            
-			Scene::CubePtr cube3 = std::make_shared<Scene::Cube>(0.5f);
-			{
-				cube3->setObjectToWorldUniform(	g_buffer->getObjectToWorldUniform());
-				cube3->setWorldToViewUniform(	g_buffer->getWorldToViewUniform());
-				cube3->setViewToClipUniform(	g_buffer->getViewToClipUniform());
-				cube3->setNormalToViewUniform(	g_buffer->getNormalToViewUniform());
-				cube3->setTexture(0, array_tex, tex_sampler, array_sampler);
-				cube3->setMaterial(blue_cube_mat);
-				scene->add(cube3);
-				cube3->setPosition( glm::vec3(x,y,z) );
-			}
-		}
-	}
-
-	ini::Parser config(resource_dir + "ini\\scene.ini");
-	auto scene_dir = config.getString("load", "dir", "procedural\\");
-	auto scene_file = config.getString("load", "scene", "balls.nff");
-
-	std::vector<Scene::SceneNodePtr> nodes = bart_loader->load(scene_dir, scene_file);
-	for(auto it=begin(nodes); it!=end(nodes); ++it)
-	{
-		Scene::SceneNodePtr &node = *it;
-		node->setObjectToWorldUniform(	g_buffer->getObjectToWorldUniform());
-		node->setWorldToViewUniform(	g_buffer->getWorldToViewUniform());
-		node->setViewToClipUniform(		g_buffer->getViewToClipUniform());
-		node->setNormalToViewUniform(	g_buffer->getNormalToViewUniform());
-		//node->setTexture(array_tex, tex_sampler, array_sampler);
-	}
-	scene->addList( nodes );
 }

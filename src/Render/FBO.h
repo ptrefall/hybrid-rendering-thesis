@@ -24,7 +24,7 @@ namespace Render
 		void bind();
 		void unbind();
 
-		void bind_rt(unsigned int active_program);
+		void bind_rt(unsigned int active_program, unsigned int index_offset);
 		void unbind_rt();
 
 		void add(unsigned int attachment, const RTPtr &render_target);

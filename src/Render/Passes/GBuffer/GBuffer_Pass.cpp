@@ -1,13 +1,12 @@
-#include "GBuffer.h"
+#include "GBuffer_Pass.h"
 
-#include "RT.h"
-#include "Tex2D.h"
-
-#include "ShaderConstants.h"
+#include "../../RT.h"
+#include "../../Tex2D.h"
+#include "../../ShaderConstants.h"
 
 using namespace Render;
 
-GBuffer::GBuffer(const File::ShaderLoaderPtr &shader_loader, unsigned int w, unsigned int h) 
+GBuffer_Pass::GBuffer_Pass(const File::ShaderLoaderPtr &shader_loader, unsigned int w, unsigned int h) 
 	: shader_loader(shader_loader), w(w), h(h)
 {
 	////////////////////////////////////////
@@ -40,7 +39,7 @@ GBuffer::GBuffer(const File::ShaderLoaderPtr &shader_loader, unsigned int w, uns
 	uni_normal_to_view		= std::make_shared<Render::Uniform>(shader->getVS(), "Normal_to_View");
 }
 
-void GBuffer::begin()
+void GBuffer_Pass::begin()
 {
     glClearColor(0.f,1.f,0.f,1.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
@@ -65,7 +64,7 @@ void GBuffer::begin()
 	glDrawBuffers(3, buffers);
 }
 
-void GBuffer::end()
+void GBuffer_Pass::end()
 {
 	//shader->unbind();
 	shader_loader->pop_bind();
@@ -76,17 +75,17 @@ void GBuffer::end()
 	glDrawBuffers(1, buffers);
 }
 
-void GBuffer::bind(unsigned int active_program)
+void GBuffer_Pass::bind(unsigned int active_program)
 {
 	fbo->bind_rt(active_program, 1);
 }
 
-void GBuffer::unbind()
+void GBuffer_Pass::unbind()
 {
 	fbo->unbind_rt();
 }
 
-void GBuffer::reshape(unsigned int w, unsigned int h) 
+void GBuffer_Pass::reshape(unsigned int w, unsigned int h) 
 { 
 	this->w = w;
 	this->h = h; 

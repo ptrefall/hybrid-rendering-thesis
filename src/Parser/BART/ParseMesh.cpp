@@ -4,7 +4,8 @@
 #include "..\..\File\AssetManager.h"
 #include "..\..\Scene\BARTMesh.h"
 #include "..\..\Kernel.h"
-#include "..\..\Render\GBuffer.h"
+#include "..\..\Scene\SceneManager.h"
+#include "..\..\Render\Passes\GBuffer\GBuffer_Pass.h"
 
 #include <sstream>
 #include <memory>
@@ -201,7 +202,7 @@ void ParseMesh::addMesh(	const std::vector<glm::vec3> &vertCoords,
 	auto mesh = std::make_shared<Scene::BARTMesh>( vertCoords, vertNormals, texCoords, indices );
 	
 	if ( active.texture != "" ) {
-		Render::UniformPtr tex_sampler = std::make_shared<Render::Uniform>(Kernel::getSingleton()->getGBuffer()->getShader()->getFS(), "diffuse_tex");
+		Render::UniformPtr tex_sampler = std::make_shared<Render::Uniform>(Kernel::getSingleton()->getSceneManager()->getGBufferPass()->getShader()->getFS(), "diffuse_tex");
 		auto tex2d = asset_manager->getTex2DAbsolutePath( active.texture, true );
 		Render::SamplerPtr dummy_sampler; // TODO
 		//auto tex2d = asset_manager->getTex2DAbsolutePath( active.texture ); 

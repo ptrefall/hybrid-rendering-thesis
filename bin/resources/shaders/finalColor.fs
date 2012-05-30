@@ -58,7 +58,7 @@ float compute_gauss_term(in vec3 N, in vec3 L, in vec3 V, in float NdotL, in flo
 void main( void )
 {
 	vec3 diffuse 	= texture( TEX_DIFF, Vertex.t ).xyz;
-	vec3 position_vs 	= texture( TEX_POS,  Vertex.t ).xyz;			//view space
+	vec3 position_vs 	= texture( TEX_POS,  Vertex.t ).xyz;							//view space
 	vec4 normal_matid = texture( TEX_NORM, Vertex.t );
 	int material_id = int(normal_matid.a);
 	

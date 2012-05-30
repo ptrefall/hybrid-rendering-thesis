@@ -6,15 +6,6 @@
 #include <string>
 #include <functional>
 
-namespace Render
-{
-	class GBuffer; typedef std::shared_ptr<GBuffer> GBufferPtr;
-	class DeferredRender; typedef std::shared_ptr<DeferredRender> DeferredRenderPtr;
-}
-namespace Raytracer
-{
-	class OptixRender; typedef std::shared_ptr<OptixRender> OptixRenderPtr;
-}
 namespace File
 {
 	class AssetManager; typedef std::shared_ptr<AssetManager> AssetManagerPtr;
@@ -74,9 +65,6 @@ public:
 	std::string getOpenGLVersionString() const;
 
 public:
-	Render::GBufferPtr getGBuffer() const { return g_buffer; }
-	Render::DeferredRenderPtr getRenderer() const { return renderer; }
-	Raytracer::OptixRenderPtr getRaytracer() const { return raytracer; }
 	File::ShaderLoaderPtr getShaderLoader() const { return shader_loader; }
 	File::MaterialLoaderPtr getMaterialLoader() const { return mat_loader; }
 	File::BARTLoader2Ptr getBARTLoader() const { return bart_loader; }
@@ -110,9 +98,6 @@ private:
 	int prev_time;
 
 private:
-	Render::GBufferPtr g_buffer;
-	Render::DeferredRenderPtr renderer;
-    Raytracer::OptixRenderPtr raytracer;
 	File::AssetManagerPtr asset_manager;
 	File::ShaderLoaderPtr shader_loader;
 	File::MaterialLoaderPtr mat_loader;
