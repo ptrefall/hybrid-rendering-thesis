@@ -54,21 +54,30 @@ void SceneManager::render()
 
 	raytrace_pass->begin();
 	{
+		//raytrace_pass->update(g_buffer_pass->getRenderTextures(), scene, lights);
 		raytrace_pass->render();
 	} raytrace_pass->end();
 
-	final_pass->begin();
+	/*light_pass->begin();
 	{
-		bindLights(final_pass->getShader());
-		final_pass->render();
-	} final_pass->end();
+		light_pass->update(lights, g_buffer_pass->getRenderTextures(), raytrace_pass->getRenderTextures());
+		light_pass->render();
+	} light_pass->end();*/
 
 	/*bloom_pass->begin();
 	{
+		bloom_pass->update(light_pass->getFinalColorTexture());
 		bloom_pass->render_extraction_step();
 		bloom_pass->render_blur_steps();
 		bloom_pass->render_final_step();
 	} bloom_pass->end();*/
+
+	final_pass->begin();
+	{
+		//final_pass->update(light_pass->getFinalColorTexture(), bloom_pass->getFilterTexture());
+		bindLights(final_pass->getShader());
+		final_pass->render();
+	} final_pass->end();
 }
 
 void SceneManager::bindLights(const Render::ShaderPtr &active_program)
