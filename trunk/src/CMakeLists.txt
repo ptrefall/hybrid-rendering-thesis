@@ -25,6 +25,11 @@ cmake_minimum_required(VERSION 2.8)
 set(NAME HybridMethods)
 project(${NAME})
 
+file(GLOB_RECURSE OPTIX_SCRIPTS ${CMAKE_SOURCE_DIR}/bin/resources/optix/*.cu)
+file(GLOB_RECURSE GLSL_SHADERS ${CMAKE_SOURCE_DIR}/bin/resources/shaders/*.*)
+file(GLOB_RECURSE INI_CONFIGS ${CMAKE_SOURCE_DIR}/bin/resources/ini/*.ini)
+file(GLOB_RECURSE MATERIAL_CONFIGS ${CMAKE_SOURCE_DIR}/bin/resources/materials/*.mat)
+
 file(GLOB_RECURSE GL3W_HEADER ${CMAKE_SOURCE_DIR}/depends/include/GL3/*.h)
 file(GLOB_RECURSE GLUT_HEADER ${CMAKE_SOURCE_DIR}/depends/include/GL/*.h)
 file(GLOB_RECURSE ASSIMP_HEADER_H ${CMAKE_SOURCE_DIR}/depends/include/AssImp/*.h)
@@ -63,6 +68,11 @@ file(GLOB_RECURSE RAYTRACER_SOURCE ./Raytracer/*.cpp)
 file(GLOB_RECURSE SCENE_SOURCE ./Scene/*.cpp)
 file(GLOB ROOT_SOURCE *.cpp)
 
+SOURCE_GROUP("Resource Files\\Optix\\" FILES ${OPTIX_SCRIPTS})
+SOURCE_GROUP("Resource Files\\Shaders\\" FILES ${GLSL_SHADERS})
+SOURCE_GROUP("Resource Files\\ini\\" FILES ${INI_CONFIGS})
+SOURCE_GROUP("Resource Files\\Materials\\" FILES ${MATERIAL_CONFIGS})
+
 SOURCE_GROUP("Header Files\\Depends\\Gl3w" FILES ${GL3W_HEADER})
 SOURCE_GROUP("Header Files\\Depends\\Glut" FILES ${GLUT_HEADER})
 SOURCE_GROUP("Header Files\\Depends\\AssImp" FILES ${ASSIMP_HEADER_H} ${ASSIMP_HEADER})
@@ -97,6 +107,13 @@ SOURCE_GROUP("Source Files\\Render\\Passes\\Raytrace" FILES 	${RENDER_RAY_PASS_S
 SOURCE_GROUP("Source Files\\Render\\Passes\\Final" FILES 		${RENDER_FINAL_PASS_SOURCE})
 SOURCE_GROUP("Source Files\\Raytracer" FILES ${RAYTRACER_SOURCE})
 SOURCE_GROUP("Source Files\\Scene" FILES ${SCENE_SOURCE})
+
+set(RESOURCES
+	${OPTIX_SCRIPTS}
+	${GLSL_SHADERS}
+	${INI_CONFIGS}
+	${MATERIAL_CONFIGS}
+)
 
 set(HDRS
 	${GL3W_HEADER}
@@ -140,7 +157,7 @@ set(SRCS
 	${ROOT_SOURCE}
 )
 
-add_executable(${NAME} ${HDRS} ${SRCS})
+add_executable(${NAME} ${RESOURCES} ${HDRS} ${SRCS})
 
 find_package(OpenGL REQUIRED)
 find_package(CUDA REQUIRED)
