@@ -276,9 +276,9 @@ void OptixRender::createTextureSamplers( optix::Context context )
 	auto raster_position = raster_fbo->getRenderTexture(1);
 	auto raster_normal = raster_fbo->getRenderTexture(2);
 	//TODO: Upload to optix!
-	addTextureSampler(raster_diffuse_sampler, raster_diffuse->getHandle(), 1.0f, "raster_diffuse");
-	addTextureSampler(raster_position_sampler, raster_position->getHandle(), 1.0f, "raster_position");
-	addTextureSampler(raster_normal_sampler, raster_normal->getHandle(), 1.0f, "raster_normal");
+	addTextureSampler(raster_diffuse_sampler, raster_diffuse->getHandle(), 1.0f, "raster_diffuse_tex");
+	addTextureSampler(raster_position_sampler, raster_position->getHandle(), 1.0f, "raster_position_tex");
+	addTextureSampler(raster_normal_sampler, raster_normal->getHandle(), 1.0f, "raster_normal_tex");
 }
 
 void OptixRender::addTextureSampler(optix::TextureSampler sampler, unsigned int gl_tex_handle, float max_anisotropy, const std::string &sampler_name)
