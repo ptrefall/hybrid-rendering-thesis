@@ -16,6 +16,15 @@ int gl3wInit(void);
 int gl3wIsSupported(int major, int minor);
 void *gl3wGetProcAddress(const char *proc);
 
+#ifdef WIN32
+#  ifndef WIN32_LEAN_AND_MEAN
+#    define WIN32_LEAN_AND_MEAN 1
+#  endif
+#include <windows.h>
+	extern PFNWGLGETSWAPINTERVALEXTPROC wgl3wGetSwapIntervalEXT;
+	extern PFNWGLSWAPINTERVALEXTPROC wgl3wSwapIntervalEXT;
+#endif
+
 /* OpenGL functions */
 extern PFNGLCULLFACEPROC gl3wCullFace;
 extern PFNGLFRONTFACEPROC gl3wFrontFace;

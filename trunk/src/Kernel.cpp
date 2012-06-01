@@ -98,6 +98,7 @@ void Kernel::init(int argc, char** argv)
 		throw std::runtime_error("Failed to initialize OpenGL!");
 	if(gl3wIsSupported(opengl_major_version, opengl_minor_version) == false)
 		throw std::runtime_error("Opengl " + getOpenGLVersionString() + " is not supported!");
+	wgl3wSwapIntervalEXT(0);
 
 	//////////////////////////////////////////
 	// FILE SYSTEM INITIALIZING
