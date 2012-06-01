@@ -2089,6 +2089,16 @@ GLAPI GLboolean APIENTRY glIsEnabled (GLenum cap);
 GLAPI void APIENTRY glDepthRange (GLclampd near, GLclampd far);
 GLAPI void APIENTRY glViewport (GLint x, GLint y, GLsizei width, GLsizei height);
 #endif /* GL3_PROTOTYPES */
+
+#ifdef WIN32
+#  ifndef WIN32_LEAN_AND_MEAN
+#    define WIN32_LEAN_AND_MEAN 1
+#  endif
+#include <windows.h>
+typedef int (APIENTRYP PFNWGLGETSWAPINTERVALEXTPROC) (void);
+typedef BOOL (APIENTRYP PFNWGLSWAPINTERVALEXTPROC) (int interval);
+#endif
+
 typedef void (APIENTRYP PFNGLCULLFACEPROC) (GLenum mode);
 typedef void (APIENTRYP PFNGLFRONTFACEPROC) (GLenum mode);
 typedef void (APIENTRYP PFNGLHINTPROC) (GLenum target, GLenum mode);

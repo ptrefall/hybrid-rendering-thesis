@@ -125,6 +125,11 @@ void *gl3wGetProcAddress(const char *proc)
 	return get_proc(proc);
 }
 
+#ifdef WIN32
+	PFNWGLGETSWAPINTERVALEXTPROC wgl3wGetSwapIntervalEXT;
+	PFNWGLSWAPINTERVALEXTPROC wgl3wSwapIntervalEXT;
+#endif
+
 PFNGLCULLFACEPROC gl3wCullFace;
 PFNGLFRONTFACEPROC gl3wFrontFace;
 PFNGLHINTPROC gl3wHint;
@@ -688,6 +693,11 @@ PFNGLTEXTURESTORAGE3DEXTPROC gl3wTextureStorage3DEXT;
 
 static void load_procs(void)
 {
+#ifdef WIN32
+	wgl3wGetSwapIntervalEXT = (PFNWGLGETSWAPINTERVALEXTPROC)get_proc("wglGetSwapIntervalEXT");
+	wgl3wSwapIntervalEXT = (PFNWGLSWAPINTERVALEXTPROC)get_proc("wglSwapIntervalEXT");
+#endif
+
 	gl3wCullFace = (PFNGLCULLFACEPROC) get_proc("glCullFace");
 	gl3wFrontFace = (PFNGLFRONTFACEPROC) get_proc("glFrontFace");
 	gl3wHint = (PFNGLHINTPROC) get_proc("glHint");
