@@ -144,8 +144,8 @@
  */
 /** @} */ /** END CUDART */
 
-/** CUDA Runtime API Version 4.1 */
-#define CUDART_VERSION  4010
+/** CUDA Runtime API Version 4.2 */
+#define CUDART_VERSION  4020
 
 #include "host_defines.h"
 #include "builtin_types.h"
@@ -362,6 +362,77 @@ extern __host__ cudaError_t CUDARTAPI cudaDeviceGetCacheConfig(enum cudaFuncCach
  * \ref ::cudaFuncSetCacheConfig(T*, enum cudaFuncCache) "cudaFuncSetCacheConfig (C++ API)"
  */
 extern __host__ cudaError_t CUDARTAPI cudaDeviceSetCacheConfig(enum cudaFuncCache cacheConfig);
+
+/**
+ * \brief Returns the shared memory configuration for the current device.
+ *
+ * This function will return in \p pConfig the current size of shared memory banks
+ * on the current device. On devices with configurable shared memory banks, 
+ * ::cudaDeviceSetSharedMemConfig can be used to change this setting, so that all 
+ * subsequent kernel launches will by default use the new bank size. When 
+ * ::cudaDeviceGetSharedMemConfig is called on devices without configurable shared 
+ * memory, it will return the fixed bank size of the hardware.
+ *
+ * The returned bank configurations can be either:
+ * - ::cudaSharedMemBankSizeFourByte - shared memory bank width is four bytes.
+ * - ::cudaSharedMemBankSizeEightByte - shared memory bank width is eight bytes.
+ *
+ * \param pConfig - Returned cache configuration
+ *
+ * \return
+ * ::cudaSuccess,
+ * ::cudaErrorInvalidValue,
+ * ::cudaErrorInitializationError
+ * \notefnerr
+ *
+ * \sa ::cudaDeviceSetCacheConfig,
+ * ::cudaDeviceGetCacheConfig,
+ * ::cudaDeviceSetSharedMemConfig,
+ * ::cudaFuncSetCacheConfig
+ */
+extern __host__ cudaError_t CUDARTAPI cudaDeviceGetSharedMemConfig(enum cudaSharedMemConfig *pConfig);
+
+/**
+ * \brief Sets the shared memory configuration for the current device.
+ *
+ * On devices with configurable shared memory banks, this function will set
+ * the shared memory bank size which is used for all subsequent kernel launches.
+ * Any per-function setting of shared memory set via ::cudaFuncSetSharedMemConfig
+ * will override the device wide setting.
+ *
+ * Changing the shared memory configuration between launches may introduce
+ * a device side synchronization point.
+ *
+ * Changing the shared memory bank size will not increase shared memory usage
+ * or affect occupancy of kernels, but may have major effects on performance. 
+ * Larger bank sizes will allow for greater potential bandwidth to shared memory,
+ * but will change what kinds of accesses to shared memory will result in bank 
+ * conflicts.
+ *
+ * This function will do nothing on devices with fixed shared memory bank size.
+ *
+ * The supported bank configurations are:
+ * - ::cudaSharedMemBankSizeDefault: set bank width the device default (currently,
+ *   four bytes)
+ * - ::cudaSharedMemBankSizeFourByte: set shared memory bank width to be four bytes
+ *   natively.
+ * - ::cudaSharedMemBankSizeEightByte: set shared memory bank width to be eight 
+ *   bytes natively.
+ *
+ * \param config - Requested cache configuration
+ *
+ * \return
+ * ::cudaSuccess,
+ * ::cudaErrorInvalidValue,
+ * ::cudaErrorInitializationError
+ * \notefnerr
+ *
+ * \sa ::cudaDeviceSetCacheConfig,
+ * ::cudaDeviceGetCacheConfig,
+ * ::cudaDeviceGetSharedMemConfig,
+ * ::cudaFuncSetCacheConfig
+ */
+extern __host__ cudaError_t CUDARTAPI cudaDeviceSetSharedMemConfig(enum cudaSharedMemConfig config);
 
 /**
  * \brief Returns a handle to a compute device
@@ -1786,6 +1857,57 @@ extern __host__ cudaError_t CUDARTAPI cudaSetupArgument(const void *arg, size_t 
  * ::cudaThreadSetCacheConfig
  */
 extern __host__ cudaError_t CUDARTAPI cudaFuncSetCacheConfig(const char *func, enum cudaFuncCache cacheConfig);
+
+/**
+ * \brief Sets the shared memory configuration for a device function
+ *
+ * On devices with configurable shared memory banks, this function will 
+ * force all subsequent launches of the specified device function to have
+ * the given shared memory bank size configuration. On any given launch of the
+ * function, the shared memory configuration of the device will be temporarily
+ * changed if needed to suit the function's preferred configuration. Changes in
+ * shared memory configuration between subsequent launches of functions, 
+ * may introduce a device side synchronization point.
+ *
+ * Any per-function setting of shared memory bank size set via 
+ * ::cudaFuncSetSharedMemConfig will override the device wide setting set by
+ * ::cudaDeviceSetSharedMemConfig.
+ *
+ * Changing the shared memory bank size will not increase shared memory usage
+ * or affect occupancy of kernels, but may have major effects on performance. 
+ * Larger bank sizes will allow for greater potential bandwidth to shared memory,
+ * but will change what kinds of accesses to shared memory will result in bank 
+ * conflicts.
+ *
+ * This function will do nothing on devices with fixed shared memory bank size.
+ *
+ * The supported bank configurations are:
+ * - ::cudaSharedMemBankSizeDefault: use the device's shared memory configuration
+ *   when launching this function.
+ * - ::cudaSharedMemBankSizeFourByte: set shared memory bank width to be 
+ *   four bytes natively when launching this function.
+ * - ::cudaSharedMemBankSizeEightByte: set shared memory bank width to be eight 
+ *   bytes natively when launching this function.
+ *
+ * \param func   - device function
+ * \param config - Requested shared memory configuration
+ *
+ * \return
+ * ::cudaSuccess,
+ * ::cudaErrorInitializationError,
+ * ::cudaErrorInvalidDeviceFunction,
+ * ::cudaErrorInvalidValue,
+ * \note_string_api_deprecation2
+ * \notefnerr
+ *
+ * \sa ::cudaConfigureCall,
+ * ::cudaDeviceSetSharedMemConfig,
+ * ::cudaDeviceGetSharedMemConfig,
+ * ::cudaDeviceSetCacheConfig,
+ * ::cudaDeviceGetCacheConfig,
+ * ::cudaFuncSetCacheConfig
+ */
+extern __host__ cudaError_t CUDARTAPI cudaFuncSetSharedMemConfig(const char *func, enum cudaSharedMemConfig config);
 
 /**
  * \brief Launches a device function

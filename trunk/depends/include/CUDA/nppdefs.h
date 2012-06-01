@@ -137,12 +137,14 @@ typedef enum
 typedef enum
 {
     NPP_CUDA_UNKNOWN_VERSION = -1, ///< Indicates that the compute-capability query failed
-    NPP_CUDA_NOT_CAPABLE,          ///< Indicates that no CUDA capable device was found on machine
-    NPP_CUDA_1_0,                  ///< Indicates that CUDA 1.0 capable device is default device on machine
-    NPP_CUDA_1_1,                  ///< Indicates that CUDA 1.1 capable device
-    NPP_CUDA_1_2,                  ///< Indicates that CUDA 1.2 capable device
-    NPP_CUDA_1_3,                  ///< Indicates that CUDA 1.3 capable device
-    NPP_CUDA_2_0                   ///< Indicates that CUDA 2.0 or better is default device on machine
+    NPP_CUDA_NOT_CAPABLE,          ///< Indicates that no CUDA capable device was found
+    NPP_CUDA_1_0,                  ///< Indicates that CUDA 1.0 capable device is machine's default device
+    NPP_CUDA_1_1,                  ///< Indicates that CUDA 1.1 capable device is machine's default device
+    NPP_CUDA_1_2,                  ///< Indicates that CUDA 1.2 capable device is machine's default device
+    NPP_CUDA_1_3,                  ///< Indicates that CUDA 1.3 capable device is machine's default device
+    NPP_CUDA_2_0,                  ///< Indicates that CUDA 2.0 capable device is machine's default device
+    NPP_CUDA_2_1,                  ///< Indicates that CUDA 2.1 capable device is machine's default device
+    NPP_CUDA_3_0                   ///< Indicates that CUDA 3.0 or better is machine's default device
 } NppGpuComputeCapability;
 
 typedef struct 

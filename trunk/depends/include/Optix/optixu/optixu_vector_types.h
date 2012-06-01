@@ -44,7 +44,7 @@ namespace optix {
 
 
 
-#include <CUDA/vector_types.h>
+#include <vector_types.h>
 
 
 

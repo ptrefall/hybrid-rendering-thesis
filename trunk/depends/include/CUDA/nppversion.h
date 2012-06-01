@@ -63,8 +63,8 @@ extern "C" {
 #endif
 
 #define NPP_VERSION_MAJOR 4
-#define NPP_VERSION_MINOR 1
-#define NPP_VERSION_BUILD 28
+#define NPP_VERSION_MINOR 2
+#define NPP_VERSION_BUILD 9
 
 #ifdef __cplusplus
 } // extern "C"

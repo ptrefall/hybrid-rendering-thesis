@@ -73,6 +73,7 @@ endif()
 
 include_directories(
 	${CMAKE_SOURCE_DIR}/depends/include/
+	${CMAKE_SOURCE_DIR}/depends/include/CUDA/
 	${CMAKE_SOURCE_DIR}/depends/include/AssImp/src/BoostWorkaround/
 	${CMAKE_SOURCE_DIR}/depends/include/AssImp/contrib/
 	${CMAKE_SOURCE_DIR}/depends/include/AssImp/contrib/cppunit-1.12.1/include/

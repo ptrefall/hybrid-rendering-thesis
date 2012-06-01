@@ -77,11 +77,11 @@
 
 #if defined(__GNUC__)
 
-#if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ > 5)
+#if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ > 6)
 
-#error -- unsupported GNU version! gcc 4.6 and up are not supported!
+#error -- unsupported GNU version! gcc 4.7 and up are not supported!
 
-#endif /* __GNUC__> 4 || (__GNUC__ == 4 && __GNUC_MINOR__ > 5) */
+#endif /* __GNUC__> 4 || (__GNUC__ == 4 && __GNUC_MINOR__ > 6) */
 
 #endif /* __GNUC__ */
 

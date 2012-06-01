@@ -26,22 +26,22 @@ using namespace optix;
 
 struct PerRayData_tex
 {
-  float4 diffuse;
-  float4 position;
-  float4 normal_matid;
+  float3 diffuse;
+  float3 position;
+  float3 normal_matid;
 };
 
 rtTextureSampler<float4, 2> raster_diffuse_tex;
 rtTextureSampler<float4, 2> raster_position_tex;
 rtTextureSampler<float4, 2> raster_normal_tex;
 rtDeclareVariable(PerRayData_tex, prd, rtPayload, );
-rtDeclareVariable(float2, texcoord, attribute texcoord, ); 
+rtDeclareVariable(float3, texcoord, attribute texcoord, ); 
 
 RT_PROGRAM void closest_hit_radiance()
 {
-  const float2 uv = texcoord;
+  const float3 uv = texcoord;
 
-  prd.diffuse = tex2D( raster_diffuse_tex, uv.x, uv.y );
-  prd.position = tex2D( raster_position_tex, uv.x, uv.y );
-  prd.normal_matid = tex2D( raster_normal_tex, uv.x, uv.y );
+  prd.diffuse = make_float3( tex2D( raster_diffuse_tex, uv.x, uv.y ) );
+  prd.position = make_float3( tex2D( raster_position_tex, uv.x, uv.y ) );
+  prd.normal_matid = make_float3( tex2D( raster_normal_tex, uv.x, uv.y ) );
 }
