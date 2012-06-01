@@ -144,14 +144,14 @@ namespace optix {
   RT_HOSTDEVICE Matrix<M,N>::Matrix( const Matrix<M,N>& m )
   {
     for(unsigned int i = 0; i < M*N; ++i)
-      _data[i] = m._data[i];
+      _data[i] = m[i];
   }
 
   template<unsigned int M, unsigned int N>
   RT_HOSTDEVICE Matrix<M,N>&  Matrix<M,N>::operator=( const Matrix& b )
   {
     for(unsigned int i = 0; i < M*N; ++i)
-      _data[i] = b._data[i];
+      _data[i] = b[i];
     return *this;
   }
 
@@ -484,7 +484,7 @@ namespace optix {
     Matrix<N,M> ret;
     for( unsigned int row = 0; row < M; ++row )
       for( unsigned int col = 0; col < N; ++col )
-        ret._data[col*M+row] = _data[row*N+col];
+        ret[col*M+row] = _data[row*N+col];
     return ret;
   }
 
@@ -631,9 +631,9 @@ namespace optix {
   RT_HOSTDEVICE bool Matrix<M,N>::operator<( const Matrix<M, N>& rhs ) const
   {
     for( unsigned int i = 0; i < N*M; ++i ) {
-      if( _data[i] < rhs._data[i] )
+      if( _data[i] < rhs[i] )
         return true;
-      else if( _data[i] > rhs._data[i] )
+      else if( _data[i] > rhs[i] )
         return false;
     }
     return false;

@@ -906,6 +906,15 @@ __inline__ __host__ cudaError_t cudaFuncSetCacheConfig(
   return cudaFuncSetCacheConfig((const char*)func, cacheConfig);
 }
 
+template<class T>
+__inline__ __host__ cudaError_t cudaFuncSetSharedMemConfig(
+  T                        *func,
+  enum cudaSharedMemConfig  config
+)
+{
+  return cudaFuncSetSharedMemConfig((const char*)func, config);
+}
+
 /**
  * \brief \hl Launches a device function
  *

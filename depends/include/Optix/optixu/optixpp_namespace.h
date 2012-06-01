@@ -301,6 +301,7 @@ namespace optix {
     /// Check the given result code and throw an error with appropriate message
     /// if the code is not RTsuccess
     virtual void checkError(RTresult code);
+    virtual void checkError(RTresult code, Context context );
     
     void checkErrorNoGetContext(RTresult code);
 
@@ -1491,6 +1492,14 @@ namespace optix {
     }
   }
 
+  inline void APIObj::checkError( RTresult code, Context context )
+  {
+    if( code != RT_SUCCESS) {
+      RTcontext c = context->get();
+      throw Exception::makeException( code, c );
+    }
+  }
+
   inline void APIObj::checkErrorNoGetContext( RTresult code )
   {
     if( code != RT_SUCCESS) {
@@ -1545,7 +1554,7 @@ namespace optix {
 
   inline void ContextObj::destroy()
   {
-    checkError( rtContextDestroy( m_context ) );
+    checkErrorNoGetContext( rtContextDestroy( m_context ) );
     m_context = 0;
   }
 
@@ -2076,7 +2085,8 @@ namespace optix {
 
   inline void ProgramObj::destroy()
   {
-    checkError( rtProgramDestroy( m_program ) );
+    Context context = getContext();
+    checkError( rtProgramDestroy( m_program ), context );
     m_program = 0;
   }
 
@@ -2132,7 +2142,8 @@ namespace optix {
 
   inline void GroupObj::destroy()
   {
-    checkError( rtGroupDestroy( m_group ) );
+    Context context = getContext();
+    checkError( rtGroupDestroy( m_group ), context );
     m_group = 0;
   }
 
@@ -2150,7 +2161,8 @@ namespace optix {
 
   inline void SelectorObj::destroy()
   {
-    checkError( rtSelectorDestroy( m_selector ) );
+    Context context = getContext();
+    checkError( rtSelectorDestroy( m_selector ), context );
     m_selector = 0;
   }
 
@@ -2287,7 +2299,8 @@ namespace optix {
 
   inline void GeometryGroupObj::destroy()
   {
-    checkError( rtGeometryGroupDestroy( m_geometrygroup ) );
+    Context context = getContext();
+    checkError( rtGeometryGroupDestroy( m_geometrygroup ), context );
     m_geometrygroup = 0;
   }
 
@@ -2346,7 +2359,8 @@ namespace optix {
 
   inline void TransformObj::destroy()
   {
-    checkError( rtTransformDestroy( m_transform ) );
+    Context context = getContext();
+    checkError( rtTransformDestroy( m_transform ), context );
     m_transform = 0;
   }
 
@@ -2393,7 +2407,8 @@ namespace optix {
 
   inline void AccelerationObj::destroy()
   {
-    checkError( rtAccelerationDestroy(m_acceleration) );
+    Context context = getContext();
+    checkError( rtAccelerationDestroy(m_acceleration), context );
     m_acceleration = 0;
   }
 
@@ -2481,7 +2496,8 @@ namespace optix {
 
   inline void GeometryInstanceObj::destroy()
   {
-    checkError( rtGeometryInstanceDestroy( m_geometryinstance ) );
+    Context context = getContext();
+    checkError( rtGeometryInstanceDestroy( m_geometryinstance ), context );
     m_geometryinstance = 0;
   }
 
@@ -2582,7 +2598,8 @@ namespace optix {
 
   inline void GeometryObj::destroy()
   {
-    checkError( rtGeometryDestroy( m_geometry ) );
+    Context context = getContext();
+    checkError( rtGeometryDestroy( m_geometry ), context );
     m_geometry = 0;
   }
 
@@ -2686,7 +2703,8 @@ namespace optix {
 
   inline void MaterialObj::destroy()
   {
-    checkError( rtMaterialDestroy( m_material ) );
+    Context context = getContext();
+    checkError( rtMaterialDestroy( m_material ), context );
     m_material = 0;
   }
 
@@ -2766,7 +2784,8 @@ namespace optix {
 
   inline void TextureSamplerObj::destroy()
   {
-    checkError( rtTextureSamplerDestroy( m_texturesampler ) );
+    Context context = getContext();
+    checkError( rtTextureSamplerDestroy( m_texturesampler ), context );
     m_texturesampler = 0;
   }
 
@@ -2927,7 +2946,8 @@ namespace optix {
 
   inline void BufferObj::destroy()
   {
-    checkError( rtBufferDestroy( m_buffer ) );
+    Context context = getContext();
+    checkError( rtBufferDestroy( m_buffer ), context );
     m_buffer = 0;
   }
 

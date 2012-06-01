@@ -832,6 +832,17 @@ enum __device_builtin__ cudaFuncCache
 };
 
 /**
+ * CUDA shared memory configuration
+ */
+
+enum __device_builtin__ cudaSharedMemConfig
+{
+    cudaSharedMemBankSizeDefault   = 0,
+    cudaSharedMemBankSizeFourByte  = 1,
+    cudaSharedMemBankSizeEightByte = 2
+};
+
+/**
  * CUDA device compute modes
  */
 enum __device_builtin__ cudaComputeMode

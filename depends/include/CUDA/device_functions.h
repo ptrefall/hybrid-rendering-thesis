@@ -3420,6 +3420,7 @@ static __forceinline__ int __ffsll(long long int a)
 #include "sm_13_double_functions.h"
 #include "sm_20_atomic_functions.h"
 #include "sm_20_intrinsics.h"
+#include "sm_30_intrinsics.h"
 #include "surface_functions.h"
 #include "texture_fetch_functions.h"
 

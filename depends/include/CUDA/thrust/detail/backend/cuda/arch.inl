@@ -1,5 +1,5 @@
 /*
- *  Copyright 2008-2011 NVIDIA Corporation
+ *  Copyright 2008-2012 NVIDIA Corporation
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -119,7 +119,7 @@ inline device_properties_t device_properties(int device_id)
   static const int max_num_devices                              = 16;
 
   static bool properties_exist[max_num_devices]                 = {0};
-  static device_properties_t device_properties[max_num_devices] = {0};
+  static device_properties_t device_properties[max_num_devices];
 
   if(device_id >= max_num_devices)
   {

@@ -1,5 +1,5 @@
 /*
- *  Copyright 2008-2011 NVIDIA Corporation
+ *  Copyright 2008-2012 NVIDIA Corporation
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -188,7 +188,7 @@ arch::function_attributes_t closure_attributes(void)
 
   // cache the result of function_attributes(), because it is slow
   static bool result_exists                 = false;
-  static arch::function_attributes_t result = {0};
+  static arch::function_attributes_t result;
 
   if(!result_exists)
   {
