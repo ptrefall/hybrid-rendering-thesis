@@ -27,7 +27,7 @@ OptixRender::OptixRender(const Render::GBuffer_PassPtr &g_buffer_pass, unsigned 
     sphere   = createGeometry( context );
     material = createMaterial( context );
     createInstance( context, sphere, material );
-	//createTextureSamplers( context );
+	createTextureSamplers( context );
     
     // Run
 	try{
@@ -243,11 +243,11 @@ Geometry OptixRender::createGeometry( Context context )
 
 Material OptixRender::createMaterial( Context context )
 {
-    Program chp = context->createProgramFromPTXFile( baseDir + "normal_shader.cu.ptx" , "closest_hit_radiance" );
-
-  Material matl = context->createMaterial();
-  matl->setClosestHitProgram( 0, chp );
-  return matl;
+    //Program chp = context->createProgramFromPTXFile( baseDir + "normal_shader.cu.ptx" , "closest_hit_radiance" );
+	Program chp = context->createProgramFromPTXFile( baseDir + "g_buffer.cu.ptx", "closest_hit_radiance" );
+	Material matl = context->createMaterial();
+	matl->setClosestHitProgram( 0, chp );
+	return matl;
 }
 
 
