@@ -195,6 +195,7 @@ Context OptixRender::createContext()
   Context context = Context::create();
   context->setRayTypeCount( 1 );
   context->setEntryPointCount( 1 );
+  context->setStackSize( 400 );
 
   context["radiance_ray_type"]->setUint( 0u );
   context["scene_epsilon"]->setFloat( 1.e-4f );
