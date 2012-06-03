@@ -9,112 +9,91 @@
 #include <glm/ext.hpp>
 #include <iostream>
 
+#include <Optix/optixu/optixu.h>
+
 using namespace Raytracer;
 using namespace optix;
 
-OptixRender::OptixRender(const Render::GBuffer_PassPtr &g_buffer_pass, unsigned int w, unsigned int h, const std::string& baseDir)
-	: g_buffer_pass(g_buffer_pass), w(w), h(h), baseDir(baseDir)
+OptixRender::OptixRender(const Render::GBuffer_PassPtr &g_buffer_pass, unsigned int width, unsigned int height, const std::string& baseDir)
+	: g_buffer_pass(g_buffer_pass), width(width), height(height), baseDir(baseDir)
 {
     GLenum error = glGetError();
 	tex = std::make_shared<Render::Tex2D>();
     error = glGetError();
-    Render::T2DTexParams params((unsigned int)GL_BGRA, (unsigned int)GL_BGRA, (unsigned int)GL_UNSIGNED_BYTE, 4, (unsigned int)w, (unsigned int)h, (unsigned int)GL_CLAMP_TO_EDGE, (unsigned char*)nullptr);
+	Render::T2DTexParams params((unsigned int)GL_BGRA, (unsigned int)GL_BGRA, (unsigned int)GL_UNSIGNED_BYTE, 4, (unsigned int)width, (unsigned int)height, (unsigned int)GL_CLAMP_TO_EDGE, (unsigned char*)nullptr);
     error = glGetError();
 	tex->update(params);
     error = glGetError();
 
-    /*context  = createContext();
-    dummy   = createGeometry( context );
-    material = createMaterial( context );
-    createInstance( context, dummy, material );*/
-	context = minimalCreateContext();
-	createTextureSamplers( context );
+    context = minimalCreateContext();
+
+	optix::Program ray_gen_program = context->createProgramFromPTXFile( baseDir + "g_buffer.cu.ptx", "gbuffer_compose" );
+	context->setRayGenerationProgram( 0, ray_gen_program );
+	unsigned int screenDims[] = {width,height};
+	ray_gen_program->declareVariable("rtLaunchDim")->set2uiv( screenDims );
+	output_buffer = createOutputBuffer();
+	ray_gen_program["output_buffer"]->set(output_buffer); // Why must this var be set on a RayGen (fails on context) ?
+	//context["output_buffer"]->set(output_buffer); 
+	
+	
+	//createTextureSamplers( context ); // TODO
     
-    // Run
+    // First Run, trap any exceptions before mainloop
 	try{
-    context->validate();
-    context->compile();
-    //context->launch( 0, w, h);
+		context->validate();
+		context->compile();
+		context->launch( 0, width, height);
 	}catch(const optix::Exception &e){
+		std::cout << e.getErrorString();
 	}
 }
 
 optix::Context OptixRender::minimalCreateContext()
 {
 	Context context = Context::create();
+	context->setRayTypeCount( 1 );
+	context->setEntryPointCount( 1 );
+
 	return context;
 }
 
-void OptixRender::_displayFrame( Buffer buffer )
+// adapted from suti: optix\SDK\sutil\SampleScene.cpp
+optix::Buffer OptixRender::createOutputBuffer()
 {
-  // Draw the resulting image
-  RTsize buffer_width_rts, buffer_height_rts;
-  buffer->getSize( buffer_width_rts, buffer_height_rts );
-  int buffer_width  = static_cast<int>(buffer_width_rts);
-  int buffer_height = static_cast<int>(buffer_height_rts);
-  RTformat buffer_format = buffer->getFormat();
+  Buffer buffer;
 
-  auto buf = (unsigned char*)buffer->map();
-  std::vector<unsigned char> imageData(buf, buf + buffer_width*buffer_height*4*sizeof(unsigned char));
-  
-    //assert( &imageData[0] );
+	/*
+		Allocate first the memory for the gl buffer, then attach it to OptiX.
+	*/
+	GLuint vbo = 0;
+	glGenBuffers(1, &vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	size_t element_size = 0;
+	RTformat format = RT_FORMAT_UNSIGNED_BYTE4;
+	context->checkError( rtuGetSizeForRTformat(format, &element_size) );
+	glBufferData(GL_ARRAY_BUFFER, element_size * width * height, 0, GL_STREAM_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    GLenum gl_data_type = GL_FALSE;
-    GLenum gl_format = GL_FALSE;
+	buffer = context->createBufferFromGLBO(RT_BUFFER_OUTPUT, vbo);
+	buffer->setFormat(format);
+	buffer->setSize( width, height );
 
-    switch (buffer_format) {
-          case RT_FORMAT_UNSIGNED_BYTE4:
-            gl_data_type = GL_UNSIGNED_BYTE;
-            gl_format    = GL_BGRA;
-            break;
 
-          case RT_FORMAT_FLOAT:
-            gl_data_type = GL_FLOAT;
-            break;
+  // Set number of devices to be used
+  // Default, 0, means not to specify them here, but let OptiX use its default behavior.
+  int _num_devices = 0;
+  if(_num_devices)
+  {
+    int max_num_devices    = Context::getDeviceCount();
+    int actual_num_devices = std::min( max_num_devices, std::max( 1, _num_devices ) );
+    std::vector<int> devs(actual_num_devices);
+    for( int i = 0; i < actual_num_devices; ++i ) devs[i] = i;
+    context->setDevices( devs.begin(), devs.end() );
+  }
 
-          case RT_FORMAT_FLOAT3:
-            gl_data_type = GL_FLOAT;
-            gl_format    = GL_RGB;
-            break;
-
-          case RT_FORMAT_FLOAT4:
-            gl_data_type = GL_FLOAT;
-            gl_format    = GL_RGBA;
-            break;
-
-          default:
-            fprintf(stderr, "Unrecognized buffer data type or format.\n");
-            exit(2);
-            break;
-    }
-    
-	Render::T2DTexParams params((unsigned int)gl_format, (unsigned int)gl_format, (unsigned int)gl_data_type, 4, (unsigned int)buffer_width, (unsigned int)buffer_height, (unsigned int)GL_CLAMP_TO_EDGE, (unsigned char*)&imageData[0]);
-	tex->update(params);
-
-    
-
-	//Kernel::getSingleton()->getTextureLoader()->save(tex, Kernel::getSingleton()->getResourceDir()+"screens\\raytraced.png");
-	
-    /*static GLuint idk = 0;
-    if ( !idk ) {
-      glGenTextures(1, &idk );
-    }
-    glBindTexture( GL_TEXTURE_2D, idk );
-    // Change these to GL_LINEAR for super- or sub-sampling
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-
-    // GL_CLAMP_TO_EDGE for linear filtering, not relevant for nearest.
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    
-    glTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, buffer_width, buffer_height, gl_format, gl_data_type, imageData );*/
-    //glDrawPixels( static_cast<GLsizei>( buffer_width),
-      //static_cast<GLsizei>( buffer_height ),
-      //gl_format, gl_data_type, imageData);
-    
-    buffer->unmap();
+  return buffer;
 }
+
 
 // C++ version of sutil.c code
 void CalculateCameraVariables(  glm::vec3 eye, glm::vec3 lookAt, glm::vec3 up,
@@ -160,13 +139,13 @@ void CalculateCameraVariables(  float hfov,
 
 void OptixRender::render()
 {
-  //unsigned int pbo = context["output_buffer"]->getBuffer()->getGLBOId(); // not a pbo!
+  //unsigned int pbo = context["output_buffer"]->getBuffer()->getGLBOId(); // is pbo now.
 	auto camera = Scene::FirstPersonCamera::getSingleton();
 	auto &world_to_view = camera->getWorldToViewMatrix();
 	auto pos = camera->getPos();
  
-    float aspect_ratio = static_cast<float>(w) / static_cast<float>(h);
-    float inv_aspect_ratio = static_cast<float>(h) / static_cast<float>(w);
+    float aspect_ratio = static_cast<float>(width) / static_cast<float>(height);
+    float inv_aspect_ratio = static_cast<float>(height) / static_cast<float>(width);
     
     float vfov = camera->getFov();
     float hfov = vfov * aspect_ratio;
@@ -181,19 +160,19 @@ void OptixRender::render()
     context["W"]->set3fv( glm::value_ptr(W) );
 
 	try {
-		context->launch(0, w,h);
+		context->launch(0, width,height);
 	} catch (optix::Exception& e) {
 		std::cout << e.getErrorString();
 		return;
 	}
-	//_displayFrame( context["output_buffer"]->getBuffer() );
-	//glClearColor(1,0,0,0);
+
+	pbo2Texture(output_buffer);
 }
 
-void OptixRender::reshape(unsigned int w, unsigned int h) 
+void OptixRender::reshape(unsigned int width, unsigned int height) 
 { 
-	this->w = w;
-	this->h = h; 
+	this->width = width;
+	this->height = height; 
 }
 
 Context OptixRender::createContext() 
@@ -208,7 +187,7 @@ Context OptixRender::createContext()
   context["scene_epsilon"]->setFloat( 1.e-4f );
 
   Variable output_buffer = context["output_buffer"];
-  Buffer buffer = context->createBuffer( RT_BUFFER_OUTPUT, RT_FORMAT_UNSIGNED_BYTE4, w, h );
+  Buffer buffer = context->createBuffer( RT_BUFFER_OUTPUT, RT_FORMAT_UNSIGNED_BYTE4, width, height );
 
   output_buffer->set(buffer);
 
@@ -301,4 +280,38 @@ void OptixRender::addTextureSampler(optix::TextureSampler sampler, unsigned int 
 	sampler->setFilteringModes( RT_FILTER_LINEAR, RT_FILTER_LINEAR, RT_FILTER_NONE );
 
 	context[sampler_name.c_str()]->setTextureSampler( sampler );
+}
+
+void OptixRender::pbo2Texture(optix::Buffer buffer)
+{
+	tex->bind();
+	
+	unsigned int vboId = buffer->getGLBOId();
+
+    // send pbo to texture
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, vboId);
+
+    RTsize elementSize = output_buffer->getElementSize();
+    if      ((elementSize % 8) == 0) glPixelStorei(GL_UNPACK_ALIGNMENT, 8);
+    else if ((elementSize % 4) == 0) glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+    else if ((elementSize % 2) == 0) glPixelStorei(GL_UNPACK_ALIGNMENT, 2);
+    else                             glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+	RTsize buffer_width_rts, buffer_height_rts;
+	buffer->getSize( buffer_width_rts, buffer_height_rts );
+	int buffer_width  = static_cast<int>(buffer_width_rts);
+	int buffer_height = static_cast<int>(buffer_height_rts);
+	RTformat buffer_format = buffer->getFormat();
+
+    if(buffer_format == RT_FORMAT_UNSIGNED_BYTE4) {
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, buffer_width, buffer_height, 0, GL_BGRA, GL_UNSIGNED_BYTE, 0);
+    } else if(buffer_format == RT_FORMAT_FLOAT4) {
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, buffer_width, buffer_height, 0, GL_RGBA, GL_FLOAT, 0);
+    } else if(buffer_format == RT_FORMAT_FLOAT3) {
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, buffer_width, buffer_height, 0, GL_RGB, GL_FLOAT, 0);
+    } else {
+      assert(0 && "Unknown buffer format");
+    }
+
+    glBindBuffer( GL_PIXEL_UNPACK_BUFFER, 0 );
 }

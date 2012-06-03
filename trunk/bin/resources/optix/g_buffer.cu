@@ -20,47 +20,33 @@
  */
 
 #include "optix.h"
+#include "helpers.h"
 #include "optixu/optixu_math_namespace.h"
 
 using namespace optix;
 
-struct PerRayData_tex
-{
-  float4 diffuse;
-  float4 position;
-  float4 normal_matid;
-};
+rtDeclareVariable(uint2, launch_index, rtLaunchIndex, );
+rtDeclareVariable(uint2, launch_dim,   rtLaunchDim, );
+rtBuffer<uchar4, 2>   output_buffer; // Map this to a PBO
 
 rtTextureSampler<float4, 2> raster_diffuse_tex;
 rtTextureSampler<float4, 2> raster_position_tex;
 rtTextureSampler<float4, 2> raster_normal_tex;
-rtDeclareVariable(PerRayData_tex, prd, rtPayload, );
-//rtDeclareVariable(float3, texcoord, attribute texcoord, ); 
 
-rtDeclareVariable(float4,  dummy, , );
-rtDeclareVariable(float3, geometric_normal, attribute geometric_normal, ); 
-rtDeclareVariable(float3, shading_normal, attribute shading_normal, ); 
-rtDeclareVariable(optix::Ray, ray, rtCurrentRay, );
 
-RT_PROGRAM void closest_hit_radiance()
+RT_PROGRAM void gbuffer_compose()
 {
-  //const float3 uv = texcoord;
+	float2 zeroToOne = make_float2(launch_index) / make_float2(launch_dim);
+	output_buffer[launch_index] = make_color( make_float3( zeroToOne.x, zeroToOne.y, 0.f ) );
+	//result_buffer[launch_index] = tex2D( tex, zeroToOne.x, zeroToOne.y );
 
-  //prd.diffuse = ( tex2D( raster_diffuse_tex, uv.x, uv.y ) );
-  //prd.position = ( tex2D( raster_position_tex, uv.x, uv.y ) );
-  //prd.normal_matid = ( tex2D( raster_normal_tex, uv.x, uv.y ) );
+
+	/*
+	float4 diffuse = ( tex2D( raster_diffuse_tex, uv.x, uv.y ) );
+	float4 position = ( tex2D( raster_position_tex, uv.x, uv.y ) );
+	float4 normal_matid = ( tex2D( raster_normal_tex, uv.x, uv.y ) );
+
+	result_buffer[launch_index] = shade...
+	*/
 }
 
-RT_PROGRAM void intersect(int primIdx)
-{
-	 //texcoord = ray.origin;
-	float3 uv = ray.origin;
-	prd.diffuse = ( tex2D( raster_diffuse_tex, uv.x, uv.y ) );
-	prd.position = ( tex2D( raster_position_tex, uv.x, uv.y ) );
-	prd.normal_matid = ( tex2D( raster_normal_tex, uv.x, uv.y ) );
-}
-
-RT_PROGRAM void bounds (int, float result[6])
-{
-  const float3 cen = make_float3( dummy );
-}
