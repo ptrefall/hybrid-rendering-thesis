@@ -37,6 +37,11 @@ rtTextureSampler<float4, 2> raster_normal_tex;
 rtDeclareVariable(PerRayData_tex, prd, rtPayload, );
 rtDeclareVariable(float3, texcoord, attribute texcoord, ); 
 
+rtDeclareVariable(float4,  dummy, , );
+rtDeclareVariable(float3, geometric_normal, attribute geometric_normal, ); 
+rtDeclareVariable(float3, shading_normal, attribute shading_normal, ); 
+rtDeclareVariable(optix::Ray, ray, rtCurrentRay, );
+
 RT_PROGRAM void closest_hit_radiance()
 {
   const float3 uv = texcoord;
@@ -44,4 +49,14 @@ RT_PROGRAM void closest_hit_radiance()
   prd.diffuse = ( tex2D( raster_diffuse_tex, uv.x, uv.y ) );
   prd.position = ( tex2D( raster_position_tex, uv.x, uv.y ) );
   prd.normal_matid = ( tex2D( raster_normal_tex, uv.x, uv.y ) );
+}
+
+RT_PROGRAM void intersect(int primIdx)
+{
+	 texcoord = ray.origin;
+}
+
+RT_PROGRAM void bounds (int, float result[6])
+{
+  const float3 cen = make_float3( dummy );
 }
