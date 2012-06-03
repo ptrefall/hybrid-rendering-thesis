@@ -23,10 +23,11 @@ OptixRender::OptixRender(const Render::GBuffer_PassPtr &g_buffer_pass, unsigned 
 	tex->update(params);
     error = glGetError();
 
-    context  = createContext();
+    /*context  = createContext();
     dummy   = createGeometry( context );
     material = createMaterial( context );
-    createInstance( context, dummy, material );
+    createInstance( context, dummy, material );*/
+	context = minimalCreateContext();
 	createTextureSamplers( context );
     
     // Run
@@ -36,6 +37,12 @@ OptixRender::OptixRender(const Render::GBuffer_PassPtr &g_buffer_pass, unsigned 
     //context->launch( 0, w, h);
 	}catch(const optix::Exception &e){
 	}
+}
+
+optix::Context OptixRender::minimalCreateContext()
+{
+	Context context = Context::create();
+	return context;
 }
 
 void OptixRender::_displayFrame( Buffer buffer )
@@ -179,7 +186,7 @@ void OptixRender::render()
 		std::cout << e.getErrorString();
 		return;
 	}
-	_displayFrame( context["output_buffer"]->getBuffer() );
+	//_displayFrame( context["output_buffer"]->getBuffer() );
 	//glClearColor(1,0,0,0);
 }
 

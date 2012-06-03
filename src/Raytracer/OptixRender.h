@@ -39,6 +39,7 @@ namespace Raytracer
 		Render::Tex2DPtr tex;
 
     private:
+		optix::Context minimalCreateContext();
         optix::Context  createContext();
         optix::Material createMaterial( optix::Context context );
         optix::Geometry createGeometry( optix::Context context );
