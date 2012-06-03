@@ -32,7 +32,7 @@ namespace Raytracer
 		unsigned int w;
 		unsigned int h;
         optix::Context  context; 
-        optix::Geometry sphere;
+        optix::Geometry dummy;
         optix::Material material;
         std::string baseDir;
 

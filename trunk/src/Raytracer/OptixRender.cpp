@@ -24,9 +24,9 @@ OptixRender::OptixRender(const Render::GBuffer_PassPtr &g_buffer_pass, unsigned 
     error = glGetError();
 
     context  = createContext();
-    sphere   = createGeometry( context );
+    dummy   = createGeometry( context );
     material = createMaterial( context );
-    createInstance( context, sphere, material );
+    createInstance( context, dummy, material );
 	createTextureSamplers( context );
     
     // Run
@@ -232,13 +232,13 @@ Context OptixRender::createContext()
 
 Geometry OptixRender::createGeometry( Context context )
 {
-  //Geometry sphere = context->createGeometry();
-  /*sphere->setPrimitiveCount( 1u );
-  sphere->setBoundingBoxProgram( context->createProgramFromPTXFile( baseDir + "sphere.cu.ptx", "bounds" ) );
-  sphere->setIntersectionProgram( context->createProgramFromPTXFile( baseDir + "sphere.cu.ptx", "intersect" ) );
-  //sphere["sphere"]->setFloat( 0.f, 0.f, 0.f, 1.0f );
-  sphere["sphere"]->setFloat( 5, 3, -20.0f, 1.0f );*/
-  return nullptr;
+  Geometry dummy = context->createGeometry();
+  dummy->setPrimitiveCount( 1u );
+  dummy->setBoundingBoxProgram( context->createProgramFromPTXFile( baseDir + "g_buffer.cu.ptx", "bounds" ) );
+  dummy->setIntersectionProgram( context->createProgramFromPTXFile( baseDir + "g_buffer.cu.ptx", "intersect" ) );
+  //dummy["dummy"]->setFloat( 0.f, 0.f, 0.f, 1.0f );
+  dummy["dummy"]->setFloat( 5, 3, -20.0f, 1.0f );
+  return dummy;
 }
 
 
@@ -252,12 +252,12 @@ Material OptixRender::createMaterial( Context context )
 }
 
 
-void OptixRender::createInstance( Context context, Geometry sphere, Material material )
+void OptixRender::createInstance( Context context, Geometry dummy, Material material )
 {
   // Create geometry instance
   GeometryInstance gi = context->createGeometryInstance();
   gi->setMaterialCount( 1 );
-  //gi->setGeometry( sphere );
+  gi->setGeometry( dummy );
   gi->setMaterial( 0, material );
 
   // Create geometry group
