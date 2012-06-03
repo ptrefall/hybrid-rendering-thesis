@@ -20,18 +20,19 @@ namespace Raytracer
 	class OptixRender
 	{
 	public:
-		OptixRender(const Render::GBuffer_PassPtr &g_buffer_pass, unsigned int w, unsigned int h, const std::string& baseDir);
+		OptixRender(const Render::GBuffer_PassPtr &g_buffer_pass, unsigned int width, unsigned int height, const std::string& baseDir);
 		void render();
 
-		void reshape(unsigned int w, unsigned int h);
+		void reshape(unsigned int width, unsigned int height);
 
 		Render::Tex2DPtr getRenderTexture() const { return tex; }
 
 	private:
         Render::GBuffer_PassPtr g_buffer_pass;
-		unsigned int w;
-		unsigned int h;
+		unsigned int width;
+		unsigned int height;
         optix::Context  context; 
+		optix::Buffer output_buffer;
         optix::Geometry dummy;
         optix::Material material;
         std::string baseDir;
@@ -40,13 +41,14 @@ namespace Raytracer
 
     private:
 		optix::Context minimalCreateContext();
+		optix::Buffer createOutputBuffer();
         optix::Context  createContext();
         optix::Material createMaterial( optix::Context context );
         optix::Geometry createGeometry( optix::Context context );
 		void createTextureSamplers( optix::Context context );
-        void     createInstance( optix::Context context, optix::Geometry sphere, optix::Material material );
-		void _displayFrame( optix::Buffer buffer );
-
+        void createInstance( optix::Context context, optix::Geometry sphere, optix::Material material );
+		void pbo2Texture(optix::Buffer buffer);
+		
 		optix::TextureSampler  raster_diffuse_sampler;
 		optix::TextureSampler  raster_position_sampler;
 		optix::TextureSampler  raster_normal_sampler;
