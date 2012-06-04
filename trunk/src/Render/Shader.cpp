@@ -88,6 +88,7 @@ void Shader::link(unsigned int &handle_index, unsigned int shader)
 		glAttachShader(pipeline_handles[handle_index], shader);
 		glDeleteShader(shader);
 		glLinkProgram(pipeline_handles[handle_index]);
+		GLenum errorCode = glGetError();
 		handle_index++;
 	}
 }
