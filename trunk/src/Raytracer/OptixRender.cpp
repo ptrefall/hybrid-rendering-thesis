@@ -32,7 +32,8 @@ OptixRender::OptixRender(const Render::GBuffer_PassPtr &g_buffer_pass, unsigned 
 	unsigned int screenDims[] = {width,height};
 	ray_gen_program->declareVariable("rtLaunchDim")->set2uiv( screenDims );
 	g_buffer = createGBuffer();
-	ray_gen_program["g_buffer"]->set(g_buffer); // Why must this var be set on a RayGen (fails on context) ?
+	//ray_gen_program["g_buffer"]->set(g_buffer); // Why must this var be set on a RayGen (fails on context) ?
+	context["g_buffer"]->set(g_buffer);
     
     // First Run, trap any exceptions before mainloop
 	try{
@@ -82,7 +83,7 @@ optix::Buffer OptixRender::createGBuffer()
 	// Set number of devices to be used
 	// Default, 0, means not to specify them here, but let OptiX use its default behavior.
 	int _num_devices = 0;
-	if(_num_devices)
+	if(_num_devices) 
 	{
 		int max_num_devices    = Context::getDeviceCount();
 		int actual_num_devices = std::min( max_num_devices, std::max( 1, _num_devices ) );
@@ -284,8 +285,8 @@ void OptixRender::addTextureSampler(optix::TextureSampler sampler, unsigned int 
 
 void OptixRender::pbo2Texture()
 {
-	tex->bind();
 	g_buffer_pbo->bind();
+	tex->bind();
 
     RTsize elementSize = g_buffer->getElementSize();
     if      ((elementSize % 8) == 0) glPixelStorei(GL_UNPACK_ALIGNMENT, 8);
