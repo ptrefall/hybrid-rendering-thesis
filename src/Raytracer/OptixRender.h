@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../Render/Tex2D.h"
+#include "../Render/PBO.h"
 #include "../Scene/Quad.h"
 #include "../File/ShaderLoader.h"
 #include <Optix/optixu/optixpp_namespace.h>
@@ -32,7 +33,7 @@ namespace Raytracer
 		unsigned int width;
 		unsigned int height;
         optix::Context  context; 
-		optix::Buffer output_buffer;
+		optix::Buffer g_buffer;
         optix::Geometry dummy;
         optix::Material material;
         std::string baseDir;
@@ -41,14 +42,15 @@ namespace Raytracer
 
     private:
 		optix::Context minimalCreateContext();
-		optix::Buffer createOutputBuffer();
+		optix::Buffer createGBuffer();
         optix::Context  createContext();
         optix::Material createMaterial( optix::Context context );
         optix::Geometry createGeometry( optix::Context context );
 		void createTextureSamplers( optix::Context context );
         void createInstance( optix::Context context, optix::Geometry sphere, optix::Material material );
-		void pbo2Texture(optix::Buffer buffer);
+		void pbo2Texture();
 		
+		Render::PBOPtr g_buffer_pbo;
 		optix::TextureSampler  raster_diffuse_sampler;
 		optix::TextureSampler  raster_position_sampler;
 		optix::TextureSampler  raster_normal_sampler;
