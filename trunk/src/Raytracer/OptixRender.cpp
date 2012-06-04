@@ -31,12 +31,8 @@ OptixRender::OptixRender(const Render::GBuffer_PassPtr &g_buffer_pass, unsigned 
 	context->setRayGenerationProgram( 0, ray_gen_program );
 	unsigned int screenDims[] = {width,height};
 	ray_gen_program->declareVariable("rtLaunchDim")->set2uiv( screenDims );
-	output_buffer = createOutputBuffer();
-	ray_gen_program["output_buffer"]->set(output_buffer); // Why must this var be set on a RayGen (fails on context) ?
-	//context["output_buffer"]->set(output_buffer); 
-	
-	
-	//createTextureSamplers( context ); // TODO
+	g_buffer = createGBuffer();
+	ray_gen_program["g_buffer"]->set(g_buffer); // Why must this var be set on a RayGen (fails on context) ?
     
     // First Run, trap any exceptions before mainloop
 	try{
@@ -58,40 +54,44 @@ optix::Context OptixRender::minimalCreateContext()
 }
 
 // adapted from suti: optix\SDK\sutil\SampleScene.cpp
-optix::Buffer OptixRender::createOutputBuffer()
+optix::Buffer OptixRender::createGBuffer()
 {
-  Buffer buffer;
+	Buffer buffer;
+	RTformat format = RT_FORMAT_UNSIGNED_BYTE4;
+	size_t element_size = 0;
+	context->checkError( rtuGetSizeForRTformat(format, &element_size) );
+
+	//Upload rasterized g-buffer info here:
+	auto raster_fbo = g_buffer_pass->getFBO();
+	auto raster_diffuse = raster_fbo->getRenderTexture(0);
+	auto raster_position = raster_fbo->getRenderTexture(1);
+	auto raster_normal = raster_fbo->getRenderTexture(2);
+	raster_diffuse->bind();
 
 	/*
 		Allocate first the memory for the gl buffer, then attach it to OptiX.
 	*/
-	GLuint vbo = 0;
-	glGenBuffers(1, &vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	size_t element_size = 0;
-	RTformat format = RT_FORMAT_UNSIGNED_BYTE4;
-	context->checkError( rtuGetSizeForRTformat(format, &element_size) );
-	glBufferData(GL_ARRAY_BUFFER, element_size * width * height, 0, GL_STREAM_DRAW);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	//TODO: Size of PBO should be equal to number of render textures in gbuffer_pass' fbo, and also equal to their sizes and types...
+	g_buffer_pbo = std::make_shared<Render::PBO>(element_size * width * height, GL_STREAM_DRAW, true);
+	g_buffer_pbo->unbind();
 
-	buffer = context->createBufferFromGLBO(RT_BUFFER_OUTPUT, vbo);
+	buffer = context->createBufferFromGLBO(RT_BUFFER_OUTPUT, g_buffer_pbo->getHandle());
 	buffer->setFormat(format);
 	buffer->setSize( width, height );
 
+	// Set number of devices to be used
+	// Default, 0, means not to specify them here, but let OptiX use its default behavior.
+	int _num_devices = 0;
+	if(_num_devices)
+	{
+		int max_num_devices    = Context::getDeviceCount();
+		int actual_num_devices = std::min( max_num_devices, std::max( 1, _num_devices ) );
+		std::vector<int> devs(actual_num_devices);
+		for( int i = 0; i < actual_num_devices; ++i ) devs[i] = i;
+			context->setDevices( devs.begin(), devs.end() );
+	}
 
-  // Set number of devices to be used
-  // Default, 0, means not to specify them here, but let OptiX use its default behavior.
-  int _num_devices = 0;
-  if(_num_devices)
-  {
-    int max_num_devices    = Context::getDeviceCount();
-    int actual_num_devices = std::min( max_num_devices, std::max( 1, _num_devices ) );
-    std::vector<int> devs(actual_num_devices);
-    for( int i = 0; i < actual_num_devices; ++i ) devs[i] = i;
-    context->setDevices( devs.begin(), devs.end() );
-  }
-
-  return buffer;
+	return buffer;
 }
 
 
@@ -166,7 +166,7 @@ void OptixRender::render()
 		return;
 	}
 
-	pbo2Texture(output_buffer);
+	pbo2Texture();
 }
 
 void OptixRender::reshape(unsigned int width, unsigned int height) 
@@ -282,26 +282,24 @@ void OptixRender::addTextureSampler(optix::TextureSampler sampler, unsigned int 
 	context[sampler_name.c_str()]->setTextureSampler( sampler );
 }
 
-void OptixRender::pbo2Texture(optix::Buffer buffer)
+void OptixRender::pbo2Texture()
 {
 	tex->bind();
-	
-	unsigned int vboId = buffer->getGLBOId();
+	g_buffer_pbo->bind();
 
-    // send pbo to texture
-    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, vboId);
-
-    RTsize elementSize = output_buffer->getElementSize();
+    RTsize elementSize = g_buffer->getElementSize();
     if      ((elementSize % 8) == 0) glPixelStorei(GL_UNPACK_ALIGNMENT, 8);
     else if ((elementSize % 4) == 0) glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
     else if ((elementSize % 2) == 0) glPixelStorei(GL_UNPACK_ALIGNMENT, 2);
     else                             glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
 	RTsize buffer_width_rts, buffer_height_rts;
-	buffer->getSize( buffer_width_rts, buffer_height_rts );
+	g_buffer->getSize( buffer_width_rts, buffer_height_rts );
 	int buffer_width  = static_cast<int>(buffer_width_rts);
 	int buffer_height = static_cast<int>(buffer_height_rts);
-	RTformat buffer_format = buffer->getFormat();
+	RTformat buffer_format = g_buffer->getFormat();
+
+	//TODO: Change this to respect the 3 textures of the g_buffer, and offset the glTexImage2D lookup from the PBO correctly..
 
     if(buffer_format == RT_FORMAT_UNSIGNED_BYTE4) {
       glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, buffer_width, buffer_height, 0, GL_BGRA, GL_UNSIGNED_BYTE, 0);
@@ -313,5 +311,5 @@ void OptixRender::pbo2Texture(optix::Buffer buffer)
       assert(0 && "Unknown buffer format");
     }
 
-    glBindBuffer( GL_PIXEL_UNPACK_BUFFER, 0 );
+    g_buffer_pbo->unbind();
 }
