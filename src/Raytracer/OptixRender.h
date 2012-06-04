@@ -26,7 +26,7 @@ namespace Raytracer
 
 		void reshape(unsigned int width, unsigned int height);
 
-		Render::Tex2DPtr getRenderTexture() const { return tex; }
+		Render::Tex2DPtr getRenderTexture() const { return diffuse_tex; }
 
 	private:
         Render::GBuffer_PassPtr g_buffer_pass;
@@ -38,7 +38,7 @@ namespace Raytracer
         optix::Material material;
         std::string baseDir;
 
-		Render::Tex2DPtr tex;
+		Render::Tex2DPtr diffuse_tex;
 
     private:
 		optix::Context minimalCreateContext();

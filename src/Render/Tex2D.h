@@ -35,6 +35,7 @@ namespace Render
 
 		void init(const T2DTexParams &tex_params);
 		void update(const T2DTexParams &tex_params);
+		void update(void *data, bool update_client_data = false);
 		void reset();
 
 		void bind();
@@ -52,6 +53,7 @@ namespace Render
 		unsigned char *getData() const { return data; }
 
 		//unsigned char *downloadData();
+		void download(bool to_client);
 
 	private:
 		unsigned int handle;

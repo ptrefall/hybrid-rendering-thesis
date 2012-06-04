@@ -41,7 +41,7 @@ void Tex2D::init(const T2DTexParams &tex_params)
 	glGenTextures(1, &handle);
 	bind();
 	glTexImage2D(GL_TEXTURE_2D, 0, internal_format, w, h, 0, format, type, data);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap_mode);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap_mode);
@@ -63,30 +63,32 @@ void Tex2D::update(const T2DTexParams &tex_params)
 	if(handle == 0)
 	{
 		glGenTextures(1, &handle);
-        error = glGetError();
 		bind();
-        error = glGetError();
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_BGRA, type, nullptr);
-        error = glGetError();
 	}
 
     if(data)
     {
 	    bind();
-        error = glGetError();
 	    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, w, h, GL_BGRA, type, data);
-        error = glGetError();
-	    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        error = glGetError();
+	    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        error = glGetError();
 	    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap_mode);
-        error = glGetError();
 	    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap_mode);
-        error = glGetError();
 	    glGenerateMipmap(GL_TEXTURE_2D);
-        error = glGetError();
     }
+}
+
+void Tex2D::update(void *data, bool update_client_data)
+{
+	if(handle == 0)
+		return;
+
+	bind();
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, w, h, format, type, data);
+
+	if(update_client_data)
+		memcpy(this->data, data, bpp * w * h);
 }
 
 void Tex2D::reset()
@@ -112,3 +114,14 @@ void Tex2D::unbind()
 	glGetTexImage(GL_TEXTURE_2D, 0, internal_format, type, new_data);
 	return new_data;
 }*/
+
+void Tex2D::download(bool to_client)
+{
+	if(to_client)
+	{
+	}
+	else
+	{
+		glGetTexImage(GL_TEXTURE_2D, 0, internal_format, type, 0);
+	}
+}

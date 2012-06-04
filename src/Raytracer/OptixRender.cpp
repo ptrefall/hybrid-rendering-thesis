@@ -18,11 +18,11 @@ OptixRender::OptixRender(const Render::GBuffer_PassPtr &g_buffer_pass, unsigned 
 	: g_buffer_pass(g_buffer_pass), width(width), height(height), baseDir(baseDir)
 {
     GLenum error = glGetError();
-	tex = std::make_shared<Render::Tex2D>();
+	diffuse_tex = std::make_shared<Render::Tex2D>();
     error = glGetError();
-	Render::T2DTexParams params((unsigned int)GL_BGRA, (unsigned int)GL_BGRA, (unsigned int)GL_UNSIGNED_BYTE, 4, (unsigned int)width, (unsigned int)height, (unsigned int)GL_CLAMP_TO_EDGE, (unsigned char*)nullptr);
+	Render::T2DTexParams params((unsigned int)GL_RGBA8, (unsigned int)GL_RGBA8, (unsigned int)GL_UNSIGNED_BYTE, 4, (unsigned int)width, (unsigned int)height, (unsigned int)GL_CLAMP_TO_EDGE, (unsigned char*)nullptr);
     error = glGetError();
-	tex->update(params);
+	diffuse_tex->update(params);
     error = glGetError();
 
     context = minimalCreateContext();
@@ -67,7 +67,6 @@ optix::Buffer OptixRender::createGBuffer()
 	auto raster_diffuse = raster_fbo->getRenderTexture(0);
 	auto raster_position = raster_fbo->getRenderTexture(1);
 	auto raster_normal = raster_fbo->getRenderTexture(2);
-	raster_diffuse->bind();
 
 	/*
 		Allocate first the memory for the gl buffer, then attach it to OptiX.
@@ -75,6 +74,7 @@ optix::Buffer OptixRender::createGBuffer()
 	//TODO: Size of PBO should be equal to number of render textures in gbuffer_pass' fbo, and also equal to their sizes and types...
 	g_buffer_pbo = std::make_shared<Render::PBO>(element_size * width * height, GL_STREAM_DRAW, true);
 	g_buffer_pbo->unbind();
+	//g_buffer_pbo->bufferFromTextureOnGPU(raster_diffuse, 0, GL_STREAM_DRAW);
 
 	buffer = context->createBufferFromGLBO(RT_BUFFER_OUTPUT, g_buffer_pbo->getHandle());
 	buffer->setFormat(format);
@@ -160,8 +160,17 @@ void OptixRender::render()
     context["V"]->set3fv( glm::value_ptr(V) );
     context["W"]->set3fv( glm::value_ptr(W) );
 
+	//auto gl_id_handle = g_buffer->getGLBOId();
+	static bool glbuffer_registered = true;
 	try {
+		if(!glbuffer_registered)
+		{
+			g_buffer->registerGLBuffer();
+			glbuffer_registered = true;
+		}
 		context->launch(0, width,height);
+		g_buffer->unregisterGLBuffer();
+		glbuffer_registered = false;
 	} catch (optix::Exception& e) {
 		std::cout << e.getErrorString();
 		return;
@@ -286,31 +295,18 @@ void OptixRender::addTextureSampler(optix::TextureSampler sampler, unsigned int 
 void OptixRender::pbo2Texture()
 {
 	g_buffer_pbo->bind();
-	tex->bind();
 
     RTsize elementSize = g_buffer->getElementSize();
-    if      ((elementSize % 8) == 0) glPixelStorei(GL_UNPACK_ALIGNMENT, 8);
-    else if ((elementSize % 4) == 0) glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-    else if ((elementSize % 2) == 0) glPixelStorei(GL_UNPACK_ALIGNMENT, 2);
-    else                             glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
-	RTsize buffer_width_rts, buffer_height_rts;
-	g_buffer->getSize( buffer_width_rts, buffer_height_rts );
-	int buffer_width  = static_cast<int>(buffer_width_rts);
-	int buffer_height = static_cast<int>(buffer_height_rts);
-	RTformat buffer_format = g_buffer->getFormat();
+    if      ((elementSize % 8) == 0) g_buffer_pbo->align(8);
+    else if ((elementSize % 4) == 0) g_buffer_pbo->align(4);
+    else if ((elementSize % 2) == 0) g_buffer_pbo->align(2);
+    else                             g_buffer_pbo->align(1);
 
 	//TODO: Change this to respect the 3 textures of the g_buffer, and offset the glTexImage2D lookup from the PBO correctly..
-
-    if(buffer_format == RT_FORMAT_UNSIGNED_BYTE4) {
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, buffer_width, buffer_height, 0, GL_BGRA, GL_UNSIGNED_BYTE, 0);
-    } else if(buffer_format == RT_FORMAT_FLOAT4) {
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, buffer_width, buffer_height, 0, GL_RGBA, GL_FLOAT, 0);
-    } else if(buffer_format == RT_FORMAT_FLOAT3) {
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, buffer_width, buffer_height, 0, GL_RGB, GL_FLOAT, 0);
-    } else {
-      assert(0 && "Unknown buffer format");
-    }
+	unsigned int diffuse_offset = 0;
+    unsigned int position_offset =	g_buffer_pbo->copyToTextureOnGPU(diffuse_tex, diffuse_offset);
+	//unsigned int normal_offset =	g_buffer_pbo->copyToTextureOnGPU(position_tex, position_offset);
+	//								g_buffer_pbo->copyToTextureOnGPU(normal_tex, normal_offset);
 
     g_buffer_pbo->unbind();
-}
+} 
