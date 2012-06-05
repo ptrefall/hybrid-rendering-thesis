@@ -79,5 +79,9 @@ include_directories(
 	${CMAKE_SOURCE_DIR}/depends/include/AssImp/contrib/cppunit-1.12.1/include/
 )
 
+set(CUDA_INCLUDE_PATH "${CMAKE_SOURCE_DIR}/depends/include/")
+set(OPTIX_INCLUDE_PATH "${CMAKE_SOURCE_DIR}/depends/include/optix")
+
 add_subdirectory(src)
+add_subdirectory(glfw_optix)
 
