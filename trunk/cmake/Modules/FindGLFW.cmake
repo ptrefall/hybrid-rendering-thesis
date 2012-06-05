@@ -1,0 +1,12 @@
+
+SET(GLFW_ROOT_PATH ${CMAKE_SOURCE_DIR}/depends/ )
+
+
+FIND_PATH( GLFW_INCLUDE_DIR NAMES GL/glfw3.h 
+		PATHS ${GLFW_ROOT_PATH}/include
+	)
+
+FIND_LIBRARY( GLFW_LIB NAMES glfw
+		PATHS  ${CMAKE_SOURCE_DIR}/depends/lib
+	) 
+
