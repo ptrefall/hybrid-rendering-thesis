@@ -24,6 +24,8 @@
 const static int TEX_WIDTH = 1024;
 const static int TEX_HEIGHT =768;
 
+GLuint vbo = 0;
+
 void sutilReportError(const char* message)
 {
   fprintf( stderr, "OptiX Error: %s\n", message );
@@ -125,95 +127,55 @@ public:
 			"uniform sampler2D tex0;\n"
 			"void main()\n"
 			"{\n"
-			"out_FragColor = vec4(1.0) * texture2D(tex0,t.xy);\n"
+			"out_FragColor = vec4(1.0) * texture(tex0,t.xy);\n"
 			//"out_FragColor = vec4(t.x,t.y,1.0,1.0);\n"
 			"}\n";
 		screen_quad_shader = std::unique_ptr<Render::Shader>( new Render::Shader(vertex_src, "", fragment_src ) );
 
+		Render::T2DTexParams params( GL_RGBA8, GL_BGRA, GL_UNSIGNED_BYTE, 4, width, height, GL_CLAMP_TO_EDGE, (unsigned char*) nullptr ); 
+		outputTex.init( params );
 	}
 
-	void map( RTbuffer imageBuffer ) 
+	void pbo2Tex(RTbuffer buffer)
 	{
-		RTresult result;
-		
-		GLsizei width, height;
-		RTsize buffer_width, buffer_height;
+		outputTex.bind();
+
+		int buffer_width = width;
+		int buffer_height = height;
+
+		RTcontext context;
+		rtBufferGetContext(buffer, &context);
+
+		GLuint vboId = 0;
+		RT_CHECK_ERROR( rtBufferGetGLBOId(buffer,&vboId) );
+		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, vboId );
+
+		RTsize elementSize = 0;
+		RT_CHECK_ERROR( rtBufferGetElementSize(buffer, &elementSize) );
+
 		RTformat buffer_format;
+		RT_CHECK_ERROR( rtBufferGetFormat(buffer, &buffer_format) );
+		
+		if      ((elementSize % 8) == 0) glPixelStorei(GL_UNPACK_ALIGNMENT, 8);
+		else if ((elementSize % 4) == 0) glPixelStorei(GL_UNPACK_ALIGNMENT, 4); 
+		else if ((elementSize % 2) == 0) glPixelStorei(GL_UNPACK_ALIGNMENT, 2);
+		else                             glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-		result = rtBufferMap(imageBuffer, &imageData);
-		if (result != RT_SUCCESS) {
-			// Get error from context
-			RTcontext context;
-			const char* error;
-			rtBufferGetContext(imageBuffer, &context);
-			rtContextGetErrorString(context, result, &error);
-			fprintf(stderr, "Error mapping image buffer: %s\n", error);
-			exit(2);
+		if(buffer_format == RT_FORMAT_UNSIGNED_BYTE4) {
+		  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, buffer_width, buffer_height, 0, GL_BGRA, GL_UNSIGNED_BYTE, 0);
+		} else if(buffer_format == RT_FORMAT_FLOAT4) {
+		  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, buffer_width, buffer_height, 0, GL_RGBA, GL_FLOAT, 0);
+		} else if(buffer_format == RT_FORMAT_FLOAT3) {
+		  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, buffer_width, buffer_height, 0, GL_RGB, GL_FLOAT, 0);
+		} else {
+		  throw "Unknown buffer format";
 		}
-		if (0 == imageData) {
-			fprintf(stderr, "data in buffer is null.\n");
-			exit(2);
-		}
 
-		result = rtBufferGetSize2D(imageBuffer, &buffer_width, &buffer_height);
-		if (result != RT_SUCCESS) {
-			// Get error from context
-			RTcontext context;
-			const char* error;
-			rtBufferGetContext(imageBuffer, &context);
-			rtContextGetErrorString(context, result, &error);
-			fprintf(stderr, "Error getting dimensions of buffer: %s\n", error);
-			exit(2);
-		}
-		width  = static_cast<GLsizei>(buffer_width);
-		height = static_cast<GLsizei>(buffer_height);
-
-		result = rtBufferGetFormat(imageBuffer, &buffer_format);
-		gl_data_type = GL_FALSE;
-		gl_format = GL_FALSE;
-		switch (buffer_format) {
-		case RT_FORMAT_UNSIGNED_BYTE4:
-			gl_data_type = GL_UNSIGNED_BYTE;
-			gl_format    = GL_BGRA;
-			break;
-
-		case RT_FORMAT_FLOAT3:
-			gl_data_type = GL_FLOAT;
-			gl_format    = GL_RGB;
-			break;
-
-		case RT_FORMAT_FLOAT4:
-			gl_data_type = GL_FLOAT;
-			gl_format    = GL_RGBA; // expected
-			break;
-
-		default:
-			fprintf(stderr, "Unrecognized buffer data type or format.\n");
-			exit(2);
-			break;
-		}
-		Render::T2DTexParams params( GL_RGBA32F, gl_format, gl_data_type, 4, width, height, GL_CLAMP_TO_EDGE, (unsigned char*)imageData ); 
-		outputTex.update( params );
-	}
-
-	void unmap( RTbuffer imageBuffer )
-	{
-		// Now unmap the buffer
-		RTresult result = rtBufferUnmap(imageBuffer);
-		if (result != RT_SUCCESS) {
-			// Get error from context
-			RTcontext context;
-			const char* error;
-			rtBufferGetContext(imageBuffer, &context);
-			rtContextGetErrorString(context, result, &error);
-			fprintf(stderr, "Error unmapping image buffer: %s\n", error);
-			exit(2);
-		}
+		glBindBuffer( GL_PIXEL_UNPACK_BUFFER, 0 );
 	}
 
 	void display(RTbuffer imageBuffer, RTvariable fTime)
 	{
-		//imageBuffer = buffer;
 		RTcontext context;
 		rtBufferGetContext(imageBuffer, &context);
 
@@ -232,13 +194,12 @@ public:
 			
 			RT_CHECK_ERROR( rtContextLaunch2D( context, 0 /* entry point */, width, height ) );
 
-			map(imageBuffer);
+			glActiveTexture(GL_TEXTURE0 + 0);
+			pbo2Tex(imageBuffer);
 			//glClear(GL_COLOR_BUFFER_BIT);
 			// display imagebuffer on a gl quad rendered using a vanilla vs, and a texture samplin' fs.
-			
-			glActiveTexture(GL_TEXTURE0 + 0);
+				
 			outputTex.bind();
-
 			screen_quad_shader->bind();
 			int loc_tex0 = glGetUniformLocation( screen_quad_shader->getFS() , "tex0");
 			glProgramUniform1i(screen_quad_shader->getFS(), loc_tex0, 0);
@@ -246,7 +207,6 @@ public:
 			screenQuad->render(0);
 
 			glfwSwapBuffers();
-			unmap(imageBuffer);
 
 			glfwPollEvents();
 			if (!glfwIsWindow(wnd) )
@@ -301,16 +261,19 @@ int main(int argc, char* argv[])
 	RT_CHECK_ERROR( rtContextSetRayGenerationProgram( context, 0, ray_gen_program ) );
 
 	RTbuffer  buffer;
-	RT_CHECK_ERROR( rtBufferCreate( context, RT_BUFFER_OUTPUT, &buffer ) );
-    RT_CHECK_ERROR( rtBufferSetFormat( buffer, RT_FORMAT_FLOAT4 ) );
+    glGenBuffers(1, &vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	int element_size = 4 * sizeof(char);
+	glBufferData(GL_ARRAY_BUFFER, element_size * width * height, nullptr, GL_STREAM_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+	
+    RT_CHECK_ERROR( rtBufferCreateFromGLBO(context, RT_BUFFER_OUTPUT, vbo, &buffer) );
+	RT_CHECK_ERROR( rtBufferSetFormat( buffer, RT_FORMAT_UNSIGNED_BYTE4 ) );
     RT_CHECK_ERROR( rtBufferSetSize2D( buffer, width, height ) );
+	
 	RTvariable out_buffer;
     RT_CHECK_ERROR( rtContextDeclareVariable( context, "out_buffer", &out_buffer ) );
     RT_CHECK_ERROR( rtVariableSetObject( out_buffer, buffer ) );
-
-	//rtCreateBufferFromGLBO(
-	//rtBufferCreateFromGLBO(context,RT_BUFFER_OUTPUT,
-
 	myGLContext.display( buffer, fTime );
 
     /* Clean up */
