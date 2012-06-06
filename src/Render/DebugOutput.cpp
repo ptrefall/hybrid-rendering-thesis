@@ -12,11 +12,11 @@ DebugOutput::DebugOutput()
 	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB);
 	glDebugMessageCallbackARB(&DebugOutput::DebugOutputToConsole, nullptr);
 
-	GLuint MessageId(4);
+	/*GLuint MessageId(4);
 	glDebugMessageControlARB(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_FALSE);
 	glDebugMessageControlARB(GL_DEBUG_SOURCE_APPLICATION_ARB, GL_DEBUG_TYPE_OTHER_ARB, GL_DONT_CARE, 0, NULL, GL_TRUE);
 	glDebugMessageControlARB(GL_DEBUG_SOURCE_APPLICATION_ARB, GL_DEBUG_TYPE_OTHER_ARB, GL_DONT_CARE, 1, &MessageId, GL_FALSE);
-	/*std::string Message1("This is a test");
+	std::string Message1("This is a test");
 	glDebugMessageInsertARB(
 		GL_DEBUG_SOURCE_APPLICATION_ARB, 
 		GL_DEBUG_TYPE_OTHER_ARB, 1, 
