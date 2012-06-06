@@ -58,13 +58,32 @@ unsigned int PBO::copyToTextureOnGPU(const Tex2DPtr &tex, unsigned int offset)
 	if(!bound)
 		bind(true);
 
-	tex->bind();
-	bind(true);
+	auto error = glGetError();
+	if(error != GL_NO_ERROR)
+		int hello = 0;
 
-	tex->update((GLubyte*)nullptr + offset);
+	tex->bind();
+	error = glGetError();
+	if(error != GL_NO_ERROR)
+		int hello = 0;
+
+	tex->update((GLubyte*)nullptr + offset, false);
+
+	error = glGetError();
+	if(error != GL_NO_ERROR)
+		int hello = 0;
 
 	tex->unbind();
+
+	error = glGetError();
+	if(error != GL_NO_ERROR)
+		int hello = 0;
+
 	unbind(true);
+
+	error = glGetError();
+	if(error != GL_NO_ERROR)
+		int hello = 0;
 
 	return offset + (tex->getBpp() * tex->getWidth() * tex->getHeight() * sizeof(unsigned char));
 }

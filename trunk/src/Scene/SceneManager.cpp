@@ -44,19 +44,43 @@ SceneManager::~SceneManager()
 
 void SceneManager::render()
 {
+	auto error = glGetError();
+	if(error != GL_NO_ERROR)
+		int hello = 0;
+
 	g_buffer_pass->begin();
 	{
+		error = glGetError();
+		if(error != GL_NO_ERROR)
+			int hello = 0;
 		glEnable(GL_DEPTH_TEST);
 		for(auto it = begin(scene); it!=end(scene); ++it )
 			(*it)->render(g_buffer_pass->getShader());
 		glDisable(GL_DEPTH_TEST);
+		error = glGetError();
+		if(error != GL_NO_ERROR)
+			int hello = 0;
 	} g_buffer_pass->end();
+
+	error = glGetError();
+	if(error != GL_NO_ERROR)
+		int hello = 0;
 
 	raytrace_pass->begin();
 	{
+		error = glGetError();
+		if(error != GL_NO_ERROR)
+			int hello = 0;
 		//raytrace_pass->update(g_buffer_pass->getRenderTextures(), scene, lights);
 		raytrace_pass->render();
+		error = glGetError();
+		if(error != GL_NO_ERROR)
+			int hello = 0;
 	} raytrace_pass->end();
+
+	error = glGetError();
+	if(error != GL_NO_ERROR)
+		int hello = 0;
 
 	/*light_pass->begin();
 	{
@@ -78,6 +102,10 @@ void SceneManager::render()
 		bindLights(final_pass->getShader());
 		final_pass->render();
 	} final_pass->end();
+
+	error = glGetError();
+	if(error != GL_NO_ERROR)
+		int hello = 0;
 }
 
 void SceneManager::bindLights(const Render::ShaderPtr &active_program)

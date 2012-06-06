@@ -84,11 +84,25 @@ void Tex2D::update(void *data, bool update_client_data)
 	if(handle == 0)
 		return;
 
-	bind();
+	//bind();
+
+	auto error = glGetError();
+	if(error != GL_NO_ERROR)
+		int hello = 0;
+
 	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, w, h, format, type, data);
+	//glTexImage2D(GL_TEXTURE_2D, 0, internal_format, w,h, 0, format, type, data);
+
+	error = glGetError();
+	if(error != GL_NO_ERROR)
+		int hello = 0;
 
 	if(update_client_data)
 		memcpy(this->data, data, bpp * w * h);
+
+	error = glGetError();
+	if(error != GL_NO_ERROR)
+		int hello = 0;
 }
 
 void Tex2D::reset()
