@@ -1,13 +1,10 @@
-
-//#include <GL3\gl3.h>
-//#include <GL3\gl3w.h>
-
 #include <string>
 #include <iostream>
 
 #define GLFW_NO_GLU
+#define GLFW_INCLUDE_GL3
 #include <GL/glfw3.h>
-#include <GL/gl.h>
+#include <GL3/gl3w.h>
 
 #include <Optix/optix.h>
 #include <Optix/optix_gl_interop.h>
@@ -16,6 +13,12 @@
 #include <string.h>
 
 #include <math.h>
+#include <memory>
+
+#include <Render/Tex2D.h>
+#include <Render/Shader.h>
+#include <Scene/Quad.h>
+
 
 // screen, buffer and tex all same size
 const static int TEX_WIDTH = 512;
@@ -53,50 +56,6 @@ void sutilHandleError(RTcontext context, RTresult code, const char* file, int li
       sutilHandleError( context, code, __FILE__, __LINE__ );       \
   } while(0)
 
-GLuint getTextureHandle()
-{
-  GLuint texId = 0;
-  glGenTextures( 1, &texId );
-  glBindTexture( GL_TEXTURE_2D, texId );
-  GLfloat img[TEX_HEIGHT][TEX_WIDTH][4];
-  
-  //Create a simple checkerboard texture (from OpenGL Programming Guide)
-  for( int j = 0; j < TEX_WIDTH; j++ ) {
-    for( int i = 0; i < TEX_HEIGHT; i++ ) {
-      GLfloat c = ( ( ( i & 0x8 ) == 0 ) ^ ( ( j & 0x8 ) == 0 ) ) * 1.0f;
-      img[ i ][ j ][ 0 ] = 1.0f;
-      img[ i ][ j ][ 1 ] = c;
-      img[ i ][ j ][ 2 ] = c;
-      img[ i ][ j ][ 3 ] = 1.0f;
-
-	  float sphx = TEX_WIDTH * .5f;
-	  float sphy = TEX_HEIGHT * .5f;
-	  float dx = (j-sphx);
-	  float dy = (i-sphy);
-	  float dist = sqrt(dx*dx + dy*dy);
-	  if ( dist < 50.f ) {
-		img[ i ][ j ][ 0 ] = 1.0f;
-		img[ i ][ j ][ 1 ] = 1.0f;
-		img[ i ][ j ][ 2 ] = 1.0f;
-		img[ i ][ j ][ 3 ] = 1.0f;
-	  }
-    }
-  }
-
-  glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
-  glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
-  glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
-  glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
-  glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, TEX_WIDTH, TEX_HEIGHT, 0, GL_RGBA, GL_FLOAT, img );
-
-  glBindTexture( GL_TEXTURE_2D, 0 );
-
-  if( glGetError( ) != 0 )
-    throw;
-
-  return texId;
-}
-
 class GLContext
 {
 public:
@@ -122,6 +81,17 @@ public:
         }
 
 		glfwMakeContextCurrent(wnd);
+
+		//////////////////////////////////////////
+		// GL3W INITIALIZING
+		//////////////////////////////////////////
+		GLenum gl3wInitErr = gl3wInit();
+		if(gl3wInitErr)
+			throw std::runtime_error("Failed to initialize OpenGL!");
+		if(gl3wIsSupported(3, 3) == false)
+			throw std::runtime_error("Opengl 3.3 is not supported!");
+		wgl3wSwapIntervalEXT(0);
+
 		initState();
 	}
 
@@ -133,13 +103,33 @@ public:
 
 	void initState()
 	{
-		// Init state
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-		glOrtho(0.f, (float)width, (float)height, 0.f, -1.f, +1.f);
-		glMatrixMode(GL_MODELVIEW);
-		glLoadIdentity();
-		glTranslatef(0.375, 0.375, 0.0);
+		screenQuad = std::unique_ptr<Scene::Quad>( new Scene::Quad(0,0) );
+
+		std::string vertex_src = \
+			"#version 330\n"
+			"layout(location = 1) in vec2 position;\n"
+			"layout(location = 0) in vec2 texcoord;\n"
+			"out vec2 t;\n"
+			"void main ()\n"
+			"{\n"
+			"gl_Position = vec4( position.x, position.y, 0.0, 1.0);\n"
+			"vec2 madd = vec2(0.5,0.5);\n"
+			"vec2 pos_norm = position; // vertices go from 0,0 to 1,1\n"
+			"t = (pos_norm * madd) + madd; // Scale to 0-1 range\n"
+			"}\n";
+		
+		std::string fragment_src = \
+			"#version 330\n"
+			"in vec2 t;\n"
+			"layout(location = 0, index = 0) out vec4 out_FragColor;\n"
+			"uniform sampler2D tex0;\n"
+			"void main()\n"
+			"{\n"
+			"out_FragColor = vec4(1.0) * texture2D(tex0,t.xy);\n"
+			//"out_FragColor = vec4(t.x,t.y,1.0,1.0);\n"
+			"}\n";
+		screen_quad_shader = std::unique_ptr<Render::Shader>( new Render::Shader(vertex_src, "", fragment_src ) );
+
 	}
 
 	void map( RTbuffer imageBuffer ) 
@@ -184,12 +174,7 @@ public:
 		switch (buffer_format) {
 		case RT_FORMAT_UNSIGNED_BYTE4:
 			gl_data_type = GL_UNSIGNED_BYTE;
-			//gl_format    = GL_BGRA; // TODO
-			break;
-
-		case RT_FORMAT_FLOAT:
-			gl_data_type = GL_FLOAT;
-			gl_format    = GL_LUMINANCE;
+			gl_format    = GL_BGRA;
 			break;
 
 		case RT_FORMAT_FLOAT3:
@@ -199,7 +184,7 @@ public:
 
 		case RT_FORMAT_FLOAT4:
 			gl_data_type = GL_FLOAT;
-			gl_format    = GL_RGBA;
+			gl_format    = GL_RGBA; // expected
 			break;
 
 		default:
@@ -207,6 +192,8 @@ public:
 			exit(2);
 			break;
 		}
+		Render::T2DTexParams params( GL_RGBA32F, gl_format, gl_data_type, 4, width, height, GL_CLAMP_TO_EDGE, (unsigned char*)imageData ); 
+		outputTex.update( params );
 	}
 
 	void unmap( RTbuffer imageBuffer )
@@ -224,7 +211,6 @@ public:
 		}
 	}
 
-
 	void display(RTbuffer imageBuffer, RTvariable fTime)
 	{
 		//imageBuffer = buffer;
@@ -234,7 +220,6 @@ public:
 		bool running = true;
 		while (running)
 		{
-
 			float time =(float)glfwGetTime() ;
 			char titleBuf[512];
 			sprintf(titleBuf, "t = %.2f", time );
@@ -247,7 +232,17 @@ public:
 
 			map(imageBuffer);
 			//glClear(GL_COLOR_BUFFER_BIT);
-			glDrawPixels(width, height, gl_format, gl_data_type, imageData);
+			// display imagebuffer on a gl quad rendered using a vanilla vs, and a texture samplin' fs.
+			
+			glActiveTexture(GL_TEXTURE0 + 0);
+			outputTex.bind();
+
+			screen_quad_shader->bind();
+			int loc_tex0 = glGetUniformLocation( screen_quad_shader->getFS() , "tex0");
+			glProgramUniform1i(screen_quad_shader->getFS(), loc_tex0, 0);
+			
+			screenQuad->render(0);
+
 			glfwSwapBuffers();
 			unmap(imageBuffer);
 
@@ -263,6 +258,10 @@ public:
 		GLvoid* imageData;
 		GLenum gl_data_type;
 		GLenum gl_format;
+		Render::Tex2D outputTex;
+		std::unique_ptr<Scene::Quad> screenQuad;
+		std::unique_ptr<Render::Shader> screen_quad_shader;
+		
 };
 
 int main(int argc, char* argv[])
@@ -288,29 +287,7 @@ int main(int argc, char* argv[])
 	RTprogram ray_gen_program;
 	std::string path_to_ptx = optix_dir + "\\glfw_optix.cu.ptx";
     RT_CHECK_ERROR( rtProgramCreateFromPTXFile( context, path_to_ptx.c_str(), "sampleTex", &ray_gen_program ) );
-	
-  // Create a texture sampler with the OpenGL texture as input.
-	
-    RTtexturesampler textureSampler;
-    RT_CHECK_ERROR( rtTextureSamplerCreateFromGLImage(context, getTextureHandle(), RT_TARGET_GL_TEXTURE_2D, &textureSampler));
-	
-	// RT_WRAP_CLAMP_TO_EDGE RT_WRAP_REPEAT
 
-	RT_CHECK_ERROR( rtTextureSamplerSetWrapMode(textureSampler, 0, RT_WRAP_CLAMP_TO_EDGE) );
-	RT_CHECK_ERROR( rtTextureSamplerSetWrapMode(textureSampler, 1, RT_WRAP_CLAMP_TO_EDGE) );
-	RT_CHECK_ERROR( rtTextureSamplerSetWrapMode(textureSampler, 2, RT_WRAP_CLAMP_TO_EDGE) ) ;
-	//  RT_TEXTURE_INDEX_NORMALIZED_COORDINATES,
-    //RT_TEXTURE_INDEX_ARRAY_INDEX
-	RT_CHECK_ERROR( rtTextureSamplerSetIndexingMode(textureSampler, RT_TEXTURE_INDEX_NORMALIZED_COORDINATES ) );
-	RT_CHECK_ERROR( rtTextureSamplerSetReadMode(textureSampler, RT_TEXTURE_READ_NORMALIZED_FLOAT ) );
-	RT_CHECK_ERROR( rtTextureSamplerSetMaxAnisotropy(textureSampler, 1.0f ) );
-	RT_CHECK_ERROR( rtTextureSamplerSetFilteringModes(textureSampler, RT_FILTER_LINEAR, RT_FILTER_LINEAR, RT_FILTER_NONE ) );
-	
-	RTvariable tex;
-	//RT_CHECK_ERROR( rtProgramDeclareVariable( ray_gen_program, "tex", &tex ) );
-	RT_CHECK_ERROR( rtContextDeclareVariable( context, "tex", &tex ) );
-	RT_CHECK_ERROR( rtVariableSetObject( tex, textureSampler ) );
-	
 	RTvariable launch_dim;
 	RT_CHECK_ERROR( rtProgramDeclareVariable( ray_gen_program, "launch_dim", &launch_dim ) );
 	RT_CHECK_ERROR( rtVariableSet2ui( launch_dim, width, height ) );
@@ -327,7 +304,10 @@ int main(int argc, char* argv[])
     RT_CHECK_ERROR( rtBufferSetSize2D( buffer, width, height ) );
 	RTvariable out_buffer;
     RT_CHECK_ERROR( rtContextDeclareVariable( context, "out_buffer", &out_buffer ) );
-    RT_CHECK_ERROR( rtVariableSetObject( out_buffer, buffer ) );    
+    RT_CHECK_ERROR( rtVariableSetObject( out_buffer, buffer ) );
+
+	//rtCreateBufferFromGLBO(
+	//rtBufferCreateFromGLBO(context,RT_BUFFER_OUTPUT,
 
 	myGLContext.display( buffer, fTime );
 

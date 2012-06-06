@@ -2,6 +2,8 @@
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN 1
+#pragma warning(disable:4055) // void* to PFNGL casts
+#pragma warning(disable:4152)
 #include <windows.h>
 
 static HMODULE libgl;
