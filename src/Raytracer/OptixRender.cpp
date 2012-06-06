@@ -17,13 +17,9 @@ using namespace optix;
 OptixRender::OptixRender(const Render::GBuffer_PassPtr &g_buffer_pass, unsigned int width, unsigned int height, const std::string& baseDir)
 	: g_buffer_pass(g_buffer_pass), width(width), height(height), baseDir(baseDir)
 {
-    GLenum error = glGetError();
 	diffuse_tex = std::make_shared<Render::Tex2D>();
-    error = glGetError();
 	Render::T2DTexParams params((unsigned int)GL_RGBA8, (unsigned int)GL_RGBA8, (unsigned int)GL_UNSIGNED_BYTE, 4, (unsigned int)width, (unsigned int)height, (unsigned int)GL_CLAMP_TO_EDGE, (unsigned char*)nullptr);
-    error = glGetError();
 	diffuse_tex->update(params);
-    error = glGetError();
 
     context = minimalCreateContext();
 
@@ -155,49 +151,28 @@ void OptixRender::render()
     //CalculateCameraVariables( hfov, aspect_ratio, U, V, W );
     CalculateCameraVariables( pos, pos+camera->getLookDirection(), camera->getUpDirection(), hfov, aspect_ratio, U, V, W );
 
-	auto error = glGetError();
-	if(error != GL_NO_ERROR)
-		int hello = 0;
-
     context["eye"]->set3fv( glm::value_ptr(pos) );
     context["U"]->set3fv( glm::value_ptr(U) );
     context["V"]->set3fv( glm::value_ptr(V) );
     context["W"]->set3fv( glm::value_ptr(W) );
 
 	//auto gl_id_handle = g_buffer->getGLBOId();
-	//static bool glbuffer_registered = true;
+	static bool glbuffer_registered = true;
 	try {
-		/*if(!glbuffer_registered)
+		if(!glbuffer_registered)
 		{
 			g_buffer->registerGLBuffer();
 			glbuffer_registered = true;
-			error = glGetError();
-			if(error != GL_NO_ERROR)
-				int hello = 0;
-		}*/
+		}
 		context->launch(0, width,height);
-		error = glGetError();
-		if(error != GL_NO_ERROR)
-			int hello = 0;
-		/*g_buffer->unregisterGLBuffer();
-		error = glGetError();
-		if(error != GL_NO_ERROR)
-			int hello = 0;
-		glbuffer_registered = false;*/
+		g_buffer->unregisterGLBuffer();
+		glbuffer_registered = false;
 	} catch (optix::Exception& e) {
 		std::cout << e.getErrorString();
 		return;
 	}
 
-	error = glGetError();
-	if(error != GL_NO_ERROR)
-		int hello = 0;
-
 	pbo2Texture();
-
-	error = glGetError();
-	if(error != GL_NO_ERROR)
-		int hello = 0;
 }
 
 void OptixRender::reshape(unsigned int width, unsigned int height) 
@@ -317,19 +292,11 @@ void OptixRender::pbo2Texture()
 {
 	g_buffer_pbo->bind();
 
-	auto error = glGetError();
-	if(error != GL_NO_ERROR)
-		int hello = 0;
-
     RTsize elementSize = g_buffer->getElementSize();
     if      ((elementSize % 8) == 0) g_buffer_pbo->align(8);
     else if ((elementSize % 4) == 0) g_buffer_pbo->align(4);
     else if ((elementSize % 2) == 0) g_buffer_pbo->align(2);
     else                             g_buffer_pbo->align(1);
-
-	error = glGetError();
-	if(error != GL_NO_ERROR)
-		int hello = 0;
 
 	//TODO: Change this to respect the 3 textures of the g_buffer, and offset the glTexImage2D lookup from the PBO correctly..
 	unsigned int diffuse_offset = 0;
@@ -337,12 +304,5 @@ void OptixRender::pbo2Texture()
 	//unsigned int normal_offset =	g_buffer_pbo->copyToTextureOnGPU(position_tex, position_offset);
 	//								g_buffer_pbo->copyToTextureOnGPU(normal_tex, normal_offset);
 
-	error = glGetError();
-	if(error != GL_NO_ERROR)
-		int hello = 0;
-
-    g_buffer_pbo->unbind();
-	error = glGetError();
-	if(error != GL_NO_ERROR)
-		int hello = 0;
+    g_buffer_pbo->unbind();;
 } 

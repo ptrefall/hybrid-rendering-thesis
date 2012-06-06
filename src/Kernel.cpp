@@ -140,14 +140,7 @@ void Kernel::render()
 	glClearColor(0.f,0.f,0.f,1.f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
-	auto error = glGetError();
-	if(error != GL_NO_ERROR)
-		int hello = 0;
 	scene->render();
-
-	error = glGetError();
-	if(error != GL_NO_ERROR)
-		int hello = 0;
 }
 
 void Kernel::reshape(int w, int h)
