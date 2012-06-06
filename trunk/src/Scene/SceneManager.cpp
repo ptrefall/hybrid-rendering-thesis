@@ -10,6 +10,7 @@
 #include "../Render/Passes/GBuffer/GBuffer_Pass.h"
 #include "../Render/Passes/Bloom/Bloom_Pass.h"
 #include "../Render/Passes/Raytrace/Raytrace_Pass.h"
+#include "../Render/DebugOutput.h"
 
 #include "../Parser/INIParser.h"
 
@@ -18,6 +19,8 @@ using namespace Scene;
 SceneManager::SceneManager(const File::ShaderLoaderPtr &shader_loader, unsigned int width, unsigned int height, const std::string &resource_dir)
 	: shader_loader(shader_loader), width(width), height(height), resource_dir(resource_dir)
 {
+	debug_output = std::make_shared<Render::DebugOutput>();
+
 	//////////////////////////////////////////
 	// DEFERRED RENDERER INITIALIZING
 	//////////////////////////////////////////

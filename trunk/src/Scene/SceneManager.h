@@ -17,6 +17,7 @@ namespace Render
 	class Final_Pass; typedef std::shared_ptr<Final_Pass> Final_PassPtr;
 	class Bloom_Pass; typedef std::shared_ptr<Bloom_Pass> Bloom_PassPtr;
 	class Raytrace_Pass; typedef std::shared_ptr<Raytrace_Pass> Raytrace_PassPtr;
+	class DebugOutput; typedef std::shared_ptr<DebugOutput> DebugOutputPtr;
 }
 
 namespace Scene
@@ -65,5 +66,7 @@ namespace Scene
 		Render::Raytrace_PassPtr raytrace_pass;
 		Render::Bloom_PassPtr bloom_pass;
 		Render::Final_PassPtr final_pass;
+
+		Render::DebugOutputPtr debug_output;
 	};
 }
