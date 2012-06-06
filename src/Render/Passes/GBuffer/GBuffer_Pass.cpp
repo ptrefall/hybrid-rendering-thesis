@@ -71,8 +71,8 @@ void GBuffer_Pass::end()
 	fbo->unbind();
 	glViewportIndexedf(0,0,0,(float)temp_w,(float)temp_h);
 
-	GLenum buffers[] = { GL_COLOR_ATTACHMENT0 };
-	glDrawBuffers(1, buffers);
+	/*GLenum buffers[] = { GL_COLOR_ATTACHMENT0 };
+	glDrawBuffers(1, buffers);*/
 }
 
 void GBuffer_Pass::bind(unsigned int active_program, unsigned int index_offset)

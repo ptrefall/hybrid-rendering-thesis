@@ -12,7 +12,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <math.h>
+#include <math.h> 
 #include <memory>
 
 #include <Render/Tex2D.h>
@@ -21,8 +21,8 @@
 
 
 // screen, buffer and tex all same size
-const static int TEX_WIDTH = 512;
-const static int TEX_HEIGHT =384;
+const static int TEX_WIDTH = 1024;
+const static int TEX_HEIGHT =768;
 
 void sutilReportError(const char* message)
 {
@@ -217,17 +217,19 @@ public:
 		RTcontext context;
 		rtBufferGetContext(imageBuffer, &context);
 
+		RT_CHECK_ERROR( rtContextValidate( context ) );
+			RT_CHECK_ERROR( rtContextCompile( context ) );
+
 		bool running = true;
 		while (running)
 		{
 			float time =(float)glfwGetTime() ;
-			char titleBuf[512];
+			/*char titleBuf[512];
 			sprintf(titleBuf, "t = %.2f", time );
-			glfwSetWindowTitle(wnd, titleBuf );
+			glfwSetWindowTitle(wnd, titleBuf );*/
 			RT_CHECK_ERROR( rtVariableSet1f( fTime, time ) );
 
-			RT_CHECK_ERROR( rtContextValidate( context ) );
-			RT_CHECK_ERROR( rtContextCompile( context ) );
+			
 			RT_CHECK_ERROR( rtContextLaunch2D( context, 0 /* entry point */, width, height ) );
 
 			map(imageBuffer);
