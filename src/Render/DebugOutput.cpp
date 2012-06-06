@@ -67,7 +67,8 @@ void DebugOutput::DebugOutputToConsole(GLenum source,GLenum type,GLuint id,GLenu
 	std::cout << "Source: " << debSource << "\tType: " << debType << "\tID: " << id << "\tSeverity: " << debSev << "\tMessage: " << message << std::endl;
     //printf("Source:%s\tType:%s\tID:%d\tSeverity:%s\tMessage:%s\n", debSource,debType,id,debSev,message);
 #ifdef WIN32
-	__debugbreak();
+	if(type == GL_DEBUG_TYPE_ERROR_ARB || type == GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR_ARB || type == GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR_ARB || severity == GL_DEBUG_SEVERITY_HIGH_ARB)
+		__debugbreak();
 #endif
 }
 
