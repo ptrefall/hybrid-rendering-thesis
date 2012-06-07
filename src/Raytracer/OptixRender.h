@@ -43,9 +43,6 @@ namespace Raytracer
     private:
 		optix::Context minimalCreateContext();
 		optix::Buffer createGBuffer();
-        optix::Context  createContext();
-        optix::Material createMaterial( optix::Context context );
-        optix::Geometry createGeometry( optix::Context context );
 		void createTextureSamplers( optix::Context context );
         void createInstance( optix::Context context, optix::Geometry sphere, optix::Material material );
 		void pbo2Texture();

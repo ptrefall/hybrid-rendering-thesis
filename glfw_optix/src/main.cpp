@@ -14,7 +14,7 @@
 #include <Optix/optixu/optixpp_namespace.h>
 #include <Render/Tex2D.h>
 #include <Render/Shader.h>
-#include <Scene/Quad.h>
+#include <Scene/Quad.h> 
 
 
 // screen, buffer and tex all same size
