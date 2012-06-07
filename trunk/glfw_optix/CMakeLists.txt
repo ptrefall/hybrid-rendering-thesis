@@ -63,6 +63,7 @@ include_directories(
 	${CMAKE_SOURCE_DIR}/depends/include/
 	${CMAKE_SOURCE_DIR}/depends/include/CUDA/
 	${CMAKE_SOURCE_DIR}/src/
+	${CMAKE_SOURCE_DIR}/bin/resources/glfw_optix/
 )
 
 ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS)
