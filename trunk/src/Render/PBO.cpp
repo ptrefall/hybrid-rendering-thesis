@@ -40,12 +40,12 @@ void PBO::unbind()
 	bind_state = PBO_UNBOUND;
 }
 
-void PBO::align(unsigned int bits, bool unpack)
+void PBO::align(unsigned int bits)
 {
 	if(!bind_state)
 		return;
 
-	if(unpack)
+	if(bind_state == PBO_UNPACK_BOUND)
 		glPixelStorei(GL_UNPACK_ALIGNMENT, bits);
 	else
 		glPixelStorei(GL_PACK_ALIGNMENT, bits);

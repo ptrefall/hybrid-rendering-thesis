@@ -20,7 +20,7 @@ namespace Render
 
 		void bind(bool unpack = true);
 		void unbind();
-		void align(unsigned int bits, bool unpack = true);
+		void align(unsigned int bits);
 
 		unsigned int copyToTextureOnGPU(const Tex2DPtr &tex, unsigned int offset);
 		unsigned int copyToTextureOnCPU(const Tex2DPtr &tex, unsigned int offset, unsigned int draw_type, unsigned int access);
