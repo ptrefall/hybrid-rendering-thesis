@@ -32,7 +32,7 @@ namespace Render
 		Tex2D();
 		Tex2D(const T2DTexParams &tex_params);
 		~Tex2D();
-
+ 
 		void init(const T2DTexParams &tex_params);
 		void update(const T2DTexParams &tex_params);
 		void update(void *data, bool update_client_data = false);
