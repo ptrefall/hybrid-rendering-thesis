@@ -14,6 +14,7 @@ file(GLOB 		  HYBRID_HEADER
 	${CMAKE_SOURCE_DIR}/src/Render/Tex2D.h
 	${CMAKE_SOURCE_DIR}/src/Render/VAO.h
 	${CMAKE_SOURCE_DIR}/src/Render/VBO.h
+	${CMAKE_SOURCE_DIR}/src/Render/PBO.h
 	${CMAKE_SOURCE_DIR}/src/Scene/Quad.h
 )
 file(GLOB 		  HYBRID_SOURCE
@@ -24,6 +25,7 @@ file(GLOB 		  HYBRID_SOURCE
 	${CMAKE_SOURCE_DIR}/src/Render/Tex2D.cpp
 	${CMAKE_SOURCE_DIR}/src/Render/VAO.cpp
 	${CMAKE_SOURCE_DIR}/src/Render/VBO.cpp
+	${CMAKE_SOURCE_DIR}/src/Render/PBO.cpp
 	${CMAKE_SOURCE_DIR}/src/Scene/Quad.cpp
 )
 
