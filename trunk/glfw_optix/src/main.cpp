@@ -1,20 +1,17 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include <math.h> 
+
 #include <string>
-#include <iostream>
+//#include <iostream>
+#include <memory>
 
 #define GLFW_NO_GLU
 #define GLFW_INCLUDE_GL3
 #include <GL/glfw3.h>
 #include <GL3/gl3w.h>
 
-#include <Optix/optix.h>
-#include <Optix/optix_gl_interop.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-
-#include <math.h> 
-#include <memory>
-
+#include <Optix/optixu/optixpp_namespace.h>
 #include <Render/Tex2D.h>
 #include <Render/Shader.h>
 #include <Scene/Quad.h>
@@ -136,25 +133,21 @@ public:
 		outputTex.init( params );
 	}
 
-	void pbo2Tex(RTbuffer buffer)
+	void pbo2Tex(optix::Buffer buffer)
 	{
 		outputTex.bind();
 
 		int buffer_width = width;
 		int buffer_height = height;
 
-		RTcontext context;
-		rtBufferGetContext(buffer, &context);
+		optix::Context context = buffer->getContext();
 
-		GLuint vboId = 0;
-		RT_CHECK_ERROR( rtBufferGetGLBOId(buffer,&vboId) );
+		GLuint vboId = buffer->getGLBOId();
 		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, vboId );
 
-		RTsize elementSize = 0;
-		RT_CHECK_ERROR( rtBufferGetElementSize(buffer, &elementSize) );
+		RTsize elementSize = buffer->getElementSize();
 
-		RTformat buffer_format;
-		RT_CHECK_ERROR( rtBufferGetFormat(buffer, &buffer_format) );
+		RTformat buffer_format = buffer->getFormat();
 		
 		if      ((elementSize % 8) == 0) glPixelStorei(GL_UNPACK_ALIGNMENT, 8);
 		else if ((elementSize % 4) == 0) glPixelStorei(GL_UNPACK_ALIGNMENT, 4); 
@@ -174,13 +167,11 @@ public:
 		glBindBuffer( GL_PIXEL_UNPACK_BUFFER, 0 );
 	}
 
-	void display(RTbuffer imageBuffer, RTvariable fTime)
+	void display(optix::Buffer imageBuffer, optix::Variable fTime)
 	{
-		RTcontext context;
-		rtBufferGetContext(imageBuffer, &context);
-
-		RT_CHECK_ERROR( rtContextValidate( context ) );
-			RT_CHECK_ERROR( rtContextCompile( context ) );
+		optix::Context context = imageBuffer->getContext();
+		context->validate();
+		context->compile();
 
 		bool running = true;
 		while (running)
@@ -189,11 +180,10 @@ public:
 			/*char titleBuf[512];
 			sprintf(titleBuf, "t = %.2f", time );
 			glfwSetWindowTitle(wnd, titleBuf );*/
-			RT_CHECK_ERROR( rtVariableSet1f( fTime, time ) );
+			fTime->set1fv( &time );
 
+			context->launch(0 /*entry point*/, width, height );
 			
-			RT_CHECK_ERROR( rtContextLaunch2D( context, 0 /* entry point */, width, height ) );
-
 			glActiveTexture(GL_TEXTURE0 + 0);
 			pbo2Tex(imageBuffer);
 			//glClear(GL_COLOR_BUFFER_BIT);
@@ -241,54 +231,49 @@ int main(int argc, char* argv[])
 	GLContext myGLContext(width,height);
 	
     /* Create our objects and set state */
-	RTcontext context;
-    RT_CHECK_ERROR( rtContextCreate( &context ) );
-    RT_CHECK_ERROR( rtContextSetRayTypeCount( context, 1 ) );
-    RT_CHECK_ERROR( rtContextSetEntryPointCount( context, 1 ) );
-	
-	RTprogram ray_gen_program;
+	optix::Context context = optix::Context::create();
+	context->setRayTypeCount(1);
+	context->setEntryPointCount(1);
+
 	std::string path_to_ptx = optix_dir + "\\glfw_optix.cu.ptx";
-    RT_CHECK_ERROR( rtProgramCreateFromPTXFile( context, path_to_ptx.c_str(), "sampleTex", &ray_gen_program ) );
+	optix::Program ray_gen_program = context->createProgramFromPTXFile( path_to_ptx, "sampleTex" );
+	
+	unsigned int screenDims[] = {width,height};
+	ray_gen_program->declareVariable("rtLaunchDim")->set2uiv(screenDims);
 
-	RTvariable launch_dim;
-	RT_CHECK_ERROR( rtProgramDeclareVariable( ray_gen_program, "launch_dim", &launch_dim ) );
-	RT_CHECK_ERROR( rtVariableSet2ui( launch_dim, width, height ) );
+	optix::Variable fTime = ray_gen_program->declareVariable("fTime");
+	float initTime = (float)glfwGetTime();
+	fTime->set1fv( &initTime );
 
-	RTvariable fTime;
-	RT_CHECK_ERROR( rtProgramDeclareVariable( ray_gen_program, "fTime", &fTime ) );
-	RT_CHECK_ERROR( rtVariableSet1f( fTime, (float)glfwGetTime() ) );
-
-	RT_CHECK_ERROR( rtContextSetRayGenerationProgram( context, 0, ray_gen_program ) );
-
-	RTbuffer  buffer;
+	context->setRayGenerationProgram(0, ray_gen_program);
+	
     glGenBuffers(1, &vbo);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	int element_size = 4 * sizeof(char);
 	glBufferData(GL_ARRAY_BUFFER, element_size * width * height, nullptr, GL_STREAM_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 	
-    RT_CHECK_ERROR( rtBufferCreateFromGLBO(context, RT_BUFFER_OUTPUT, vbo, &buffer) );
-	RT_CHECK_ERROR( rtBufferSetFormat( buffer, RT_FORMAT_UNSIGNED_BYTE4 ) );
-    RT_CHECK_ERROR( rtBufferSetSize2D( buffer, width, height ) );
+	optix::Buffer buffer = context->createBufferFromGLBO(RT_BUFFER_OUTPUT, vbo);
+	buffer->setFormat(RT_FORMAT_UNSIGNED_BYTE4);
+	buffer->setSize(width,height);
+
+	optix::Variable out_buffer = context->declareVariable("out_buffer");
+	out_buffer->set(buffer);
 	
-	RTvariable out_buffer;
-    RT_CHECK_ERROR( rtContextDeclareVariable( context, "out_buffer", &out_buffer ) );
-    RT_CHECK_ERROR( rtVariableSetObject( out_buffer, buffer ) );
 	myGLContext.display( buffer, fTime );
 
     /* Clean up */
-    RT_CHECK_ERROR( rtBufferDestroy( buffer ) );
-    RT_CHECK_ERROR( rtProgramDestroy( ray_gen_program ) );
-    RT_CHECK_ERROR( rtContextDestroy( context ) );
-
-
-	//try {
-	//	//kernel->init(argc, argv);
-	//} catch( std::exception &e) {
-	//	std::cout << e.what() << std::endl;
-	//	system("pause");
-	//	return -1;
-	//}
+	try {
+		buffer->unregisterGLBuffer();
+		buffer->destroy();
+		ray_gen_program->destroy();
+		context->destroy();
+	} catch( std::exception &e) {
+		//std::cout << e.what() << std::endl;
+		printf("%s\n", e.what() );
+		system("pause");
+		return -1;
+	}
 	
 	return 0;
 }
