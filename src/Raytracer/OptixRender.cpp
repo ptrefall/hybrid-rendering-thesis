@@ -18,7 +18,7 @@ OptixRender::OptixRender(const Render::GBuffer_PassPtr &g_buffer_pass, unsigned 
 	: g_buffer_pass(g_buffer_pass), width(width), height(height), baseDir(baseDir)
 {
 	diffuse_tex = std::make_shared<Render::Tex2D>();
-	Render::T2DTexParams params((unsigned int)GL_RGBA8, (unsigned int)GL_BGRA, (unsigned int)GL_UNSIGNED_BYTE, 4, (unsigned int)width, (unsigned int)height, (unsigned int)GL_CLAMP_TO_EDGE, (unsigned char*)nullptr);
+	Render::T2DTexParams params((unsigned int)GL_RGBA8, (unsigned int)GL_RGBA, (unsigned int)GL_UNSIGNED_BYTE, 4, (unsigned int)width, (unsigned int)height, (unsigned int)GL_CLAMP_TO_EDGE, (unsigned char*)nullptr);
 	diffuse_tex->update(params); 
 
     context = minimalCreateContext();
@@ -225,5 +225,5 @@ void OptixRender::pbo2Texture()
 	//unsigned int normal_offset =	g_buffer_pbo->copyToTextureOnGPU(position_tex, position_offset);
 	//								g_buffer_pbo->copyToTextureOnGPU(normal_tex, normal_offset);
 
-    g_buffer_pbo->unbind();;
+    g_buffer_pbo->unbind();
 } 
