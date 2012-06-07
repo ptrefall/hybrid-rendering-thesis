@@ -9,7 +9,7 @@
 #include <glm/ext.hpp>
 #include <iostream>
 
-#include <Optix/optixu/optixu.h>
+#include <Optix/optixu/optixu.h> 
 
 using namespace Raytracer;
 using namespace optix;

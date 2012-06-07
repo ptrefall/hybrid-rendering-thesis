@@ -29,9 +29,9 @@ CubeSphere::CubeSphere(unsigned int cell_count, float spacing)
 	for(unsigned int y = 0; y < height; y += step)
 	for(unsigned int x = 0; x < width; x += step)
 	{
-		float z = 0.0f;
+		float z = 1.0f;
 		buildIndices(indices, x,y,z, width, height);
-		buildVertices(vertices, x,y,z, spacing, 0.0f);
+		buildVertices(vertices, x,y,z, spacing, 1.0f);
 		buildTexCoords(texCoords, x,y,z, width, height);
 	}
 
