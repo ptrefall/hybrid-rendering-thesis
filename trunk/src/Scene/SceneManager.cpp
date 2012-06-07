@@ -4,6 +4,7 @@
 
 #include "Spacejet.h"
 #include "Cube.h"
+#include "CubeSphere.h"
 #include "BARTMesh.h"
 
 #include "../Render/Passes/Final/Final_Pass.h"
@@ -200,6 +201,18 @@ void SceneManager::initScene(	const File::AssetManagerPtr &asset_manager,
 				cube3->setPosition( glm::vec3(x,y,z) );
 			}
 		}
+	}
+
+	Scene::CubeSpherePtr sphere = std::make_shared<Scene::CubeSphere>();
+	{
+		sphere->setObjectToWorldUniform(	g_buffer_pass->getObjectToWorldUniform());
+		sphere->setWorldToViewUniform(	g_buffer_pass->getWorldToViewUniform());
+		sphere->setViewToClipUniform(	g_buffer_pass->getViewToClipUniform());
+		sphere->setNormalToViewUniform(	g_buffer_pass->getNormalToViewUniform());
+		sphere->setTexture(0,array_tex, tex_sampler, array_sampler);
+		sphere->setMaterial(blue_cube_mat);
+		add(sphere);
+		sphere->setPosition( glm::vec3(1,-1,6) );
 	}
 
 	/*ini::Parser config(resource_dir + "ini\\scene.ini");
