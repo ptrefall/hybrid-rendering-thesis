@@ -124,7 +124,7 @@ void Tex2D::download(void *data, bool to_client)
 {
 	if(to_client)
 	{
-	}
+	} 
 	else
 	{
 		glGetTexImage(GL_TEXTURE_2D, 0, format, type, data);
