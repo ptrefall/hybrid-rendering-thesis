@@ -34,7 +34,7 @@ RT_PROGRAM void gbuffer_compose()
 	//g_buffer[launch_index].w = 255;
 	//float2 zeroToOne = make_float2(launch_index) / make_float2(launch_dim);
 	//g_buffer[launch_index] = make_color( make_float3( zeroToOne.x, zeroToOne.y, 0.f ) );
-	g_buffer[launch_index] = make_color( make_float3( 255.0f, 255.0f, 255.0f ) );
+	g_buffer[launch_index] = make_color( make_float3( 255.0f, 0.0f, 0.0f ) );
 
 	/*
 	float4 diffuse = ( tex2D( raster_diffuse_tex, uv.x, uv.y ) );

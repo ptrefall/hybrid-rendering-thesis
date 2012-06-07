@@ -16,7 +16,7 @@ namespace Render
 		~DebugOutput();
 
 		static void CALLBACK DebugOutputToConsole(GLenum source,GLenum type,GLuint id,GLenum severity,GLsizei length,const GLchar *message,GLvoid *userParam);
-
+		 
 	private:
 		unsigned int handle;
 	};

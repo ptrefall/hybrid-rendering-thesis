@@ -19,7 +19,7 @@ OptixRender::OptixRender(const Render::GBuffer_PassPtr &g_buffer_pass, unsigned 
 {
 	diffuse_tex = std::make_shared<Render::Tex2D>();
 	Render::T2DTexParams params((unsigned int)GL_RGBA8, (unsigned int)GL_BGRA, (unsigned int)GL_UNSIGNED_BYTE, 4, (unsigned int)width, (unsigned int)height, (unsigned int)GL_CLAMP_TO_EDGE, (unsigned char*)nullptr);
-	diffuse_tex->update(params);
+	diffuse_tex->update(params); 
 
     context = minimalCreateContext();
 
@@ -169,10 +169,10 @@ void OptixRender::render()
 		glbuffer_registered = false;
 	} catch (optix::Exception& e) {
 		std::cout << e.getErrorString();
-		return;
+		return; 
 	}
-
-	glActiveTexture(GL_TEXTURE0);
+	 
+	glActiveTexture(GL_TEXTURE0); 
 	pbo2Texture();
 }
 
