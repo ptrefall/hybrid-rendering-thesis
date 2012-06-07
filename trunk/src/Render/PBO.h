@@ -19,7 +19,7 @@ namespace Render
 		~PBO();
 
 		void bind(bool unpack = true);
-		void unbind(bool unpack = true);
+		void unbind();
 		void align(unsigned int bits, bool unpack = true);
 
 		unsigned int copyToTextureOnGPU(const Tex2DPtr &tex, unsigned int offset);
@@ -30,7 +30,7 @@ namespace Render
 		unsigned int getHandle() const { return handle; }
 
 	private:
+		enum BindState { PBO_UNBOUND = 0, PBO_UNPACK_BOUND = GL_PIXEL_UNPACK_BUFFER, PBO_PACK_BOUND = GL_PIXEL_PACK_BUFFER } bind_state;
 		unsigned int handle;
-		bool bound;
 	};
 }

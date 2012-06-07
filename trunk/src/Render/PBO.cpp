@@ -3,14 +3,11 @@
 using namespace Render;
 
 PBO::PBO(const unsigned int &size, const unsigned int &draw_type, bool unpack)
-	: bound(false)
+	: bind_state(PBO_UNBOUND)
 {
 	glGenBuffers(1, &handle);
-	bind();
-	if(unpack)
-		glBufferData(GL_PIXEL_UNPACK_BUFFER, size, nullptr, draw_type);
-	else
-		glBufferData(GL_PIXEL_PACK_BUFFER, size, nullptr, draw_type);
+	bind(unpack);
+	glBufferData(bind_state, size, nullptr, draw_type);
 }
 
 PBO::~PBO()
@@ -20,31 +17,32 @@ PBO::~PBO()
 
 void PBO::bind(bool unpack)
 {
-	bound = true;
-	if(unpack)
-		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, handle);
-	else
-		glBindBuffer(GL_PIXEL_PACK_BUFFER, handle);
+	if(bind_state != PBO_UNBOUND && bind_state != (unpack ? PBO_UNPACK_BOUND : PBO_PACK_BOUND))
+	{
+		std::string bind_state_str = unpack ? "Unpack Buffer" : "Pack Buffer";
+		throw std::runtime_error("Trying to bind a PBO to " + bind_state_str + ", but it's already bound to the opposite buffer type!");
+	}
+	bind_state = (unpack ? PBO_UNPACK_BOUND : PBO_PACK_BOUND);
+	glBindBuffer(bind_state, handle);
 }
 
-void PBO::unbind(bool unpack)
+void PBO::unbind()
 {
-	bound = false;
-	if(unpack)
-	{
-		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+	if(!bind_state)
+		return;
+
+	glBindBuffer(bind_state, 0);
+	if(bind_state == PBO_UNPACK_BOUND)
 		glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-	}
 	else
-	{
-		glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 		glPixelStorei(GL_PACK_ALIGNMENT, 4);
-	}
+
+	bind_state = PBO_UNBOUND;
 }
 
 void PBO::align(unsigned int bits, bool unpack)
 {
-	if(!bound)
+	if(!bind_state)
 		return;
 
 	if(unpack)
@@ -55,20 +53,20 @@ void PBO::align(unsigned int bits, bool unpack)
 
 unsigned int PBO::copyToTextureOnGPU(const Tex2DPtr &tex, unsigned int offset)
 {
-	if(!bound)
+	if(!bind_state)
 		bind(true);
 
 	tex->bind();
 	tex->update((GLubyte*)nullptr + offset, false);
 	tex->unbind();
 
-	unbind(true);
+	unbind();
 	return offset + (tex->getBpp() * tex->getWidth() * tex->getHeight() * sizeof(unsigned char));
 }
 
 unsigned int PBO::copyToTextureOnCPU(const Tex2DPtr &tex, unsigned int offset, unsigned int draw_type, unsigned int access)
 {
-	if(!bound)
+	if(!bind_state)
 		bind(true);
 
 	tex->bind();
@@ -103,14 +101,14 @@ unsigned int PBO::copyToTextureOnCPU(const Tex2DPtr &tex, unsigned int offset, u
 	delete[] new_tex_data;
 
 	tex->unbind();
-	unbind(true);
+	unbind();
 
 	return offset + buffer_size;
 }
 
 unsigned int PBO::bufferFromTextureOnGPU(const Tex2DPtr &tex, unsigned int offset, unsigned int draw_type)
 {
-	if(!bound)
+	if(!bind_state)
 		bind(false);
 
 	unsigned int buffer_size = tex->getBpp() * tex->getWidth() * tex->getHeight();
@@ -121,13 +119,13 @@ unsigned int PBO::bufferFromTextureOnGPU(const Tex2DPtr &tex, unsigned int offse
 	tex->bind();
 	tex->download(false);
 
-	unbind(false);
+	unbind();
 	return offset + buffer_size;
 }
 
 unsigned int PBO::bufferFromTextureOnCPU(const Tex2DPtr &tex, unsigned int offset, unsigned int draw_type, unsigned int access)
 {
-	if(!bound)
+	if(!bind_state)
 		bind(false);
 
 	unsigned int buffer_size = tex->getBpp() * tex->getWidth() * tex->getHeight();
@@ -154,7 +152,7 @@ unsigned int PBO::bufferFromTextureOnCPU(const Tex2DPtr &tex, unsigned int offse
 		glUnmapBuffer(GL_PIXEL_PACK_BUFFER); // release the mapped buffer
 	}
 
-	unbind(false);
+	unbind();
 
 	return offset + buffer_size;
 }
