@@ -17,6 +17,7 @@
 #include <Render/PBO.h>
 #include <Scene/Quad.h>
 #include <glm/glm.hpp>
+#include <glm/ext.hpp>
 
 #include "commonStructs.h"
 
@@ -73,7 +74,7 @@ public:
 		context->setEntryPointCount(1);
 		optix::Variable out_buffer = context->declareVariable("output_buffer");
 		optix::Variable light_buffer = context->declareVariable("lights");
-		context->declareVariable("max_depth")->setInt(10);
+		context->declareVariable("max_depth")->setInt(0);
 		context->declareVariable("radiance_ray_type")->setUint(0u);
 		context->declareVariable("shadow_ray_type")->setUint(1u);
 		context->declareVariable("scene_epsilon")->setFloat(1.e-4f);
@@ -171,8 +172,8 @@ public:
 
 	void createInstances(optix::Geometry box, optix::Material material)
 	{
-		static const int NUM_BOXES = 6;
-		optix::Transform transforms[NUM_BOXES];
+		static const int NUM_BOXES = 32;
+		transforms.resize(NUM_BOXES);
 
 		float m[16];
 		m[ 0] = 1.0f;  m[ 1] = 0.0f;  m[ 2] = 0.0f;  m[ 3] = 0.0f;
@@ -232,7 +233,8 @@ public:
 
 			transforms[i] = context->createTransform();
 			transforms[i]->setChild( geometrygroup );
-			m[3] = i*1.5f - (NUM_BOXES-1)*0.75f;
+			float seperation = 1.1f;
+			m[3] = i*seperation - (NUM_BOXES-1)*seperation*.5f;
 			transforms[i]->setMatrix( 0, m, 0 );
 		}
 
@@ -246,7 +248,7 @@ public:
 		top_object->set( top_level_group );
 		optix::Variable top_shadower = context->declareVariable("top_shadower");
 		top_shadower->set(top_level_group);
-		optix::Acceleration top_level_acceleration = context->createAcceleration("NoAccel", "NoAccel");
+		top_level_acceleration = context->createAcceleration("NoAccel", "NoAccel");
 		top_level_group->setAcceleration(top_level_acceleration);
 
 		/* mark acceleration as dirty */
@@ -266,10 +268,10 @@ public:
 	void animate()
 	{
 		float t = fTime->getFloat();
-		float r = 3.f;
-		cam.eyePos.x = r*sin(t);
+		float radi = 10.f;
+		cam.eyePos.x = radi*sin(t);
 		cam.eyePos.y = 0;
-		cam.eyePos.z = r*cos(t);
+		cam.eyePos.z = radi*cos(t);
 
 		float mtx[9];
 		ang2mat(t,0.f, mtx);
@@ -283,6 +285,20 @@ public:
 		optixCamVars.v->set3fv(&cam.v.x);
 		optixCamVars.w->set3fv(&cam.w.x);
 
+
+		glm::mat4 identity(1.f);		
+		float num = (float)transforms.size();
+		for (size_t i=0; i<transforms.size(); ++i){
+			float a = 6.28f * i/num;
+			glm::vec3 pos( cos(a), sin(4.f*a+t)*0.25f, sin(a) );
+			pos *= 5.f;
+
+			glm::mat4 xform = glm::translate( identity, pos );
+			xform = glm::transpose(xform);
+			transforms[i]->setMatrix( false, glm::value_ptr(xform),  0 );
+		}
+
+		//top_level_acceleration->markDirty();
 	}
 
 	~OptixScene()
@@ -296,6 +312,8 @@ private:
 	optix::Context context;
 	optix::Buffer out_buffer_obj;
 	optix::Variable fTime;
+	std::vector<optix::Transform> transforms;
+	optix::Acceleration top_level_acceleration;
 
 	std::string optix_dir;
 	int width;
