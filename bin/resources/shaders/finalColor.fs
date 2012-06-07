@@ -81,7 +81,7 @@ void main( void )
 		1.0
 		);
 		
-	//out_FragColor = vec4( ray.rgb, 1.0 );
+	//out_FragColor = vec4( diffuse, 1.0 );
 	//out_FragColor = vec4( N, 1.0 );
 	//out_FragColor = vec4( (N + 1.0) * 0.5, 1.0 );
 	//out_FragColor = vec4( abs(N), 1.0 );

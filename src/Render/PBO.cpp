@@ -3,7 +3,7 @@
 using namespace Render;
 
 PBO::PBO(const unsigned int &size, const unsigned int &draw_type, bool unpack)
-	: bind_state(PBO_UNBOUND)
+	: bind_state(PBO_UNBOUND), draw_type(draw_type)
 {
 	glGenBuffers(1, &handle);
 	bind(unpack);
@@ -115,9 +115,9 @@ unsigned int PBO::bufferFromTextureOnGPU(const Tex2DPtr &tex, unsigned int offse
 	if(tex->getInternalFormat() >= GL_RGBA32F && tex->getInternalFormat() <= GL_RGB16F)
 		buffer_size *= sizeof(float);
 
-	//glBufferData(bind_state, buffer_size, nullptr, draw_type);
+	glBufferData(bind_state, buffer_size, (GLubyte*)nullptr+offset, draw_type);
 	tex->bind();
-	tex->download(false);
+	tex->download((GLubyte*)nullptr, false);
 
 	unbind();
 	return offset + buffer_size;

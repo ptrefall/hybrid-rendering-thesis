@@ -32,5 +32,6 @@ namespace Render
 	private:
 		enum BindState { PBO_UNBOUND = 0, PBO_UNPACK_BOUND = GL_PIXEL_UNPACK_BUFFER, PBO_PACK_BOUND = GL_PIXEL_PACK_BUFFER } bind_state;
 		unsigned int handle;
+		unsigned int draw_type;
 	};
 }

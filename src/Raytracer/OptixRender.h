@@ -23,34 +23,27 @@ namespace Raytracer
 	public:
 		OptixRender(const Render::GBuffer_PassPtr &g_buffer_pass, unsigned int width, unsigned int height, const std::string& baseDir);
 		void render();
-
 		void reshape(unsigned int width, unsigned int height);
-
-		Render::Tex2DPtr getRenderTexture() const { return diffuse_tex; }
 
 	private:
         Render::GBuffer_PassPtr g_buffer_pass;
 		unsigned int width;
 		unsigned int height;
-        optix::Context  context; 
-		optix::Buffer g_buffer;
-        optix::Geometry dummy;
-        optix::Material material;
+        optix::Context context; 
         std::string baseDir;
-
-		Render::Tex2DPtr diffuse_tex;
 
     private:
 		optix::Context minimalCreateContext();
-		optix::Buffer createGBuffer();
-		void createTextureSamplers( optix::Context context );
-        void createInstance( optix::Context context, optix::Geometry sphere, optix::Material material );
+		void createGBuffers();
 		void pbo2Texture();
+		unsigned int getBufferAlignment(optix::Buffer buffer);
+
+		optix::Buffer g_buffer_diffuse;
+		optix::Buffer g_buffer_position;
+		optix::Buffer g_buffer_normal;
 		
-		Render::PBOPtr g_buffer_pbo;
-		optix::TextureSampler  raster_diffuse_sampler;
-		optix::TextureSampler  raster_position_sampler;
-		optix::TextureSampler  raster_normal_sampler;
-		void addTextureSampler(optix::TextureSampler sampler, unsigned int gl_tex_handle, float max_anisotropy, const std::string &sampler_name);
+		Render::PBOPtr g_buffer_diffuse_pbo;
+		Render::PBOPtr g_buffer_position_pbo;
+		Render::PBOPtr g_buffer_normal_pbo;
 	};
 }

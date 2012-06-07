@@ -82,6 +82,20 @@ void Tex2D::update(void *data, bool update_client_data)
 		memcpy(this->data, data, bpp * w * h);
 }
 
+void Tex2D::update(void *data, unsigned int xoffset, unsigned int yoffset, unsigned int width, unsigned int height, bool update_client_data)
+{
+	if(handle == 0)
+		return;
+
+	bind();
+
+	glTexSubImage2D(GL_TEXTURE_2D, 0, xoffset, yoffset, width, height, format, type, data);
+	//glTexImage2D(GL_TEXTURE_2D, 0, internal_format, w,h, 0, format, type, data);
+
+	if(update_client_data)
+		memcpy(this->data+(bpp*xoffset*yoffset), data, bpp * width * height);
+}
+
 void Tex2D::reset()
 {
 	glDeleteTextures(1, &handle);
@@ -106,14 +120,14 @@ void Tex2D::unbind()
 	return new_data;
 }*/
 
-void Tex2D::download(bool to_client)
+void Tex2D::download(void *data, bool to_client)
 {
 	if(to_client)
 	{
 	}
 	else
 	{
-		glGetTexImage(GL_TEXTURE_2D, 0, format, type, (GLubyte*)nullptr);
+		glGetTexImage(GL_TEXTURE_2D, 0, format, type, data);
 		//glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, w, h, format, type, (GLubyte*)nullptr+0);
 	}
 }
