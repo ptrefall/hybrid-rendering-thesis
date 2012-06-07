@@ -48,7 +48,7 @@ public:
 		int element_size = 4 * sizeof(char);
 		pbo = new Render::PBO(element_size * width * height, GL_STREAM_DRAW, true);
 
-		buffer = context->createBufferFromGLBO(RT_BUFFER_OUTPUT, pbo->getHandle() );
+		buffer = context->createBufferFromGLBO(RT_BUFFER_INPUT_OUTPUT, pbo->getHandle() );
 		buffer->setFormat(RT_FORMAT_UNSIGNED_BYTE4);
 		buffer->setSize(width,height);
 

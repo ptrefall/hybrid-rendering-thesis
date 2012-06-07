@@ -23,6 +23,7 @@ OptixRender::OptixRender(const Render::GBuffer_PassPtr &g_buffer_pass, unsigned 
 
     context = minimalCreateContext();
 
+
 	optix::Program ray_gen_program = context->createProgramFromPTXFile( baseDir + "g_buffer.cu.ptx", "gbuffer_compose" );
 	context->setRayGenerationProgram( 0, ray_gen_program );
 	unsigned int screenDims[] = {width,height};
@@ -72,7 +73,7 @@ optix::Buffer OptixRender::createGBuffer()
 	g_buffer_pbo->unbind();
 	//g_buffer_pbo->bufferFromTextureOnGPU(raster_diffuse, 0, GL_STREAM_DRAW);
 
-	buffer = context->createBufferFromGLBO(RT_BUFFER_OUTPUT, g_buffer_pbo->getHandle());
+	buffer = context->createBufferFromGLBO(RT_BUFFER_INPUT_OUTPUT, g_buffer_pbo->getHandle());
 	buffer->setFormat(format);
 	buffer->setSize( width, height );
 
@@ -136,7 +137,6 @@ void CalculateCameraVariables(  float hfov,
 
 void OptixRender::render()
 {
-  //unsigned int pbo = context["output_buffer"]->getBuffer()->getGLBOId(); // is pbo now.
 	auto camera = Scene::FirstPersonCamera::getSingleton();
 	auto &world_to_view = camera->getWorldToViewMatrix();
 	auto pos = camera->getPos();
@@ -157,16 +157,16 @@ void OptixRender::render()
     context["W"]->set3fv( glm::value_ptr(W) );
 
 	//auto gl_id_handle = g_buffer->getGLBOId();
-	static bool glbuffer_registered = true;
+	//static bool glbuffer_registered = true;
 	try {
-		if(!glbuffer_registered)
-		{
-			g_buffer->registerGLBuffer();
-			glbuffer_registered = true;
-		}
+		//if(!glbuffer_registered)
+		//{
+		//	g_buffer->registerGLBuffer();
+		//	glbuffer_registered = true;
+		//}
 		context->launch(0, width,height);
-		g_buffer->unregisterGLBuffer();
-		glbuffer_registered = false;
+		//g_buffer->unregisterGLBuffer();
+		//glbuffer_registered = false;
 	} catch (optix::Exception& e) {
 		std::cout << e.getErrorString();
 		return; 
