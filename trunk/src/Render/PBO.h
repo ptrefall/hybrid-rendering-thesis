@@ -24,7 +24,7 @@ namespace Render
 
 		unsigned int copyToTextureOnGPU(const Tex2DPtr &tex, unsigned int offset);
 		unsigned int copyToTextureOnCPU(const Tex2DPtr &tex, unsigned int offset, unsigned int draw_type, unsigned int access);
-		unsigned int bufferFromTextureOnGPU(const Tex2DPtr &tex, unsigned int offset, unsigned int draw_type);
+		unsigned int bufferFromTextureOnGPU(const Tex2DPtr &tex, unsigned int offset);
 		unsigned int bufferFromTextureOnCPU(const Tex2DPtr &tex, unsigned int offset, unsigned int draw_type, unsigned int access);
 
 		unsigned int getHandle() const { return handle; }

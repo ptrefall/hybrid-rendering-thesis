@@ -71,7 +71,7 @@ optix::Buffer OptixRender::createGBuffer()
 	//TODO: Size of PBO should be equal to number of render textures in gbuffer_pass' fbo, and also equal to their sizes and types...
 	g_buffer_pbo = std::make_shared<Render::PBO>(element_size * width * height, GL_STREAM_DRAW, true);
 	g_buffer_pbo->unbind();
-	//g_buffer_pbo->bufferFromTextureOnGPU(raster_diffuse, 0, GL_STREAM_DRAW);
+	//g_buffer_pbo->bufferFromTextureOnGPU(raster_diffuse, 0);
 
 	buffer = context->createBufferFromGLBO(RT_BUFFER_INPUT_OUTPUT, g_buffer_pbo->getHandle());
 	buffer->setFormat(format);

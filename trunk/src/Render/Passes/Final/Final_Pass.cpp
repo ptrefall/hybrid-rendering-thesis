@@ -70,7 +70,7 @@ void Final_Pass::end()
 	//fbo->unbind();
 
 	raytrace_pass->unbind(0);
-	g_buffer_pass->unbind(1);
+	g_buffer_pass->unbind(1); 
 
 	//glViewportIndexedf(0,0,0,(float)temp_w,(float)temp_h);
 
@@ -79,8 +79,8 @@ void Final_Pass::end()
 }
 
 void Final_Pass::bind(unsigned int active_program)
-{
-	fbo->bind_rt(active_program, 0);
+{ 
+	fbo->bind_rt(active_program, 0); 
 }
 
 void Final_Pass::unbind()

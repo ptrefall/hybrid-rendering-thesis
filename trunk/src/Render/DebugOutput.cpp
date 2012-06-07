@@ -9,8 +9,10 @@ using namespace Render;
 
 DebugOutput::DebugOutput()
 {
+#ifdef _DEBUG
 	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB);
 	glDebugMessageCallbackARB(&DebugOutput::DebugOutputToConsole, nullptr);
+#endif 
 
 	/*GLuint MessageId(4);
 	glDebugMessageControlARB(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_FALSE);
