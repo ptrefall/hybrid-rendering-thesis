@@ -83,18 +83,18 @@ unsigned int PBO::copyToTextureOnCPU(const Tex2DPtr &tex, unsigned int offset, u
 	// If you do that, the previous data in PBO will be discarded and
 	// glMapBufferARB() returns a new allocated pointer immediately
 	// even if GPU is still working with the previous data.
-	glBufferData(GL_PIXEL_UNPACK_BUFFER, buffer_size, 0, draw_type);
+	glBufferData(bind_state, buffer_size, 0, draw_type);
 
 	unsigned char *new_tex_data = new unsigned char[buffer_size];
 	// map the buffer object into client's memory
-	GLubyte* ptr = (GLubyte*)glMapBuffer(GL_PIXEL_UNPACK_BUFFER, access);
+	GLubyte* ptr = (GLubyte*)glMapBuffer(bind_state, access);
 
 	if(ptr)
 	{
 		// update data directly on the mapped buffer
 		memcpy(new_tex_data, ptr + offset, buffer_size);
 		
-		glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER); // release the mapped buffer
+		glUnmapBuffer(bind_state); // release the mapped buffer
 	}
 
 	tex->update(new_tex_data);
@@ -106,7 +106,7 @@ unsigned int PBO::copyToTextureOnCPU(const Tex2DPtr &tex, unsigned int offset, u
 	return offset + buffer_size;
 }
 
-unsigned int PBO::bufferFromTextureOnGPU(const Tex2DPtr &tex, unsigned int offset, unsigned int draw_type)
+unsigned int PBO::bufferFromTextureOnGPU(const Tex2DPtr &tex, unsigned int offset)
 {
 	if(!bind_state)
 		bind(false);
@@ -115,7 +115,7 @@ unsigned int PBO::bufferFromTextureOnGPU(const Tex2DPtr &tex, unsigned int offse
 	if(tex->getInternalFormat() >= GL_RGBA32F && tex->getInternalFormat() <= GL_RGB16F)
 		buffer_size *= sizeof(float);
 
-	glBufferData(GL_PIXEL_PACK_BUFFER, buffer_size, nullptr, draw_type);
+	//glBufferData(bind_state, buffer_size, nullptr, draw_type);
 	tex->bind();
 	tex->download(false);
 
@@ -139,7 +139,7 @@ unsigned int PBO::bufferFromTextureOnCPU(const Tex2DPtr &tex, unsigned int offse
 	// If you do that, the previous data in PBO will be discarded and
 	// glMapBufferARB() returns a new allocated pointer immediately
 	// even if GPU is still working with the previous data.
-	glBufferData(GL_PIXEL_PACK_BUFFER, buffer_size, 0, draw_type);
+	glBufferData(bind_state, buffer_size, 0, draw_type);
 
 	// map the buffer object into client's memory
 	GLubyte* ptr = (GLubyte*)glMapBuffer(GL_PIXEL_PACK_BUFFER, access);
@@ -149,7 +149,7 @@ unsigned int PBO::bufferFromTextureOnCPU(const Tex2DPtr &tex, unsigned int offse
 		// update data directly on the mapped buffer
 		memcpy(ptr + offset, tex->getData(), buffer_size);
 		
-		glUnmapBuffer(GL_PIXEL_PACK_BUFFER); // release the mapped buffer
+		glUnmapBuffer(bind_state); // release the mapped buffer
 	}
 
 	unbind();

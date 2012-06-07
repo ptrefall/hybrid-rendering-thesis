@@ -113,6 +113,7 @@ void Tex2D::download(bool to_client)
 	}
 	else
 	{
-		glGetTexImage(GL_TEXTURE_2D, 0, internal_format, type, 0);
+		glGetTexImage(GL_TEXTURE_2D, 0, format, type, (GLubyte*)nullptr);
+		//glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, w, h, format, type, (GLubyte*)nullptr+0);
 	}
 }
