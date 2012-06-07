@@ -19,11 +19,22 @@ __device__ __inline__ optix::uchar4 make_color(const optix::float3& c)
 }
 #endif
 
+__device__ __inline__
+float ConcentriqueCircle(float xt,float yt,float zt){
+   xt *= xt;
+   yt *= yt;
+   zt *= zt;
+   return fmod(sqrt(xt+yt+zt), 1.0f);
+}
+
 RT_PROGRAM void sampleTex()
 {
 	float2 zeroToOne = make_float2(launch_index) / make_float2(launch_dim);
 	float2 minusOneToOne = -1.f + 2.f * zeroToOne;
 	minusOneToOne *= 5;
 	
-	out_buffer[launch_index] = make_color( make_float3( minusOneToOne.x, minusOneToOne.y, sin( minusOneToOne.x*minusOneToOne.y+3.f*fTime ) ) );
+	//out_buffer[launch_index] = make_color( make_float3( minusOneToOne.x, minusOneToOne.y, sin( minusOneToOne.x*minusOneToOne.y+3.f*fTime ) ) );
+	float aspect = launch_dim.x / (float)launch_dim.y;
+	float d = ConcentriqueCircle(aspect*2.f*minusOneToOne.x, 2.f*minusOneToOne.y, 3.f*sin(fTime) );
+	out_buffer[launch_index] = make_color( make_float3(d,d,d) );
 }
