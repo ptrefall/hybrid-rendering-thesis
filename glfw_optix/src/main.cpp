@@ -189,10 +189,10 @@ public:
 		RTsize elementSize = buffer->getElementSize();
 		RTformat buffer_format = buffer->getFormat();
 		
-		if      ((elementSize % 8) == 0) pbo->align(8,true);
-		else if ((elementSize % 4) == 0) pbo->align(4,true);
-		else if ((elementSize % 2) == 0) pbo->align(2,true);
-		else                             pbo->align(1,true);
+		if      ((elementSize % 8) == 0) pbo->align(8);
+		else if ((elementSize % 4) == 0) pbo->align(4);
+		else if ((elementSize % 2) == 0) pbo->align(2);
+		else                             pbo->align(1);
 
 		if(buffer_format == RT_FORMAT_UNSIGNED_BYTE4) {
 		  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, buffer_width, buffer_height, 0, GL_BGRA, GL_UNSIGNED_BYTE, 0);
@@ -204,7 +204,7 @@ public:
 		  throw "Unknown buffer format";
 		}
 
-		pbo->unbind(true);
+		pbo->unbind();
 	}
 
 	void destroy()
