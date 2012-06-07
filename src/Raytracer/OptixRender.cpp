@@ -172,6 +172,7 @@ void OptixRender::render()
 		return;
 	}
 
+	glActiveTexture(GL_TEXTURE0);
 	pbo2Texture();
 }
 

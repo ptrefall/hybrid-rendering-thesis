@@ -18,8 +18,8 @@
 
 
 // screen, buffer and tex all same size
-const static int TEX_WIDTH = 1024;
-const static int TEX_HEIGHT =768;
+const static int TEX_WIDTH = 1920;
+const static int TEX_HEIGHT =1080;
 
 GLuint vbo = 0;
 

@@ -8,7 +8,7 @@
 uniform sampler2D TEX_DIFF; 
 uniform sampler2D TEX_POS;
 uniform sampler2D TEX_NORM;
-//uniform sampler2D TEX_RAY;
+uniform sampler2D TEX_RAY;
 
 uniform vec3 ambient_mat[16];
 uniform vec3 diffuse_mat[16];
@@ -62,7 +62,7 @@ void main( void )
 	vec3 position_vs 	= texture( TEX_POS,  Vertex.t ).xyz;							//view space
 	vec4 normal_matid = texture( TEX_NORM, Vertex.t );
 	int material_id = int(normal_matid.a);
-	//vec4 ray = texture( TEX_RAY, Vertex.t );
+	vec4 ray = texture( TEX_RAY, Vertex.t );
 	
 	//vec3 N = -normalize(cross(dFdy(position_vs), dFdx(position_vs)));	//view space
 	vec3 N = normalize(normal_matid.xyz);								//view space
@@ -77,7 +77,7 @@ void main( void )
 	out_FragColor = vec4( 
 		((diffuse * diffuse_mat[material_id] * NdotL) +
 		(specular_mat[material_id] * term) +
-		(diffuse * ambient_mat[material_id])), // + ray.rgb, 
+		(diffuse * ambient_mat[material_id])) + ray.rgb, 
 		1.0
 		);
 		
