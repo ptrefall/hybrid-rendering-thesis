@@ -28,15 +28,10 @@ void Raytrace_Pass::end()
 
 void Raytrace_Pass::bind(unsigned int active_program, unsigned int index_offset)
 {
-	glActiveTexture(GL_TEXTURE0 + index_offset);
-	raytracer->getRenderTexture()->bind();
-	raytrace_tex_uniform->bind((int)index_offset, active_program);
 }
 
 void Raytrace_Pass::unbind(unsigned int index_offset)
 {
-	glActiveTexture(GL_TEXTURE0 + index_offset);
-	raytracer->getRenderTexture()->unbind();
 }
 
 void Raytrace_Pass::reshape(unsigned int w, unsigned int h) 

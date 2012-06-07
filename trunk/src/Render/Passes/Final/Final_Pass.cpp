@@ -80,7 +80,7 @@ void Final_Pass::end()
 
 void Final_Pass::bind(unsigned int active_program)
 { 
-	fbo->bind_rt(active_program, 0); 
+	fbo->bind_rt(active_program, 0);
 }
 
 void Final_Pass::unbind()

@@ -17,20 +17,16 @@ using namespace optix;
 OptixRender::OptixRender(const Render::GBuffer_PassPtr &g_buffer_pass, unsigned int width, unsigned int height, const std::string& baseDir)
 	: g_buffer_pass(g_buffer_pass), width(width), height(height), baseDir(baseDir)
 {
-	diffuse_tex = std::make_shared<Render::Tex2D>();
-	Render::T2DTexParams params((unsigned int)GL_RGBA8, (unsigned int)GL_RGBA, (unsigned int)GL_UNSIGNED_BYTE, 4, (unsigned int)width, (unsigned int)height, (unsigned int)GL_CLAMP_TO_EDGE, (unsigned char*)nullptr);
-	diffuse_tex->update(params); 
-
     context = minimalCreateContext();
-
 
 	optix::Program ray_gen_program = context->createProgramFromPTXFile( baseDir + "g_buffer.cu.ptx", "gbuffer_compose" );
 	context->setRayGenerationProgram( 0, ray_gen_program );
 	unsigned int screenDims[] = {width,height};
 	ray_gen_program->declareVariable("rtLaunchDim")->set2uiv( screenDims );
-	g_buffer = createGBuffer();
-	//ray_gen_program["g_buffer"]->set(g_buffer); // Why must this var be set on a RayGen (fails on context) ?
-	context["g_buffer"]->set(g_buffer);
+	createGBuffers();
+	context["g_buffer_diffuse"]->set(g_buffer_diffuse);
+	context["g_buffer_position"]->set(g_buffer_position);
+	context["g_buffer_normal"]->set(g_buffer_normal);
     
     // First Run, trap any exceptions before mainloop
 	try{
@@ -52,30 +48,33 @@ optix::Context OptixRender::minimalCreateContext()
 }
 
 // adapted from suti: optix\SDK\sutil\SampleScene.cpp
-optix::Buffer OptixRender::createGBuffer()
+void OptixRender::createGBuffers()
 {
-	Buffer buffer;
-	RTformat format = RT_FORMAT_UNSIGNED_BYTE4;
 	size_t element_size = 0;
-	context->checkError( rtuGetSizeForRTformat(format, &element_size) );
 
-	//Upload rasterized g-buffer info here:
-	auto raster_fbo = g_buffer_pass->getFBO();
-	auto raster_diffuse = raster_fbo->getRenderTexture(0);
-	auto raster_position = raster_fbo->getRenderTexture(1);
-	auto raster_normal = raster_fbo->getRenderTexture(2);
+	//DIFFUSE BUFFER
+	context->checkError( rtuGetSizeForRTformat(RT_FORMAT_UNSIGNED_BYTE4, &element_size) );
+	g_buffer_diffuse_pbo = std::make_shared<Render::PBO>(element_size * width * height, GL_STREAM_DRAW, true);
+	g_buffer_diffuse_pbo->unbind();
+	g_buffer_diffuse = context->createBufferFromGLBO(RT_BUFFER_INPUT_OUTPUT, g_buffer_diffuse_pbo->getHandle());
+	g_buffer_diffuse->setFormat(RT_FORMAT_UNSIGNED_BYTE4);
+	g_buffer_diffuse->setSize( width, height );
 
-	/*
-		Allocate first the memory for the gl buffer, then attach it to OptiX.
-	*/
-	//TODO: Size of PBO should be equal to number of render textures in gbuffer_pass' fbo, and also equal to their sizes and types...
-	g_buffer_pbo = std::make_shared<Render::PBO>(element_size * width * height, GL_STREAM_DRAW, true);
-	g_buffer_pbo->unbind();
-	//g_buffer_pbo->bufferFromTextureOnGPU(raster_diffuse, 0);
+	//POSITION BUFFER
+	context->checkError( rtuGetSizeForRTformat(RT_FORMAT_FLOAT4, &element_size) );
+	g_buffer_position_pbo = std::make_shared<Render::PBO>(element_size * width * height, GL_STREAM_DRAW, true);
+	g_buffer_position_pbo->unbind();
+	g_buffer_position = context->createBufferFromGLBO(RT_BUFFER_INPUT_OUTPUT, g_buffer_position_pbo->getHandle());
+	g_buffer_position->setFormat(RT_FORMAT_FLOAT4);
+	g_buffer_position->setSize( width, height );
 
-	buffer = context->createBufferFromGLBO(RT_BUFFER_INPUT_OUTPUT, g_buffer_pbo->getHandle());
-	buffer->setFormat(format);
-	buffer->setSize( width, height );
+	//NORMAL BUFFER
+	//context->checkError( rtuGetSizeForRTformat(RT_FORMAT_FLOAT4, &element_size) );
+	g_buffer_normal_pbo = std::make_shared<Render::PBO>(element_size * width * height, GL_STREAM_DRAW, true);
+	g_buffer_normal_pbo->unbind();
+	g_buffer_normal = context->createBufferFromGLBO(RT_BUFFER_INPUT_OUTPUT, g_buffer_normal_pbo->getHandle());
+	g_buffer_normal->setFormat(RT_FORMAT_FLOAT4);
+	g_buffer_normal->setSize( width, height );
 
 	// Set number of devices to be used
 	// Default, 0, means not to specify them here, but let OptiX use its default behavior.
@@ -88,8 +87,6 @@ optix::Buffer OptixRender::createGBuffer()
 		for( int i = 0; i < actual_num_devices; ++i ) devs[i] = i;
 			context->setDevices( devs.begin(), devs.end() );
 	}
-
-	return buffer;
 }
 
 
@@ -159,7 +156,11 @@ void OptixRender::render()
 	//Upload rasterized g-buffer info here:
 	auto raster_fbo = g_buffer_pass->getFBO();
 	auto raster_diffuse = raster_fbo->getRenderTexture(0);
-	g_buffer_pbo->bufferFromTextureOnGPU(raster_diffuse, 0);
+	auto raster_position = raster_fbo->getRenderTexture(1);
+	auto raster_normal = raster_fbo->getRenderTexture(2);
+	g_buffer_diffuse_pbo->bufferFromTextureOnGPU(raster_diffuse, 0);
+	g_buffer_position_pbo->bufferFromTextureOnGPU(raster_position, 0);
+	g_buffer_normal_pbo->bufferFromTextureOnGPU(raster_normal, 0);
 
 	//auto gl_id_handle = g_buffer->getGLBOId();
 	//static bool glbuffer_registered = true;
@@ -175,7 +176,7 @@ void OptixRender::render()
 	} catch (optix::Exception& e) {
 		std::cout << e.getErrorString();
 		return; 
-	}
+	} 
 	 
 	glActiveTexture(GL_TEXTURE0); 
 	pbo2Texture();
@@ -187,48 +188,37 @@ void OptixRender::reshape(unsigned int width, unsigned int height)
 	this->height = height; 
 }
 
-void OptixRender::createTextureSamplers( optix::Context context )
+unsigned int OptixRender::getBufferAlignment(optix::Buffer buffer)
 {
-	//Upload rasterized g-buffer info here:
-	auto raster_fbo = g_buffer_pass->getFBO();
-	auto raster_diffuse = raster_fbo->getRenderTexture(0);
-	auto raster_position = raster_fbo->getRenderTexture(1);
-	auto raster_normal = raster_fbo->getRenderTexture(2);
-	//TODO: Upload to optix!
-	addTextureSampler(raster_diffuse_sampler, raster_diffuse->getHandle(), 1.0f, "raster_diffuse_tex");
-	addTextureSampler(raster_position_sampler, raster_position->getHandle(), 1.0f, "raster_position_tex");
-	addTextureSampler(raster_normal_sampler, raster_normal->getHandle(), 1.0f, "raster_normal_tex");
-}
-
-void OptixRender::addTextureSampler(optix::TextureSampler sampler, unsigned int gl_tex_handle, float max_anisotropy, const std::string &sampler_name)
-{
-	sampler = context->createTextureSamplerFromGLImage( gl_tex_handle, RT_TARGET_GL_TEXTURE_2D );
-	sampler->setWrapMode( 0, RT_WRAP_CLAMP_TO_EDGE );
-	sampler->setWrapMode( 1, RT_WRAP_CLAMP_TO_EDGE );
-	sampler->setWrapMode( 2, RT_WRAP_CLAMP_TO_EDGE );
-	sampler->setIndexingMode( RT_TEXTURE_INDEX_NORMALIZED_COORDINATES );
-	sampler->setReadMode( RT_TEXTURE_READ_NORMALIZED_FLOAT );
-	sampler->setMaxAnisotropy( max_anisotropy );
-	sampler->setFilteringModes( RT_FILTER_LINEAR, RT_FILTER_LINEAR, RT_FILTER_NONE );
-
-	context[sampler_name.c_str()]->setTextureSampler( sampler );
+	RTsize elementSize = buffer->getElementSize();
+    if      ((elementSize % 8) == 0) return 8;
+    else if ((elementSize % 4) == 0) return 4;
+    else if ((elementSize % 2) == 0) return 2;
+    else                             return 1;
 }
 
 void OptixRender::pbo2Texture()
 {
-	g_buffer_pbo->bind();
+	auto raster_fbo = g_buffer_pass->getFBO();
+	auto raster_diffuse = raster_fbo->getRenderTexture(0);
+	auto raster_position = raster_fbo->getRenderTexture(1);
+	auto raster_normal = raster_fbo->getRenderTexture(2);
 
-    RTsize elementSize = g_buffer->getElementSize();
-    if      ((elementSize % 8) == 0) g_buffer_pbo->align(8);
-    else if ((elementSize % 4) == 0) g_buffer_pbo->align(4);
-    else if ((elementSize % 2) == 0) g_buffer_pbo->align(2);
-    else                             g_buffer_pbo->align(1);
+	g_buffer_diffuse_pbo->bind();
+	{
+		g_buffer_diffuse_pbo->align(getBufferAlignment(g_buffer_diffuse));
+		g_buffer_diffuse_pbo->copyToTextureOnGPU(raster_diffuse, 0);
+	} g_buffer_diffuse_pbo->unbind();
 
-	//TODO: Change this to respect the 3 textures of the g_buffer, and offset the glTexImage2D lookup from the PBO correctly..
-	unsigned int diffuse_offset = 0;
-    unsigned int position_offset =	g_buffer_pbo->copyToTextureOnGPU(diffuse_tex, diffuse_offset);
-	//unsigned int normal_offset =	g_buffer_pbo->copyToTextureOnGPU(position_tex, position_offset);
-	//								g_buffer_pbo->copyToTextureOnGPU(normal_tex, normal_offset);
+	g_buffer_position_pbo->bind();
+	{
+		g_buffer_position_pbo->align(getBufferAlignment(g_buffer_position));
+		g_buffer_position_pbo->copyToTextureOnGPU(raster_position, 0);
+	} g_buffer_position_pbo->unbind();
 
-    g_buffer_pbo->unbind();
+	g_buffer_normal_pbo->bind();
+	{
+		g_buffer_normal_pbo->align(getBufferAlignment(g_buffer_normal));
+		g_buffer_normal_pbo->copyToTextureOnGPU(raster_normal, 0);
+	} g_buffer_normal_pbo->unbind();
 } 
