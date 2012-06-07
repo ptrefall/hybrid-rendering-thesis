@@ -156,6 +156,11 @@ void OptixRender::render()
     context["V"]->set3fv( glm::value_ptr(V) );
     context["W"]->set3fv( glm::value_ptr(W) );
 
+	//Upload rasterized g-buffer info here:
+	auto raster_fbo = g_buffer_pass->getFBO();
+	auto raster_diffuse = raster_fbo->getRenderTexture(0);
+	g_buffer_pbo->bufferFromTextureOnGPU(raster_diffuse, 0);
+
 	//auto gl_id_handle = g_buffer->getGLBOId();
 	//static bool glbuffer_registered = true;
 	try {
