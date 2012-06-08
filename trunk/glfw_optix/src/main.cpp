@@ -1,12 +1,16 @@
 #include "cube_scene.h"
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h> 
-
 #include <string>
 #include <iostream>
 #include <memory>
+
+
+
+#include <Render/Tex2D.h>
+#include <Render/Shader.h>
+#include <Render/PBO.h>
+#include <Scene/Quad.h>
+#include <Scene/proto_camera.h>
 
 #define GLFW_NO_GLU
 #define GLFW_INCLUDE_GL3
@@ -15,12 +19,6 @@
 #include <Optix/optixu/optixpp_namespace.h>
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
-
-#include <Render/Tex2D.h>
-#include <Render/Shader.h>
-#include <Render/PBO.h>
-#include <Scene/Quad.h>
-#include <Scene/proto_camera.h>
 
 const static int SCREEN_WIDTH = 512;
 const static int SCREEN_HEIGHT =384;
@@ -31,7 +29,7 @@ public:
 	ScreenBufferRender(OptixScene *myScene)
 		: myScene(myScene)
 	{
-		screenQuad = std::unique_ptr<Scene::Quad>( new Scene::Quad(0,0) );
+		screenQuad = std::unique_ptr<Scene::Quad>( new Scene::Quad() );
 
 		std::string vertex_src = \
 			"#version 330\n"
@@ -111,8 +109,8 @@ public:
 
 		int mouse_x, mouse_y;
 		glfwGetMousePos(wnd, &mouse_x, &mouse_y );
-		myScene->updateCamera( glfwGetKey(wnd, 'A'), glfwGetKey(wnd, 'D'), glfwGetKey(wnd, 'S'), glfwGetKey(wnd, 'W'),
-			                    glm::vec2((float)mouse_x, (float)mouse_y), glfwGetMouseButton(wnd,0), 1.f/60.f );
+		myScene->updateCamera( glfwGetKey(wnd, 'A')==1, glfwGetKey(wnd, 'D')==1, glfwGetKey(wnd, 'S')==1, glfwGetKey(wnd, 'W')==1,
+			                    glm::vec2((float)mouse_x, (float)mouse_y), glfwGetMouseButton(wnd,0)==1, 1.f/60.f );
 		myScene->animate();
 			
 		RTsize width, height;
@@ -128,7 +126,7 @@ public:
 		int loc_tex0 = glGetUniformLocation( screen_quad_shader->getFS() , "tex0");
 		glProgramUniform1i(screen_quad_shader->getFS(), loc_tex0, 0);
 			
-		screenQuad->render(0);
+		screenQuad->render();
 	}
 
 	void destroy()

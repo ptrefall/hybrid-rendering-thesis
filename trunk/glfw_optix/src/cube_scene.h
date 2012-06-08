@@ -34,7 +34,7 @@ public:
 		context->setStackSize(2048);
 		optix::Variable out_buffer = context->declareVariable("output_buffer");
 		optix::Variable light_buffer = context->declareVariable("lights");
-		context->declareVariable("max_depth")->setInt(10);
+		context->declareVariable("max_depth")->setInt(2);
 		context->declareVariable("radiance_ray_type")->setUint(0u);
 		context->declareVariable("shadow_ray_type")->setUint(1u);
 		context->declareVariable("scene_epsilon")->setFloat(1.e-4f);
@@ -212,7 +212,8 @@ public:
 	{
 		fps_camera.update( key_left, key_right, key_back, key_fwd, mouse_coords, mouse_button_down, deltaTime );
 		glm::vec3 eyePos = fps_camera.getPos();
-		glm::vec3 u = fps_camera.getStrafeDirection();
+		float aspect = width/(float)height;
+		glm::vec3 u = aspect * fps_camera.getStrafeDirection();
 		glm::vec3 v = fps_camera.getUpDirection();
 		glm::vec3 w = fps_camera.getLookDirection();
 		

@@ -7,7 +7,7 @@
 
 using namespace Scene;
 
-Quad::Quad(unsigned int w, unsigned int h)
+Quad::Quad()
 {
 	unsigned int indices[] = {0,1,2, 2,3,0};	// 6
 	const float s = 1.0f;
@@ -28,7 +28,7 @@ Quad::Quad(unsigned int w, unsigned int h)
 	ibo->unbind();
 }
 
-void Quad::render(const Render::ShaderPtr &active_program)
+void Quad::render()
 {
 	vao->bind();
 	glDrawElements(GL_TRIANGLES, ibo->size(), GL_UNSIGNED_INT, BUFFER_OFFSET(0));

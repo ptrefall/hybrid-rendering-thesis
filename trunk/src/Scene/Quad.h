@@ -16,9 +16,8 @@ namespace Scene
 	class Quad
 	{
 	public:
-		Quad(unsigned int w, unsigned int h);
-
-		void render(const Render::ShaderPtr &active_program);
+		Quad();
+		void render();
 
 	private:
 		Render::VAOPtr vao;
