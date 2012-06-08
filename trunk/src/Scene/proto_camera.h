@@ -1,6 +1,7 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <glm/ext.hpp>
 #include <memory>
 
 namespace Scene
@@ -19,11 +20,7 @@ public:
 	void lookAt( const glm::vec3& pos, const glm::vec3& target, const glm::vec3& up );
 
 	void update(bool left_key, bool right_key, bool back_key, bool forwards_key,
-		float mouse_x, float mouse_y, bool mouse_is_down, float delta );
-
-	float getHorizontalAngle() { return hang; }
-
-	float getVerticalAngle() { return vang; }
+		glm::vec2 mouse_coords, bool mouse_is_down, float delta );
 
 	glm::vec3 getStrafeDirection() { return glm::vec3(world_to_view[0].x, world_to_view[1].x, world_to_view[2].x); }
 
@@ -70,6 +67,8 @@ private:
     glm::vec3 cameraUp;
     glm::vec3 cameraForward;
 
+	glm::quat orientation;
+
 	float vFov;
 	float near_dist;
 	float far_dist;
@@ -77,9 +76,6 @@ private:
     float movementUnitsPerSecond;
     float mouseDegreesPerSecond;
 
-    float hang;
-    float vang;
-	float oldmousx;
-	float oldmousy;
+	glm::vec2 old_mouse;
 };
 }

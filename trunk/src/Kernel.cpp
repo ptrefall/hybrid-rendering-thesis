@@ -132,7 +132,7 @@ void Kernel::run(int start_time, std::function<void()> main_loop_body)
 
 void Kernel::update(float dt)
 {
-	camera->update(keystatus['a'], keystatus['d'], keystatus['s'], keystatus['w'], (float)mouse.coords.x, (float)mouse.coords.y, mouse.leftPressed, dt);
+	camera->update(keystatus['a'], keystatus['d'], keystatus['s'], keystatus['w'], glm::vec2(mouse.coords), mouse.leftPressed, dt);
 }
 
 void Kernel::render()

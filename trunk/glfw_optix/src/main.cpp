@@ -1,46 +1,32 @@
-//#include <stdlib.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <math.h> 
 
 #include <string>
-//#include <iostream>
+#include <iostream>
 #include <memory>
 
 #define GLFW_NO_GLU
 #define GLFW_INCLUDE_GL3
 #include <GL/glfw3.h>
 #include <GL3/gl3w.h>
-
 #include <Optix/optixu/optixpp_namespace.h>
+#include <glm/glm.hpp>
+#include <glm/ext.hpp>
+
 #include <Render/Tex2D.h>
 #include <Render/Shader.h>
 #include <Render/PBO.h>
 #include <Scene/Quad.h>
-#include <glm/glm.hpp>
-#include <glm/ext.hpp>
+#include <Scene/proto_camera.h>
 
 #include "commonStructs.h"
 
 
 // screen, buffer and tex all same size
-const static int TEX_WIDTH = 800;
-const static int TEX_HEIGHT =600;
+const static int TEX_WIDTH = 512;
+const static int TEX_HEIGHT =384;
 
-struct Camera
-{
-	glm::vec3 eyePos;
-	glm::vec3 u;
-	glm::vec3 v;
-	glm::vec3 w;
-} cam;
-
-struct CamVars
-{
-	optix::Variable eyePos;
-	optix::Variable u;
-	optix::Variable v;
-	optix::Variable w;
-} optixCamVars;
 
 void ang2mat(float hang,float vang,float mat[9])
 {
@@ -54,6 +40,14 @@ void ang2mat(float hang,float vang,float mat[9])
 class OptixScene
 {
 public:
+	struct CamVars
+	{
+		optix::Variable eyePos;
+		optix::Variable u;
+		optix::Variable v;
+		optix::Variable w;
+	} optixCamVars;
+
 	OptixScene(std::string optix_dir, int width, int height) :
 	  optix_dir(optix_dir), width(width), height(height)
 	{
@@ -63,18 +57,13 @@ public:
 
 	void init()
 	{
-		cam.eyePos = glm::vec3(0.0f, 0.0f, 5.0f);
-		cam.u = glm::vec3(1.0f, 0.0f, 0.0f ); // screen wid
-		cam.v = glm::vec3(0.0f, 1.0f, 0.0f ); // up
-		cam.w = glm::vec3(0.0f, 0.0f, -1.0f); // Z
-
 		/* Context */
 		context = optix::Context::create();
 		context->setRayTypeCount(2); /* shadow and radiance */
 		context->setEntryPointCount(1);
 		optix::Variable out_buffer = context->declareVariable("output_buffer");
 		optix::Variable light_buffer = context->declareVariable("lights");
-		context->declareVariable("max_depth")->setInt(0);
+		context->declareVariable("max_depth")->setInt(10);
 		context->declareVariable("radiance_ray_type")->setUint(0u);
 		context->declareVariable("shadow_ray_type")->setUint(1u);
 		context->declareVariable("scene_epsilon")->setFloat(1.e-4f);
@@ -105,10 +94,6 @@ public:
 		optixCamVars.u = ray_gen_program->declareVariable("U"); 
 		optixCamVars.v = ray_gen_program->declareVariable("V");
 		optixCamVars.w = ray_gen_program->declareVariable("W");
-		optixCamVars.eyePos->set3fv(&cam.eyePos.x);
-		optixCamVars.u->set3fv(&cam.u.x);
-		optixCamVars.v->set3fv(&cam.v.x);
-		optixCamVars.w->set3fv(&cam.w.x);
 
 		unsigned int screenDims[] = {width,height};
 		ray_gen_program->declareVariable("rtLaunchDim")->set2uiv(screenDims);
@@ -132,6 +117,9 @@ public:
 		out_buffer_obj->setSize(width,height);
 		
 		out_buffer->set(out_buffer_obj);
+
+		
+		fps_camera.lookAt( glm::vec3(10.0f, 10.0f, 10.0f), glm::vec3(0.f), glm::vec3(0.f, 1.f, 0.f) );
 	}
 
 	optix::Geometry createGeometry()
@@ -174,13 +162,6 @@ public:
 	{
 		static const int NUM_BOXES = 32;
 		transforms.resize(NUM_BOXES);
-
-		float m[16];
-		m[ 0] = 1.0f;  m[ 1] = 0.0f;  m[ 2] = 0.0f;  m[ 3] = 0.0f;
-		m[ 4] = 0.0f;  m[ 5] = 1.0f;  m[ 6] = 0.0f;  m[ 7] = 0.0f;
-		m[ 8] = 0.0f;  m[ 9] = 0.0f;  m[10] = 1.0f;  m[11] = 0.0f;
-		m[12] = 0.0f;  m[13] = 0.0f;  m[14] = 0.0f;  m[15] = 1.0f;
-
 
 		for ( int i = 0; i < NUM_BOXES; ++i )
 		{
@@ -234,8 +215,9 @@ public:
 			transforms[i] = context->createTransform();
 			transforms[i]->setChild( geometrygroup );
 			float seperation = 1.1f;
-			m[3] = i*seperation - (NUM_BOXES-1)*seperation*.5f;
-			transforms[i]->setMatrix( 0, m, 0 );
+			glm::mat4 xform = glm::transpose(glm::translate( glm::mat4(1.f), i*seperation - (NUM_BOXES-1)*seperation*.5f,  0.f, 0.f ) );
+			transforms[i]->setMatrix( 0, glm::value_ptr(xform), 0 );
+
 		}
 
 		/* Place these geometrygroups as children of the top level object */
@@ -265,40 +247,48 @@ public:
 		return out_buffer_obj;
 	}
 
+	void updateCamera(bool key_left, bool key_right, bool key_back, bool key_fwd, 
+					 glm::vec2 mouse_coords, bool mouse_button_down, float deltaTime)
+	{
+		fps_camera.update( key_left, key_right, key_back, key_fwd, mouse_coords, mouse_button_down, deltaTime );
+		glm::vec3 eyePos = fps_camera.getPos();
+		glm::vec3 u = fps_camera.getStrafeDirection();
+		glm::vec3 v = fps_camera.getUpDirection();
+		glm::vec3 w = fps_camera.getLookDirection();
+		
+		optixCamVars.eyePos->set3fv(&eyePos.x);
+		optixCamVars.u->set3fv(&u.x);
+		optixCamVars.v->set3fv(&v.x);
+		optixCamVars.w->set3fv(&w.x);
+	}
+
 	void animate()
 	{
 		float t = fTime->getFloat();
-		float radi = 10.f;
-		cam.eyePos.x = radi*sin(t);
-		cam.eyePos.y = 0;
-		cam.eyePos.z = radi*cos(t);
-
-		float mtx[9];
-		ang2mat(t,0.f, mtx);
-
-		cam.u = glm::vec3( mtx[0],mtx[1],mtx[2] );
-		cam.v = glm::vec3( mtx[3],mtx[4],mtx[5] );
-		cam.w = -glm::vec3( mtx[6],mtx[7],mtx[8] );
-		
-		optixCamVars.eyePos->set3fv(&cam.eyePos.x);
-		optixCamVars.u->set3fv(&cam.u.x);
-		optixCamVars.v->set3fv(&cam.v.x);
-		optixCamVars.w->set3fv(&cam.w.x);
-
-
 		glm::mat4 identity(1.f);		
-		float num = (float)transforms.size();
+		int num = transforms.size();
 		for (size_t i=0; i<transforms.size(); ++i){
-			float a = 6.28f * i/num;
+			float a = 6.28f * i/(float)num;
 			glm::vec3 pos( cos(a), sin(4.f*a+t)*0.25f, sin(a) );
 			pos *= 5.f;
 
 			glm::mat4 xform = glm::translate( identity, pos );
 			xform = glm::transpose(xform);
-			transforms[i]->setMatrix( false, glm::value_ptr(xform),  0 );
+			
+
+			if ( i==0 ) {
+				// T*R*S
+				glm::mat4 xform(1.0f);
+				xform = glm::translate(xform, glm::vec3(0.f, -3.f, 0.f) );
+				xform = glm::scale(xform, 25.f, 1.f, 25.f);
+				
+				transforms[i]->setMatrix( true, glm::value_ptr(xform),  0 );
+			} else {
+				transforms[i]->setMatrix( false, glm::value_ptr(xform),  0 );
+			}
 		}
 
-		//top_level_acceleration->markDirty();
+		top_level_acceleration->markDirty();
 	}
 
 	~OptixScene()
@@ -315,6 +305,7 @@ private:
 	std::vector<optix::Transform> transforms;
 	optix::Acceleration top_level_acceleration;
 
+	Scene::FirstPersonCamera fps_camera;
 	std::string optix_dir;
 	int width;
 	int height;
@@ -365,7 +356,6 @@ public:
 	~GLContext()
 	{
 		glfwTerminate();
-		exit(EXIT_SUCCESS);
 	}
 
 	void initState()
@@ -454,7 +444,6 @@ public:
 		optix::Variable fTime = myScene->getFTime();
 		optix::Context context = imageBuffer->getContext();
 
-
 		context->validate();
 		context->compile();
 
@@ -467,6 +456,10 @@ public:
 			glfwSetWindowTitle(wnd, titleBuf );*/
 			fTime->set1fv( &time );
 
+			int mouse_x, mouse_y;
+			glfwGetMousePos(wnd, &mouse_x, &mouse_y );
+			myScene->updateCamera( glfwGetKey(wnd, 'A'), glfwGetKey(wnd, 'D'), glfwGetKey(wnd, 'S'), glfwGetKey(wnd, 'W'),
+			                       glm::vec2((float)mouse_x, (float)mouse_y), glfwGetMouseButton(wnd,0), 1.f/60.f );
 			myScene->animate();
 			context->launch(0 /*entry point*/, width, height );
 
@@ -520,8 +513,8 @@ int main(int argc, char* argv[])
 		OptixScene *myScene = new OptixScene(optix_dir, width, height);
 		myGLContext.display( myScene );
 	} catch( std::exception &e) {
-		//std::cout << e.what() << std::endl;
-		printf("%s\n", e.what() );
+		std::cout << e.what() << std::endl;
+		//printf("%s\n", e.what() );
 		system("pause");
 	}
 
