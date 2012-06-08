@@ -25,7 +25,7 @@ Final_Pass::Final_Pass(const GBuffer_PassPtr &g_buffer_pass, const Raytrace_Pass
 	fbo->check();
 	fbo->unbind();
 
-	quad = std::make_shared<Scene::Quad>(w,h);
+	quad = std::make_shared<Scene::Quad>();
 	shader = shader_loader->load("present.vs", std::string(), "finalColor.fs");
 	camPos = std::make_shared<Uniform>(shader->getFS(), "CamPos_vs");
 }
@@ -61,7 +61,7 @@ void Final_Pass::begin()
 
 void Final_Pass::render()
 {
-	quad->render(0);
+	quad->render();
 }
 
 void Final_Pass::end()

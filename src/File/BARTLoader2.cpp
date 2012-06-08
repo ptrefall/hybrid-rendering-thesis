@@ -180,7 +180,6 @@ Format:
 void BARTLoader2::parseInclude(FILE *fp)
 {
 	char filename[100];
-	FILE *ifp;
 	int detail_level;
 	if(fscanf(fp,"%d %s",&detail_level,filename)!=2)
 		std::runtime_error("Error: could not parse include.");

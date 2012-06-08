@@ -25,6 +25,8 @@
 /// @date 2008-08-18 / 2011-06-15
 /// @author Christophe Riccio
 ///////////////////////////////////////////////////////////////////////////////////
+#pragma warning(disable:4201) // C4201: nonstandard extension used : nameless struct/union
+
 
 #ifndef glm_core_type_gentype2
 #define glm_core_type_gentype2

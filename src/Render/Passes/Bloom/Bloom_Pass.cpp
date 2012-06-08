@@ -29,7 +29,7 @@ Bloom_Pass::Bloom_Pass(const Final_PassPtr &final_pass, const File::ShaderLoader
 	fbo_blur_horizontal->check();
 	fbo_blur_horizontal->unbind();
 
-	quad = std::make_shared<Scene::Quad>(w,h);
+	quad = std::make_shared<Scene::Quad>();
 	shader_extraction = shader_loader->load("present.vs", std::string(), "bloom_pass_extraction.fs");
 	shader_blur_vertical = shader_loader->load("present.vs", std::string(), "bloom_pass_blur_vertical.fs");
 	shader_blur_horizontal = shader_loader->load("present.vs", std::string(), "bloom_pass_blur_horizontal.fs");
@@ -51,7 +51,7 @@ void Bloom_Pass::render_extraction_step()
 		final_pass->bind(shader_extraction->getFS());
 		GLenum buffers[] = { GL_COLOR_ATTACHMENT0 };
 		glDrawBuffers(1, buffers);
-		quad->render(0);
+		quad->render();
 		final_pass->unbind();
 		shader_loader->pop_bind();
 	} fbo_extraction->unbind();
@@ -68,7 +68,7 @@ void Bloom_Pass::render_blur_steps()
 		fbo_extraction->bind_rt(shader_blur_vertical->getFS(),0);
 		GLenum buffers[] = { GL_COLOR_ATTACHMENT0 };
 		glDrawBuffers(1, buffers);
-		quad->render(0);
+		quad->render();
 		fbo_extraction->unbind_rt(0);
 		shader_loader->pop_bind();
 	} fbo_blur_vertical->unbind();
@@ -82,7 +82,7 @@ void Bloom_Pass::render_blur_steps()
 		fbo_blur_vertical->bind_rt(shader_blur_horizontal->getFS(),0);
 		GLenum buffers[] = { GL_COLOR_ATTACHMENT0 };
 		glDrawBuffers(1, buffers);
-		quad->render(0);
+		quad->render();
 		fbo_blur_vertical->unbind_rt(0);
 		shader_loader->pop_bind();
 	} fbo_blur_horizontal->unbind();
@@ -94,7 +94,7 @@ void Bloom_Pass::render_final_step()
 	fbo_blur_horizontal->bind_rt(shader_final->getFS(),0);
 	GLenum buffers[] = { GL_COLOR_ATTACHMENT0 };
 	glDrawBuffers(1, buffers);
-	quad->render(0);
+	quad->render();
 	fbo_blur_horizontal->unbind_rt(0);
 	shader_loader->pop_bind();
 }
