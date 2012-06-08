@@ -62,8 +62,7 @@ void FirstPersonCamera::update(bool left_key, bool right_key, bool back_key, boo
 
 		glm::quat rx = glm::angleAxis(mouse_speed.y, glm::vec3(1.f, 0.f, 0.f));
 		glm::quat ry = glm::angleAxis(mouse_speed.x, glm::vec3(0.f, 1.f, 0.f));
-		orientation = glm::normalize( rx*orientation*ry );
-		world_to_view = glm::mat4_cast(orientation); // keep Quat & Matrix in sync
+		orientation = glm::normalize( rx*orientation*ry );	
 	}
 	
     float xMove = float(right_key-left_key);
@@ -73,8 +72,10 @@ void FirstPersonCamera::update(bool left_key, bool right_key, bool back_key, boo
     if ( glm::length2(moveDir) ) {
 		float speed = delta * movementUnitsPerSecond; // meters per second
         pos += speed * glm::normalize(moveDir);
-		world_to_view = glm::translate( glm::mat4_cast(orientation) , -pos);
+		
 	}
 
+	world_to_view = glm::mat4_cast(orientation); // keep Quat & Matrix in sync
+	world_to_view = glm::translate( glm::mat4_cast(orientation) , -pos);
 	old_mouse = mouse_coords;
 }				  
