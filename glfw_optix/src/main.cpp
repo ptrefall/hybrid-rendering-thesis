@@ -1,4 +1,4 @@
-#include "cube_scene.h"
+#include "triangle_scene.h"
 
 #include <string>
 #include <iostream>
@@ -51,7 +51,7 @@ public:
 			"uniform sampler2D tex0;\n"
 			"void main()\n"
 			"{\n"
-			"out_FragColor = vec4(1.0) * texture(tex0,t.xy);\n"
+			"out_FragColor = texture(tex0,t.xy);\n"
 			//"out_FragColor = vec4(t.x,t.y,1.0,1.0);\n"
 			"}\n";
 		screen_quad_shader = std::unique_ptr<Render::Shader>( new Render::Shader(vertex_src, "", fragment_src ) );
@@ -125,7 +125,7 @@ public:
 		screen_quad_shader->bind();
 		int loc_tex0 = glGetUniformLocation( screen_quad_shader->getFS() , "tex0");
 		glProgramUniform1i(screen_quad_shader->getFS(), loc_tex0, 0);
-			
+
 		screenQuad->render();
 	}
 
