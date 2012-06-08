@@ -9,7 +9,7 @@ macro(COMPILE_CU2PTX)
 		set(PTX ${CU}${PTX_EXT})
 		add_custom_command(	TARGET ${NAME}
 							PRE_BUILD 
-							COMMAND ${RUN_IF_NEWER_EXEC} ${CU} ${PTX} "nvcc.exe" ${CU} ARGS --machine 32 --ptx --include-path ${CUDA_INCLUDE_PATH} --include-path ${OPTIX_INCLUDE_PATH} --output-file ${PTX}
+							COMMAND ${RUN_IF_NEWER_EXEC} ${CU} ${PTX} "nvcc.exe" ${CU} ARGS --machine 32 --ptx -arch=sm_13 --include-path ${CUDA_INCLUDE_PATH} --include-path ${OPTIX_INCLUDE_PATH} --output-file ${PTX}
 							COMMENT "Compiling Optix script ${CU} to ${PTX}")
 	endforeach()
 endmacro()

@@ -6,6 +6,12 @@ project(${NAME})
 file(GLOB_RECURSE GL3W_HEADER ${CMAKE_SOURCE_DIR}/depends/include/GL3/*.h)
 file(GLOB_RECURSE GL3W_SOURCE ${CMAKE_SOURCE_DIR}/depends/include/GL3/*.c)
 
+file(GLOB_RECURSE ASSIMP_HEADER_H ${CMAKE_SOURCE_DIR}/depends/include/AssImp/*.h)
+file(GLOB_RECURSE ASSIMP_HEADER ${CMAKE_SOURCE_DIR}/depends/include/AssImp/*.hpp)
+
+file(GLOB_RECURSE ASSIMP_SOURCE_C ${CMAKE_SOURCE_DIR}/depends/include/AssImp/*.c)
+file(GLOB_RECURSE ASSIMP_SOURCE ${CMAKE_SOURCE_DIR}/depends/include/AssImp/*.cpp)
+
 file(GLOB 		  HYBRID_HEADER
 	${CMAKE_SOURCE_DIR}/src/Render/ATTRIB.h
 	${CMAKE_SOURCE_DIR}/src/Render/IBO.h
@@ -17,6 +23,10 @@ file(GLOB 		  HYBRID_HEADER
 	${CMAKE_SOURCE_DIR}/src/Render/PBO.h
 	${CMAKE_SOURCE_DIR}/src/Scene/Quad.h
 	${CMAKE_SOURCE_DIR}/src/Scene/proto_camera.h
+	
+	${CMAKE_SOURCE_DIR}/src/Scene/SceneNode.h
+	${CMAKE_SOURCE_DIR}/src/Scene/Mesh.h
+	${CMAKE_SOURCE_DIR}/src/File/MeshLoader.h
 )
 file(GLOB 		  HYBRID_SOURCE
 	${CMAKE_SOURCE_DIR}/src/Render/ATTRIB.cpp
@@ -29,11 +39,18 @@ file(GLOB 		  HYBRID_SOURCE
 	${CMAKE_SOURCE_DIR}/src/Render/PBO.cpp
 	${CMAKE_SOURCE_DIR}/src/Scene/Quad.cpp
 	${CMAKE_SOURCE_DIR}/src/Scene/proto_camera.cpp
+	
+	${CMAKE_SOURCE_DIR}/src/Scene/SceneNode.cpp
+	${CMAKE_SOURCE_DIR}/src/Scene/Mesh.cpp
+	${CMAKE_SOURCE_DIR}/src/File/MeshLoader.cpp
 )
 
 file(GLOB_RECURSE OPTIX_SCRIPTS ${CMAKE_SOURCE_DIR}/bin/resources/glfw_optix/*.cu)
 file(GLOB ROOT_HEADER src/*.h)
 file(GLOB ROOT_SOURCE src/*.cpp)
+
+SOURCE_GROUP("Header Files\\Depends\\AssImp" FILES ${ASSIMP_HEADER_H} ${ASSIMP_HEADER})
+SOURCE_GROUP("Source Files\\Depends\\AssImp" FILES ${ASSIMP_SOURCE_C} ${ASSIMP_SOURCE})
 
 SOURCE_GROUP("Resource Files\\Optix\\" FILES ${OPTIX_SCRIPTS})
 SOURCE_GROUP("Header Files\\HybridRender" FILES ${HYBRID_HEADER})
@@ -45,12 +62,16 @@ set(RESOURCES
 
 set(HDRS
 	${GL3W_HEADER}
+	${ASSIMP_HEADER_H} 
+	${ASSIMP_HEADER}
 	${HYBRID_HEADER}
 	${ROOT_HEADER}
 )
 
 set(SRCS
 	${GL3W_SOURCE}
+	${ASSIMP_SOURCE_C} 
+	${ASSIMP_SOURCE}
 	${HYBRID_SOURCE}
 	${ROOT_SOURCE}
 )
@@ -68,7 +89,7 @@ include_directories(
 	${CMAKE_SOURCE_DIR}/bin/resources/glfw_optix/
 )
 
-ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS)
+ADD_DEFINITIONS(-DASSIMP_BUILD_BOOST_WORKAROUND -D_SCL_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS -DASSIMP_BUILD_NO_IFC_IMPORTER)
 
 add_executable(${NAME} ${RESOURCES} ${HDRS} ${SRCS})
 
@@ -80,16 +101,7 @@ target_link_libraries(${NAME}
 	debug ${GLFW_STATIC_DEBUG_LIBRARY} optimized ${GLFW_STATIC_RELEASE_LIBRARY}
 )
 
-IF(MSVC)
-
-	SET(VS_MULTITHREADED_DEBUG_IGNORE_LIBRARY_FLAGS
-		"/NODEFAULTLIB:libcmt.lib"
-	)
-	#SET_TARGET_PROPERTIES(${NAME} PROPERTIES
-		   #LINK_FLAGS_DEBUG
-		   #${VS_MULTITHREADED_DEBUG_IGNORE_LIBRARY_FLAGS}
-	#)
-		   
+IF(MSVC)	   
 	TARGET_LINK_LIBRARIES(${NAME} WinMM)
 ENDIF()
 

@@ -37,7 +37,7 @@ public:
 		context->declareVariable("max_depth")->setInt(10);
 		context->declareVariable("radiance_ray_type")->setUint(0u);
 		context->declareVariable("shadow_ray_type")->setUint(1u);
-		context->declareVariable("scene_epsilon")->setFloat(1e-4f);
+		context->declareVariable("scene_epsilon")->setFloat(1.e-4f);
 
 		/* Lights buffer */
 		BasicLight light;
