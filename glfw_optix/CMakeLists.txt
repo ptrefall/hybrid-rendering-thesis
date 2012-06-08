@@ -16,6 +16,7 @@ file(GLOB 		  HYBRID_HEADER
 	${CMAKE_SOURCE_DIR}/src/Render/VBO.h
 	${CMAKE_SOURCE_DIR}/src/Render/PBO.h
 	${CMAKE_SOURCE_DIR}/src/Scene/Quad.h
+	${CMAKE_SOURCE_DIR}/src/Scene/proto_camera.h
 )
 file(GLOB 		  HYBRID_SOURCE
 	${CMAKE_SOURCE_DIR}/src/Render/ATTRIB.cpp
@@ -27,6 +28,7 @@ file(GLOB 		  HYBRID_SOURCE
 	${CMAKE_SOURCE_DIR}/src/Render/VBO.cpp
 	${CMAKE_SOURCE_DIR}/src/Render/PBO.cpp
 	${CMAKE_SOURCE_DIR}/src/Scene/Quad.cpp
+	${CMAKE_SOURCE_DIR}/src/Scene/proto_camera.cpp
 )
 
 file(GLOB_RECURSE OPTIX_SCRIPTS ${CMAKE_SOURCE_DIR}/bin/resources/glfw_optix/*.cu)
