@@ -91,7 +91,7 @@ public:
 		
 		out_buffer->set(out_buffer_obj);
 
-		fps_camera.lookAt( glm::vec3(30.0f, 30.0f, 30.0f), glm::vec3(0.f), glm::vec3(0.f, 1.f, 0.f) );
+		fps_camera.lookAt( glm::vec3(10.0f, 10.0f, 10.0f), glm::vec3(0.f), glm::vec3(0.f, 1.f, 0.f) );
 	}
 
 	optix::Geometry createMeshGeometry()
