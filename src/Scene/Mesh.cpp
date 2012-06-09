@@ -14,8 +14,8 @@ using namespace glm;
 Mesh::Mesh(MeshDataPtr data)
 {
 	vao = std::make_shared<Render::VAO>();
-	vbo = std::make_shared<Render::VBO>(data->getBufferSize(), GL_STATIC_DRAW);
-	ibo = std::make_shared<Render::IBO>(data->indices, GL_STATIC_DRAW);
+	vbo = std::make_shared<Render::VBO>(data->getBufferSize(), GL_STATIC_READ);
+	ibo = std::make_shared<Render::IBO>(data->indices, GL_STATIC_READ);
 
 	bool normals_loaded = false;
 	bool tangents_loaded = false;

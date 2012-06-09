@@ -18,6 +18,7 @@ namespace Render
 
 		void bind();
 		void unbind();
+		unsigned int getHandle() const { return handle; }
 
 		unsigned int size() const { return index_size; }
 
