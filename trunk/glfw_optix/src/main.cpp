@@ -28,6 +28,7 @@ class ScreenBufferRender
 public:
 	ScreenBufferRender(OptixScene *myScene)
 		: myScene(myScene)
+		, old_time( 0.0 )
 	{
 		screenQuad = std::unique_ptr<Scene::Quad>( new Scene::Quad() );
 
@@ -102,15 +103,18 @@ public:
 
 	void render(GLFWwindow wnd)
 	{
-		float time =(float)glfwGetTime() ;
+		double time = glfwGetTime();
+		double delta_time = time - old_time;
+		old_time = time;
+
 		optix::Variable fTime = myScene->getFTime();
 		optix::Context context = myScene->getContext();
-		fTime->set1fv( &time );
+		fTime->setFloat( (float)time );
 
 		int mouse_x, mouse_y;
 		glfwGetMousePos(wnd, &mouse_x, &mouse_y );
 		myScene->updateCamera( glfwGetKey(wnd, 'A')==1, glfwGetKey(wnd, 'D')==1, glfwGetKey(wnd, 'S')==1, glfwGetKey(wnd, 'W')==1,
-			                    glm::vec2((float)mouse_x, (float)mouse_y), glfwGetMouseButton(wnd,0)==1, 1.f/60.f );
+			                    glm::vec2((float)mouse_x, (float)mouse_y), glfwGetMouseButton(wnd,0)==1, delta_time );
 		myScene->animate();
 			
 		RTsize width, height;
@@ -138,6 +142,7 @@ private:
 	Render::Tex2D outputTex;
 	std::unique_ptr<Scene::Quad> screenQuad;
 	std::unique_ptr<Render::Shader> screen_quad_shader;
+	double old_time;
 	OptixScene *myScene;
 };
 
