@@ -18,6 +18,7 @@ namespace Render
 
 		void bind();
 		void unbind();
+		unsigned int getHandle() const { return handle; }
 
 		template<class T>
 		unsigned int buffer(const std::vector<T> &data)
@@ -28,7 +29,7 @@ namespace Render
 			offset += sizeof(T)*data.size();
 			return return_offset;
 		}
-
+	
 	private:
 		unsigned int handle;
 		unsigned int offset;

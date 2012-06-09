@@ -24,8 +24,7 @@ namespace File
 		MeshLoader(const std::string &base_dir);
 		~MeshLoader();
 
-		template<class MeshType>
-		std::shared_ptr<MeshType> load(const std::string &filename)
+		Scene::MeshDataPtr loadMeshDataEasy(const std::string &filename)
 		{
 			Scene::MeshDataPtr data;
 			auto scene = importer->ReadFile(base_dir + filename, aiProcessPreset_TargetRealtime_Quality);
@@ -41,7 +40,13 @@ namespace File
 				else break;
 			}
 
-			auto mesh = std::make_shared<MeshType>(data);
+			return data;
+		}
+
+		template<class MeshType>
+		std::shared_ptr<MeshType> load(const std::string &filename)
+		{
+			auto mesh = std::make_shared<MeshType>( loadMeshDataEasy(filename) );
 			return mesh;
 		}
 

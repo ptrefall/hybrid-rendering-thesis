@@ -230,15 +230,13 @@ int main(int argc, char* argv[])
 	resource_dir = resource_dir.substr(0, resource_dir.find_last_of("\\"));
 	resource_dir += "\\resources\\";
 
-	std::string optix_dir = resource_dir + "\\glfw_optix\\";
-
 	unsigned int width = SCREEN_WIDTH;
 	unsigned int height = SCREEN_HEIGHT;
 
 	GLContext myGLContext(width,height);
 	
 	try {
-		OptixScene *myScene = new OptixScene(optix_dir, width, height);
+		OptixScene *myScene = new OptixScene(resource_dir, width, height);
 		ScreenBufferRender myRender(myScene);
 		myGLContext.display( &myRender );
 	} catch( std::exception &e) {
