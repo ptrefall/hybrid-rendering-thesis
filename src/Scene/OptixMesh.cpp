@@ -16,18 +16,16 @@ OptixMesh::OptixMesh(MeshDataPtr data, optix::Context rtContext, const std::stri
 	: Mesh(data)
 {
 	int num_indices = data->indices.size();
-	int num_vts = data->vertices.size() / 3;
-
-	int num_triangles = data->indices.size()/3;
+	int num_triangles = data->indices.size() / 3;
+	int num_vertices = data->vertices.size() / 3;
+	int num_normals = data->normals.size() / 3;
 
 	rtModel = rtContext->createGeometry();
 	rtModel->setPrimitiveCount( num_triangles );
 	rtModel->setIntersectionProgram( rtContext->createProgramFromPTXFile( ptx_dir+"triangle_mesh_small.cu.ptx", "mesh_intersect" ) );
 	rtModel->setBoundingBoxProgram( rtContext->createProgramFromPTXFile( ptx_dir+"triangle_mesh_small.cu.ptx", "mesh_bounds" ) );
 	
-	int num_vertices = data->vertices.size() / 3;
-	
-	int num_vertex_attributes = 3; // allways has verts
+	//int num_vertex_attributes = 3; // allways has verts
 	//if(data->hasNormals() ) num_vertex_attributes += 3;
 	//if(data->hasBitangents() ) num_vertex_attributes += 3;
 	//if(data->hasTexCoords() ) num_vertex_attributes += 2;
@@ -35,15 +33,17 @@ OptixMesh::OptixMesh(MeshDataPtr data, optix::Context rtContext, const std::stri
 
 	optix::Buffer vertex_buffer = rtContext->createBufferFromGLBO(RT_BUFFER_INPUT, vbo->getHandle() );
     vertex_buffer->setFormat(RT_FORMAT_USER);
-    vertex_buffer->setElementSize(num_vertex_attributes*sizeof(float));
-    vertex_buffer->setSize(num_vertices);
+    vertex_buffer->setElementSize(3*sizeof(float));
+    vertex_buffer->setSize(num_vertices + num_normals);
     rtModel["vertex_buffer"]->setBuffer(vertex_buffer);
-
 
     optix::Buffer index_buffer = rtContext->createBufferFromGLBO(RT_BUFFER_INPUT, ibo->getHandle() );
     index_buffer->setFormat(RT_FORMAT_INT3);
     index_buffer->setSize( num_triangles );
     rtModel["index_buffer"]->setBuffer(index_buffer);
+
+	rtModel["normal_offset"]->setInt( num_normals );
+	
 }
 
 void OptixMesh::init()

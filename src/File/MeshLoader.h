@@ -27,7 +27,8 @@ namespace File
 		Scene::MeshDataPtr loadMeshDataEasy(const std::string &filename)
 		{
 			Scene::MeshDataPtr data;
-			auto scene = importer->ReadFile(base_dir + filename, aiProcessPreset_TargetRealtime_Quality);
+
+			auto scene = importer->ReadFile(base_dir + filename, aiProcessPreset_TargetRealtime_Fast);
 			for(unsigned int n = 0; n < scene->mNumMeshes; n++)
 			{
 				auto scene_mesh = scene->mMeshes[n];
@@ -36,6 +37,7 @@ namespace File
 				if(n == 0)
 				{
 					data = loadMeshData(scene_mesh);
+					data->name = filename;
 				}
 				else break;
 			}
