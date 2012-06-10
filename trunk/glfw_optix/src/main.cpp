@@ -20,8 +20,8 @@
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 
-const static int SCREEN_WIDTH = 512;
-const static int SCREEN_HEIGHT =384;
+const static int SCREEN_WIDTH = 1024;
+const static int SCREEN_HEIGHT =768;
 
 class ScreenBufferRender
 {
@@ -65,6 +65,7 @@ public:
 		outputTex.init( params );
 
 		optix::Context context = imageBuffer->getContext();
+		
 		context->validate();
 		context->compile();
 	}

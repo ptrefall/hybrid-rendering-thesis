@@ -40,7 +40,7 @@ public:
 		context->declareVariable("max_depth")->setInt(10);
 		context->declareVariable("radiance_ray_type")->setUint(0u);
 		context->declareVariable("shadow_ray_type")->setUint(1u);
-		context->declareVariable("scene_epsilon")->setFloat(1.e-4f);
+		context->declareVariable("scene_epsilon")->setFloat(1e-4f);
 
 		/* Lights buffer */
 		BasicLight light;
@@ -91,16 +91,94 @@ public:
 		
 		out_buffer->set(out_buffer_obj);
 
-		fps_camera.lookAt( glm::vec3(10.0f, 10.0f, 10.0f), glm::vec3(0.f), glm::vec3(0.f, 1.f, 0.f) );
+		fps_camera.lookAt( glm::vec3(15.0f, 15.0f, 15.0f), glm::vec3(0.f), glm::vec3(0.f, 1.f, 0.f) );
 	}
 
-	optix::Geometry createMeshGeometry()
+	optix::Material createMaterial()
 	{
+		/* Create our hit programs to be shared among all materials */
+		std::string path_to_ptx = optix_dir + "\\phong.cu.ptx";
+		optix::Program closest_hit_program = context->createProgramFromPTXFile( path_to_ptx, "closest_hit_radiance" );
+		optix::Program any_hit_program = context->createProgramFromPTXFile( path_to_ptx, "any_hit_shadow" );
+
+		optix::Material mat = context->createMaterial();
+		mat->setClosestHitProgram(0, closest_hit_program);
+		mat->setAnyHitProgram(1, any_hit_program);
+		return mat;
+	}
+
+	optix::Material createNormalDebugMaterial()
+	{
+		/* Create our hit programs to be shared among all materials */
+		std::string path_to_ptx = optix_dir + "\\mat_normal.cu.ptx";
+		optix::Program closest_hit_program = context->createProgramFromPTXFile( path_to_ptx, "closest_hit_radiance" );
+		optix::Material mat = context->createMaterial();
+		 
+		// debug normals only uses closest hit.
+		
+		mat->setClosestHitProgram(0 /*radiance*/, closest_hit_program);
+		return mat;
+	}
+
+	void createInstances()
+	{
+		optix::Group top_level_group = context->createGroup();
+		optix::Variable top_object = context->declareVariable("top_object");
+		top_object->set( top_level_group );
+		optix::Variable top_shadower = context->declareVariable("top_shadower");
+		top_shadower->set(top_level_group);
+		top_level_acceleration = context->createAcceleration("Bvh", "Bvh");
+		top_level_group->setAcceleration(top_level_acceleration);
+
+		optix::Material material = createMaterial(); // createNormalDebugMaterial
+		//createBoxInstances(top_level_group, createBoxGeometry(), material );
+
+		//createFloor(top_level_group, material);
+
 		std::string model_dir = resource_dir + "models\\";
 		File::MeshLoader mesh_loader(model_dir);
 		// TODO destruction
-		spacejet = std::shared_ptr<Scene::OptixMesh>( new Scene::OptixMesh(mesh_loader.loadMeshDataEasy("ferox.3ds"), context, optix_dir));
-		return spacejet->getGeometry();
+		spacejet = std::shared_ptr<Scene::OptixMesh>( new Scene::OptixMesh(mesh_loader.loadMeshDataEasy("hin_logo.3ds"), context, optix_dir));
+		//disc = std::shared_ptr<Scene::OptixMesh>( new Scene::OptixMesh(mesh_loader.loadMeshDataEasy("disc.obj"), context, optix_dir));
+		//big_cube = std::shared_ptr<Scene::OptixMesh>( new Scene::OptixMesh(mesh_loader.loadMeshDataEasy("cube.obj"), context, optix_dir));
+
+		createMeshInstances(top_level_group, spacejet->getGeometry(), material, 0 );
+		//createMeshInstances(top_level_group, disc->getGeometry(), material, 1 );
+		//createMeshInstances(top_level_group, big_cube->getGeometry(), material, 2 );
+		
+		/* mark acceleration as dirty */
+		top_level_acceleration->markDirty();
+	}
+
+	void setInstanceMaterialParams( optix::GeometryInstance instance, glm::vec3 diffuse, glm::vec3 reflect, float shinyness )
+	{
+		/* Set variables to be consumed by material for this geometry instance */
+		struct material_data_def
+		{
+			glm::vec3 ambient;
+			glm::vec3 kd, ks, ka;
+			glm::vec3 reflectivity;
+			float expv;
+		} material_data;
+		material_data.kd = diffuse;
+		material_data.ks = glm::vec3(0.5f, 0.5f, 0.5f);
+		material_data.ka = glm::vec3(0.8f, 0.8f, 0.8f);
+		material_data.reflectivity = reflect; //glm::vec3(0.8f, 0.8f, 0.8f);
+		material_data.expv = shinyness; //10.0f;
+		material_data.ambient = glm::vec3(0.2f, 0.2f, 0.2f);
+
+		optix::Variable kd = instance->declareVariable("Kd");
+		optix::Variable ks = instance->declareVariable("Ks");
+		optix::Variable ka = instance->declareVariable("Ka");
+		optix::Variable expv = instance->declareVariable("phong_exp");
+		optix::Variable reflectivity = instance->declareVariable("reflectivity");
+		optix::Variable ambient = instance->declareVariable("ambient_light_color");
+		kd->set3fv( &material_data.kd.x );
+		ks->set3fv( &material_data.ks.x );
+		ka->set3fv( &material_data.ka.x );
+		reflectivity->set3fv( &material_data.reflectivity.x );
+		expv->setFloat( material_data.expv );
+		ambient->set3fv( &material_data.ambient.x );
 	}
 
 	/*
@@ -111,13 +189,62 @@ public:
 	Mesh-class (actually instance, but store GEO in assetgr, but keeping concepts
 	clean & clear is better. one data -> one Mesh -> many instances/scene nodes
 	*/
-	void createMeshInstances(optix::Group top_level_group, optix::Geometry mesh, optix::Material material)
+	void createMeshInstances(optix::Group top_level_group, optix::Geometry mesh, optix::Material material, int material_setting)
 	{
 		optix::GeometryInstance instance = context->createGeometryInstance();
 		instance->setGeometry(mesh);
 		instance->setMaterialCount(1);
 		instance->setMaterial(0, material);
-		setInstanceMaterialParams( instance, glm::vec3(0.5f,0.5f,0.5f) );
+
+		// jet disc cube
+		if (material_setting == 0 ) {
+			setInstanceMaterialParams( instance, glm::vec3(0.2f,0.2f,0.2f), glm::vec3(0.f,0.f,0.f), 0.0f );
+		} else if ( material_setting == 1 ) {
+			setInstanceMaterialParams( instance, glm::vec3(0.0f,0.0f,0.2f), glm::vec3(0.8f,0.8f,0.8f), 10.f );
+		} else if (material_setting==2) {
+			setInstanceMaterialParams( instance, glm::vec3(0.2f,0.0f,0.0f), glm::vec3(0.f), 0.0f );
+		}
+
+		/* create group to hold instance transform */
+		optix::GeometryGroup geometrygroup = context->createGeometryGroup();
+		geometrygroup->setChildCount(1);
+		geometrygroup->setChild(0,instance);
+
+		/* create acceleration object for group and specify some build hints*/
+		//optix::Acceleration acceleration = context->createAcceleration("Sbvh", "BvhCompact"); // split
+		optix::Acceleration acceleration = context->createAcceleration("Bvh", "Bvh"); // classic
+		//optix::Acceleration acceleration = context->createAcceleration("MedianBvh", "Bvh"); // fast construct (dyn content)
+		//optix::Acceleration acceleration = context->createAcceleration("Lbvh", "Bvh"); // HLBVH2 algorithm, fast GPU bvh, use when BVH dominates runtime
+		//optix::Acceleration acceleration =  context->createAcceleration("TriangleKdTree", "KdTree"); // requires "vertex_buffer" and "index_buffer" .cu variables set
+		//acceleration->setProperty( "vertex_buffer_name", "vertex_buffer" );
+		//acceleration->setProperty( "index_buffer_name", "index_buffer" );
+		//optix::Acceleration acceleration = context->createAcceleration("NoAccel", "NoAccel"); // very inefficient for anything but simple cases (ok if very few primitives)
+
+		geometrygroup->setAcceleration(acceleration);
+		acceleration->markDirty();
+
+		optix::Transform mesh_xfrom = context->createTransform();
+		mesh_xfrom->setChild( geometrygroup );
+		
+		glm::mat4 xform(1.f);
+		//xform = glm::translate( xform, 0.f, 0.f, 0.f );
+		//xform = glm::scale( xform, glm::vec3(1.f) );
+		xform = glm::transpose( xform );
+		
+		mesh_xfrom->setMatrix( 0, glm::value_ptr(xform), 0 );
+
+		int cnt = top_level_group->getChildCount()+1;
+		top_level_group->setChildCount(cnt);
+		top_level_group->setChild(cnt-1, mesh_xfrom );
+	}
+
+	void createFloor(optix::Group top_level_group, optix::Material material)
+	{
+		optix::GeometryInstance instance = context->createGeometryInstance();
+		instance->setGeometry(createBoxGeometry());
+		instance->setMaterialCount(1);
+		instance->setMaterial(0, material );
+		setInstanceMaterialParams( instance, glm::vec3(0.5f,0.1f,0.1f), glm::vec3(0.5f,0.5f,0.5f), 3.f );
 
 		/* create group to hold instance transform */
 		optix::GeometryGroup geometrygroup = context->createGeometryGroup();
@@ -127,23 +254,61 @@ public:
 		/* create acceleration object for group and specify some build hints*/
 		optix::Acceleration acceleration = context->createAcceleration("Bvh", "Bvh");
 		geometrygroup->setAcceleration(acceleration);
-
-		/* mark acceleration as dirty */
 		acceleration->markDirty();
 
 		optix::Transform mesh_xfrom = context->createTransform();
 		mesh_xfrom->setChild( geometrygroup );
 		
-
 		glm::mat4 xform(1.f);
-		xform = glm::translate( xform, 0.f, 0.f, 0.f );
-		xform = glm::scale( xform, glm::vec3(0.01f) );
+		// TRS
+		xform = glm::translate( xform, 0.f, 3.f, 0.f );
+		xform = glm::scale(xform, 25.f, 1.f, 25.f);
+		
 		
 		mesh_xfrom->setMatrix( 0, glm::value_ptr(xform), 0 );
 
 		int cnt = top_level_group->getChildCount()+1;
-		top_level_group->setChildCount( cnt);
+		top_level_group->setChildCount(cnt);
 		top_level_group->setChild(cnt-1, mesh_xfrom );
+	}
+
+	void createBoxInstances(optix::Group top_level_group, optix::Geometry box, optix::Material material)
+	{
+		static const int NUM_BOXES = 24;
+		transforms.resize(NUM_BOXES);
+
+		for ( int i = 0; i < NUM_BOXES; ++i )
+		{
+			/* Create this geometry instance */
+			optix::GeometryInstance instance = context->createGeometryInstance();
+			instance->setGeometry(box);
+			instance->setMaterialCount(1);
+			instance->setMaterial(0, material);
+			
+			float kd_slider = (float)i / (float)(NUM_BOXES-1);
+			setInstanceMaterialParams( instance, glm::vec3(kd_slider, 0.0f, 1.0f-kd_slider), glm::vec3(0.2f,0.2f,0.2f), 1.f );
+
+			/* create group to hold instance transform */
+			optix::GeometryGroup geometrygroup = context->createGeometryGroup();
+			geometrygroup->setChildCount(1);
+			geometrygroup->setChild(0,instance);
+
+			/* create acceleration object for group and specify some build hints*/
+			optix::Acceleration acceleration = context->createAcceleration("Bvh", "Bvh");
+			geometrygroup->setAcceleration(acceleration);
+			acceleration->markDirty();
+
+			transforms[i] = context->createTransform();
+			transforms[i]->setChild( geometrygroup );
+			float seperation = 1.1f;
+			glm::mat4 xform = glm::transpose(glm::translate( glm::mat4(1.f), i*seperation - (NUM_BOXES-1)*seperation*.5f,  0.f, 0.f ) );
+			transforms[i]->setMatrix( 0, glm::value_ptr(xform), 0 );
+
+			/* Place these geometrygroups as children of the top level object */
+			int cnt = top_level_group->getChildCount()+1;
+			top_level_group->setChildCount(cnt);
+			top_level_group->setChild(cnt-1, transforms[i] );
+		}
 	}
 
 	optix::Geometry createBoxGeometry()
@@ -165,115 +330,6 @@ public:
 
 		return box_geo;
 	}
-	
-	optix::Material createMaterial()
-	{
-		/* Create our hit programs to be shared among all materials */
-		std::string path_to_ptx = optix_dir + "\\phong.cu.ptx";
-		optix::Program closest_hit_program = context->createProgramFromPTXFile( path_to_ptx, "closest_hit_radiance" );
-		optix::Program any_hit_program = context->createProgramFromPTXFile( path_to_ptx, "any_hit_shadow" );
-
-		optix::Material mat = context->createMaterial();
-	   /* Note that we are leaving anyHitProgram[0] and closestHitProgram[1] as NULL.
-		 * This is because our radiance rays only need closest_hit and shadow rays only
-		 * need any_hit */
-		mat->setClosestHitProgram(0, closest_hit_program);
-		mat->setAnyHitProgram(1, any_hit_program);
-		return mat;
-	}
-
-	void createInstances()
-	{
-		optix::Group top_level_group = context->createGroup();
-		optix::Variable top_object = context->declareVariable("top_object");
-		top_object->set( top_level_group );
-		optix::Variable top_shadower = context->declareVariable("top_shadower");
-		top_shadower->set(top_level_group);
-		top_level_acceleration = context->createAcceleration("NoAccel", "NoAccel");
-		top_level_group->setAcceleration(top_level_acceleration);
-
-		optix::Material material = createMaterial();
-		createBoxInstances(top_level_group, createBoxGeometry(), material );
-		createMeshInstances(top_level_group, createMeshGeometry(), material );
-
-		/* mark acceleration as dirty */
-		top_level_acceleration->markDirty();
-	}
-
-	void setInstanceMaterialParams( optix::GeometryInstance instance, glm::vec3 diffuse )
-	{
-		/* Set variables to be consumed by material for this geometry instance */
-		struct material_data_def
-		{
-			glm::vec3 ambient;
-			glm::vec3 kd, ks, ka;
-			glm::vec3 reflectivity;
-			float expv;
-		} material_data;
-		material_data.kd = diffuse;
-		material_data.ks = glm::vec3(0.5f, 0.5f, 0.5f);
-		material_data.ka = glm::vec3(0.8f, 0.8f, 0.8f);
-		material_data.reflectivity = glm::vec3(0.8f, 0.8f, 0.8f);
-		material_data.expv = 10.0f;
-		material_data.ambient = glm::vec3(0.2f, 0.2f, 0.2f);
-
-		optix::Variable kd = instance->declareVariable("Kd");
-		optix::Variable ks = instance->declareVariable("Ks");
-		optix::Variable ka = instance->declareVariable("Ka");
-		optix::Variable expv = instance->declareVariable("phong_exp");
-		optix::Variable reflectivity = instance->declareVariable("reflectivity");
-		optix::Variable ambient = instance->declareVariable("ambient_light_color");
-		kd->set3fv( &material_data.kd.x );
-		ks->set3fv( &material_data.ks.x );
-		ka->set3fv( &material_data.ka.x );
-		reflectivity->set3fv( &material_data.reflectivity.x );
-		expv->setFloat( material_data.expv );
-		ambient->set3fv( &material_data.ambient.x );
-	}
-
-	void createBoxInstances(optix::Group top_level_group, optix::Geometry box, optix::Material material)
-	{
-		static const int NUM_BOXES = 24;
-		transforms.resize(NUM_BOXES);
-
-		for ( int i = 0; i < NUM_BOXES; ++i )
-		{
-			/* Create this geometry instance */
-			optix::GeometryInstance instance = context->createGeometryInstance();
-			instance->setGeometry(box);
-			instance->setMaterialCount(1);
-			instance->setMaterial(0, material);
-			
-			float kd_slider = (float)i / (float)(NUM_BOXES-1);
-			setInstanceMaterialParams( instance, glm::vec3(kd_slider, 0.0f, 1.0f-kd_slider) );
-
-			/* create group to hold instance transform */
-			optix::GeometryGroup geometrygroup = context->createGeometryGroup();
-			geometrygroup->setChildCount(1);
-			geometrygroup->setChild(0,instance);
-
-			/* create acceleration object for group and specify some build hints*/
-			optix::Acceleration acceleration = context->createAcceleration("Bvh", "Bvh");
-			geometrygroup->setAcceleration(acceleration);
-
-			/* mark acceleration as dirty */
-			acceleration->markDirty();
-
-			transforms[i] = context->createTransform();
-			transforms[i]->setChild( geometrygroup );
-			float seperation = 1.1f;
-			glm::mat4 xform = glm::transpose(glm::translate( glm::mat4(1.f), i*seperation - (NUM_BOXES-1)*seperation*.5f,  0.f, 0.f ) );
-			transforms[i]->setMatrix( 0, glm::value_ptr(xform), 0 );
-
-		}
-
-		/* Place these geometrygroups as children of the top level object */
-		top_level_group->setChildCount( NUM_BOXES);
-		for(int i=0; i<NUM_BOXES; ++i){
-			top_level_group->setChild(i, transforms[i] );
-		}
-
-	}
 
 	void updateCamera(bool key_left, bool key_right, bool key_back, bool key_fwd, 
 					 glm::vec2 mouse_coords, bool mouse_button_down, float deltaTime)
@@ -283,7 +339,7 @@ public:
 		float aspect = width/(float)height;
 		glm::vec3 u = aspect * fps_camera.getStrafeDirection();
 		glm::vec3 v = fps_camera.getUpDirection();
-		glm::vec3 w = fps_camera.getLookDirection();
+		glm::vec3 w = 2.2f * fps_camera.getLookDirection();
 		
 		optixCamVars.eyePos->set3fv(&eyePos.x);
 		optixCamVars.u->set3fv(&u.x);
@@ -303,7 +359,6 @@ public:
 
 			glm::mat4 xform = glm::translate( identity, pos );
 			xform = glm::transpose(xform);
-			
 
 			if ( i==0 ) {
 				// T*R*S
@@ -317,7 +372,7 @@ public:
 			}
 		}
 
-		top_level_acceleration->markDirty();
+		//top_level_acceleration->markDirty();
 	}
 
 	~OptixScene()
@@ -350,7 +405,8 @@ private:
 	optix::Acceleration top_level_acceleration;
 
 	Scene::OptixMeshPtr spacejet;
-
+	Scene::OptixMeshPtr disc;
+	Scene::OptixMeshPtr	big_cube;
 	Scene::FirstPersonCamera fps_camera;
 	std::string optix_dir;
 	std::string resource_dir;

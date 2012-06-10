@@ -15,6 +15,7 @@ namespace Scene
 {
 	struct MeshData
 	{
+		std::string name; // useful when debugging
 		std::vector<float> vertices;
 		std::vector<float> normals;
 		std::vector<float> tangents;

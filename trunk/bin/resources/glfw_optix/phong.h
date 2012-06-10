@@ -53,7 +53,7 @@ rtDeclareVariable(PerRayData_shadow,   prd_shadow, rtPayload, );
 __device__ void phongShadowed()
 {
   // this material is opaque, so it fully attenuates all shadow rays
-  prd_shadow.attenuation = optix::make_float3(0);
+  prd_shadow.attenuation = optix::make_float3(0.0f);
   rtTerminateRay();
 }
 
