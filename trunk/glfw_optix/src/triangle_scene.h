@@ -84,10 +84,10 @@ public:
 		glm::vec3 v = fps_camera->getUpDirection();
 		glm::vec3 w = screenDist * fps_camera->getLookDirection();
 		
-		optixCamVars.eyePos->set3fv(&eyePos.x);
-		optixCamVars.u->set3fv(&u.x);
-		optixCamVars.v->set3fv(&v.x);
-		optixCamVars.w->set3fv(&w.x);
+		optixCamVars.eyePos->set3fv( glm::value_ptr(eyePos) );
+		optixCamVars.u->set3fv( glm::value_ptr(u) );
+		optixCamVars.v->set3fv( glm::value_ptr(v) );
+		optixCamVars.w->set3fv( glm::value_ptr(w) );
 	}
 
 	void renderRaster()
@@ -207,8 +207,8 @@ private:
 		//glm::vec3 missColor(.3f, 0.1f, 0.2f);
 		//miss_program->declareVariable("bg_color")->set3fv(&missColor.x);
 		glm::vec3 scene_up(0.f, 1.f, 0.f);
-		context->declareVariable("background_light")->setFloat( 0.5f, 0.5f, 0.5f );
-		context->declareVariable("background_dark")->setFloat( 0.5f, 0.5f, 0.8f );
+		context->declareVariable("background_light")->setFloat( 1.f, 1.f, 1.f );
+		context->declareVariable("background_dark")->setFloat( 0.3f, 0.3f, 0.8f );
 		context->declareVariable("up")->set3fv(glm::value_ptr(scene_up));
 		context->setMissProgram(0, miss_program );
 
@@ -229,13 +229,14 @@ private:
 
 	optix::Material createMaterial()
 	{
-		std::string path_to_ptx = optix_dir + "\\phong.cu.ptx";
+		//std::string path_to_ptx = optix_dir + "\\phong.cu.ptx";
+		std::string path_to_ptx = optix_dir + "\\tut1_diffuse.cu.ptx";
 		optix::Program closest_hit_program = context->createProgramFromPTXFile( path_to_ptx, "closest_hit_radiance" );
-		optix::Program any_hit_program = context->createProgramFromPTXFile( path_to_ptx, "any_hit_shadow" );
+		//optix::Program any_hit_program = context->createProgramFromPTXFile( path_to_ptx, "any_hit_shadow" );
 
 		optix::Material mat = context->createMaterial();
 		mat->setClosestHitProgram(0, closest_hit_program);
-		mat->setAnyHitProgram(1, any_hit_program);
+		//mat->setAnyHitProgram(1, any_hit_program);
 		return mat;
 	}
 
@@ -272,7 +273,19 @@ private:
 		auto disc = std::shared_ptr<Scene::OptixMesh>( new Scene::OptixMesh(mesh_loader.loadMeshDataEasy("disc.obj"), context, optix_dir));
 		auto ico = std::shared_ptr<Scene::OptixMesh>( new Scene::OptixMesh(mesh_loader.loadMeshDataEasy("icosphere.3ds"), context, optix_dir));
 
-		createMeshInstances(top_level_group, hin_logo, material, 0 );
+		// Create a few logos in a circle
+		for ( int i=0; i<12; i++ ) {
+			float ang_degs = i/12.f * 360.f;
+			optix::Transform tf = createMeshInstances(top_level_group, hin_logo, material, 0 );
+			glm::mat4 xform(1.f);
+			
+			xform = glm::rotate( xform, ang_degs, glm::vec3(0.f, 1.f, 0.f ) );
+			xform = glm::translate( xform, 0.f, 0.f, 15.f );
+			xform = glm::transpose( xform );
+			tf->setMatrix( 0, glm::value_ptr(xform), 0 );
+		}
+		
+		
 		createMeshInstances(top_level_group, disc, material, 1 );
 
 		for (size_t i=0; i<lights.size(); ++i){
@@ -329,8 +342,9 @@ private:
 		instance->setMaterial(0, material);
 
 		if (material_setting == 0 ) {
+			// amb (kd) ks (ka) refl shiny
 			setInstanceMaterialParams( instance, glm::vec3(0.2f,0.2f,0.2f),
-				                                 glm::vec3(0.5f), glm::vec3(1.f), glm::vec3(0.8f,0.8f,0.8f), glm::vec3(0.2f), 1.f);
+				                                 glm::vec3(0.8f), glm::vec3(1.f), glm::vec3(0.8f,0.8f,0.8f), glm::vec3(0.2f), 1.f);
 		} else if ( material_setting == 1 ) {
 			setInstanceMaterialParams( instance, glm::vec3(0.2f,0.2f,0.2f) );
 		} else if (material_setting==2) {

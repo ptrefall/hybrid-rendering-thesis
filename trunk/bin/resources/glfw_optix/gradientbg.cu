@@ -16,6 +16,7 @@ rtDeclareVariable(PerRayData_radiance, prd_radiance, rtPayload, );
 
 RT_PROGRAM void miss()
 {
-	const float t = max(dot(ray.direction,up), 0.0f);
+	const float t = 0.5f + 0.5f*dot(ray.direction,up); // +0.5 * 0.5 Gives a longer range... might be interesting to mix 3 colors, sky/north-pole, horizon, void/south-pole
+	//const float t = max(dot(ray.direction,up), 0.0f);
 	prd_radiance.result = lerp(background_light, background_dark,t);
 }
