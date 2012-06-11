@@ -20,8 +20,8 @@
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 
-const static int SCREEN_WIDTH = 1024;
-const static int SCREEN_HEIGHT =768;
+const static int SCREEN_WIDTH  = 1024;
+const static int SCREEN_HEIGHT = 768;
 
 class ScreenBufferRender
 {
@@ -64,10 +64,11 @@ public:
 		Render::T2DTexParams params( GL_RGBA8, GL_BGRA, GL_UNSIGNED_BYTE, 4, width, height, GL_CLAMP_TO_EDGE, (unsigned char*) nullptr ); 
 		outputTex.init( params );
 
-		optix::Context context = imageBuffer->getContext();
-		
-		context->validate();
-		context->compile();
+		printf("compiling context...\n");
+		double timeStart = glfwGetTime();
+		myScene->compileScene();
+		double timeSpent = glfwGetTime() - timeStart;
+		printf("finished compile, took %.1f seconds\n", timeSpent);
 	}
 
 	void pbo2Tex()
@@ -78,16 +79,15 @@ public:
 		RTsize width, height;
 		imageBuffer->getSize(width, height);
 
-		Render::PBO *pbo = myScene->pbo;
-		pbo->bind(true);
+		myScene->pbo->bind(true);
 
 		RTsize elementSize = imageBuffer->getElementSize();
 		RTformat buffer_format = imageBuffer->getFormat();
 		
-		if      ((elementSize % 8) == 0) pbo->align(8);
-		else if ((elementSize % 4) == 0) pbo->align(4);
-		else if ((elementSize % 2) == 0) pbo->align(2);
-		else                             pbo->align(1);
+		if      ((elementSize % 8) == 0) myScene->pbo->align(8);
+		else if ((elementSize % 4) == 0) myScene->pbo->align(4);
+		else if ((elementSize % 2) == 0) myScene->pbo->align(2);
+		else                             myScene->pbo->align(1);
 
 		if(buffer_format == RT_FORMAT_UNSIGNED_BYTE4) {
 		  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, 0);
@@ -99,7 +99,7 @@ public:
 		  throw "Unknown buffer format";
 		}
 
-		pbo->unbind();
+		myScene->pbo->unbind();
 	}
 
 	void render(GLFWwindow wnd)
@@ -109,7 +109,6 @@ public:
 		old_time = time;
 
 		optix::Variable fTime = myScene->getFTime();
-		optix::Context context = myScene->getContext();
 		fTime->setFloat( (float)time );
 
 		int mouse_x, mouse_y;
@@ -120,6 +119,7 @@ public:
 			
 		RTsize width, height;
 		myScene->getOutBuffer()->getSize(width, height);
+		optix::Context context = myScene->getContext();
 		context->launch(0 /*entry point*/, width, height );
 
 		glActiveTexture(GL_TEXTURE0 + 0);
@@ -132,6 +132,20 @@ public:
 		glProgramUniform1i(screen_quad_shader->getFS(), loc_tex0, 0);
 
 		screenQuad->render();
+
+		glEnable(GL_DEPTH_TEST);
+		glClear(GL_DEPTH_BUFFER_BIT);
+		myScene->renderRaster();
+	}
+	
+	void resize(int w, int h)
+	{
+		myScene->resize(w,h);
+
+		//outputTex.bind();
+		//glTexImage2D(GL_TEXTURE_2D, 0, outputTex.getFormat(), w, h, 0, outputTex.getInternalFormat(), outputTex.getType(), 0);
+		//glTexImage2D(GL_TEXTURE_2D, 0, outputTex.getInternalFormat(), w, h, 0, outputTex.getFormat(), outputTex.getType(), 0);
+		//outputTex.unbind();
 	}
 
 	void destroy()
@@ -153,6 +167,7 @@ public:
 	GLContext(int width, int height) 
 		: width(width)
 		, height(height)
+		, myRender(nullptr)
 	{
 		if (!glfwInit())
 		{
@@ -172,10 +187,10 @@ public:
         }
 
 		glfwMakeContextCurrent(wnd);
-
-		glfwSetWindowCloseCallback(GLContext::closeWindow);
 		glfwSetWindowUserPointer(wnd, this);
-
+		glfwSetWindowCloseCallback(GLContext::closeWindow);
+		glfwSetWindowSizeCallback(GLContext::resizeWindow);
+		
 		//////////////////////////////////////////
 		// GL3W INITIALIZING
 		//////////////////////////////////////////
@@ -198,11 +213,22 @@ public:
 		myRender->destroy();
 	}
 
+	void resize(int w, int h)
+	{
+		if ( myRender ) myRender->resize(w,h);
+	}
+
 	static int closeWindow(GLFWwindow wnd)
 	{
 		GLContext *ptr = (GLContext*)glfwGetWindowUserPointer(wnd);
 		ptr->destroy();
 		return 1;
+	}
+
+	static void resizeWindow(GLFWwindow wnd, int w, int h)
+	{
+		GLContext *ptr = (GLContext*)glfwGetWindowUserPointer(wnd);
+		ptr->resize(w,h);
 	}
 
 	void display( ScreenBufferRender *myRender )

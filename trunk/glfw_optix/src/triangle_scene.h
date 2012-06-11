@@ -20,6 +20,12 @@ public:
 		optix::Variable w;
 	} optixCamVars;
 
+	~OptixScene()
+	{
+		out_buffer_obj->unregisterGLBuffer();
+		context->destroy();
+	}
+
 	OptixScene(std::string resource_dir, int width, int height) :
 	  resource_dir(resource_dir), width(width), height(height)
 	{
@@ -28,14 +34,126 @@ public:
 		createInstances();
 	}
 
+	void compileScene()
+	{
+		context->validate();
+		context->compile();
+		context->launch(0,width,height);
+	}
+
+	optix::Variable getFTime()
+	{
+		return fTime;
+	}
+
+	optix::Buffer getOutBuffer()
+	{
+		return out_buffer_obj;
+	}
+
+	optix::Context getContext()
+	{
+		return context;
+	}
+
+	void updateCamera(bool key_left, bool key_right, bool key_back, bool key_fwd, 
+					 glm::vec2 mouse_coords, bool mouse_button_down, float deltaTime)
+	{
+		fps_camera->update( key_left, key_right, key_back, key_fwd, mouse_coords, mouse_button_down, deltaTime );
+		
+		float aspect = width/(float)height;
+		float inv_aspect = height/(float)width;
+
+		float vertical_fov = fps_camera->getFov();
+		float horizontal_fov = vertical_fov * aspect;
+
+		float screenDist = 1.0 / tan(vertical_fov * 0.5);
+		
+		glm::vec3 eyePos = fps_camera->getPos();
+
+		glm::vec3 u = fps_camera->getStrafeDirection();
+		glm::vec3 v = inv_aspect * fps_camera->getUpDirection();
+		glm::vec3 w = screenDist * fps_camera->getLookDirection();
+		
+		optixCamVars.eyePos->set3fv(&eyePos.x);
+		optixCamVars.u->set3fv(&u.x);
+		optixCamVars.v->set3fv(&v.x);
+		optixCamVars.w->set3fv(&w.x);
+	}
+
+	void renderRaster()
+	{
+		scene_objects[0]->renderReal();
+		//for ( size_t i=0; i<scene_objects.size(); ++i ){
+		//	scene_objects[i]->renderReal();
+		//}
+	}
+
+	void resize(int width, int height)
+	{
+		this->width = width;
+		this->height = height;
+		std::cout << "resizing buffers to " << width << " " << height << std::endl;
+		
+		glViewport(0,0,width,height);
+		fps_camera->updateProjection(width, height, 45.f, 0.01f, 1000.f);
+
+		// We don't want to allocate 0 memory for the PBOs
+		width = width == 0 ? 1 : width; 
+		height = height == 0 ? 1 : height; 
+
+		try {
+			// resize PBOs
+			out_buffer_obj->unregisterGLBuffer();
+			//out_buffer_obj->destroy();
+
+			glBindBuffer(GL_PIXEL_UNPACK_BUFFER, pbo->getHandle() );
+			glBufferData(GL_PIXEL_UNPACK_BUFFER, 4*width*height*sizeof(char), 0, GL_STREAM_READ);
+			glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+			out_buffer_obj->registerGLBuffer();
+
+			//out_buffer_obj = context->createBufferFromGLBO(RT_BUFFER_OUTPUT, pbo->getHandle() );
+			out_buffer_obj->setFormat(RT_FORMAT_UNSIGNED_BYTE4);
+			out_buffer_obj->setSize(width,height);
+
+		} catch ( optix::Exception& e ) {
+			std::cout << e.what() << std::endl;
+			system("pause");
+			exit(-1);
+		}
+	}
+
+	void animate()
+	{
+		//float t = fTime->getFloat();
+		//glm::mat4 identity(1.f);		
+		//int num = transforms.size();
+
+		//glm::vec3 pos( 0.1f );
+
+		//for (size_t i=0; i<transforms.size(); ++i){
+		//	float a = 6.28f * i/(float)num;
+		//	float radius = 25.f;
+		//	//glm::vec3 pos( radius*cos(a), 5.f + sin(4.f*a+t)*0.25f, radius*sin(a) );
+
+		//	getLorenzAttractorDelta( pos, num );
+		//	glm::mat4 xform = glm::translate( identity, pos );
+		//	xform = glm::transpose(xform);
+
+		//	transforms[i]->setMatrix( false, glm::value_ptr(xform),  0 );
+		//}
+
+		//top_level_acceleration->markDirty();
+	}
+
+private:
 	void init()
 	{
-		/* Context */
 		context = optix::Context::create();
 		context->setRayTypeCount(2); /* shadow and radiance */
 		context->setEntryPointCount(1);
 		context->setStackSize(2048);
-		optix::Variable out_buffer = context->declareVariable("output_buffer");
+		out_buffer = context->declareVariable("output_buffer");
 		optix::Variable light_buffer = context->declareVariable("lights");
 		context->declareVariable("max_depth")->setInt(10);
 		context->declareVariable("radiance_ray_type")->setUint(0u);
@@ -69,8 +187,6 @@ public:
 		optixCamVars.v = ray_gen_program->declareVariable("V");
 		optixCamVars.w = ray_gen_program->declareVariable("W");
 
-		unsigned int screenDims[] = {width,height};
-		ray_gen_program->declareVariable("rtLaunchDim")->set2uiv(screenDims);
 		fTime = ray_gen_program->declareVariable("fTime");
 		fTime->setFloat( 0.f );
 		context->setRayGenerationProgram(0, ray_gen_program);
@@ -84,19 +200,21 @@ public:
 
 		/* Create shared GL/CUDA PBO */
 		int element_size = 4 * sizeof(char);
-		pbo = new Render::PBO(element_size * width * height, GL_STREAM_DRAW, true);
+		pbo = new Render::PBO(element_size * width * height, GL_STREAM_READ, true);
 		out_buffer_obj = context->createBufferFromGLBO(RT_BUFFER_OUTPUT, pbo->getHandle() );
 		out_buffer_obj->setFormat(RT_FORMAT_UNSIGNED_BYTE4);
 		out_buffer_obj->setSize(width,height);
 		
 		out_buffer->set(out_buffer_obj);
 
-		fps_camera.lookAt( glm::vec3(15.0f, 15.0f, 15.0f), glm::vec3(0.f), glm::vec3(0.f, 1.f, 0.f) );
+		fps_camera = std::shared_ptr<Scene::FirstPersonCamera>( Scene::FirstPersonCamera::getSingleton() );
+		fps_camera->lookAt( glm::vec3(15.0f, 15.0f, 15.0f), glm::vec3(0.f), glm::vec3(0.f, 1.f, 0.f) );
+		fps_camera->updateProjection(width, height, 45.f, 0.01f, 1000.f);
+		fps_camera->setSpeed( 20.f );
 	}
 
 	optix::Material createMaterial()
 	{
-		/* Create our hit programs to be shared among all materials */
 		std::string path_to_ptx = optix_dir + "\\phong.cu.ptx";
 		optix::Program closest_hit_program = context->createProgramFromPTXFile( path_to_ptx, "closest_hit_radiance" );
 		optix::Program any_hit_program = context->createProgramFromPTXFile( path_to_ptx, "any_hit_shadow" );
@@ -109,13 +227,11 @@ public:
 
 	optix::Material createNormalDebugMaterial()
 	{
-		/* Create our hit programs to be shared among all materials */
 		std::string path_to_ptx = optix_dir + "\\mat_normal.cu.ptx";
 		optix::Program closest_hit_program = context->createProgramFromPTXFile( path_to_ptx, "closest_hit_radiance" );
 		optix::Material mat = context->createMaterial();
 		 
 		// debug normals only uses closest hit.
-		
 		mat->setClosestHitProgram(0 /*radiance*/, closest_hit_program);
 		return mat;
 	}
@@ -131,22 +247,19 @@ public:
 		top_level_group->setAcceleration(top_level_acceleration);
 
 		optix::Material material = createMaterial(); // createNormalDebugMaterial
-		//createBoxInstances(top_level_group, createBoxGeometry(), material );
-
-		//createFloor(top_level_group, material);
+		
+		optix::Geometry box = createBoxGeometry();
+		createFloor(top_level_group, box, material);
 
 		std::string model_dir = resource_dir + "models\\";
 		File::MeshLoader mesh_loader(model_dir);
 		// TODO destruction
-		spacejet = std::shared_ptr<Scene::OptixMesh>( new Scene::OptixMesh(mesh_loader.loadMeshDataEasy("hin_logo.3ds"), context, optix_dir));
-		//disc = std::shared_ptr<Scene::OptixMesh>( new Scene::OptixMesh(mesh_loader.loadMeshDataEasy("disc.obj"), context, optix_dir));
-		//big_cube = std::shared_ptr<Scene::OptixMesh>( new Scene::OptixMesh(mesh_loader.loadMeshDataEasy("cube.obj"), context, optix_dir));
+		auto hin_logo = std::shared_ptr<Scene::OptixMesh>( new Scene::OptixMesh(mesh_loader.loadMeshDataEasy("hin_logo.3ds"), context, optix_dir));
+		//auto disc = std::shared_ptr<Scene::OptixMesh>( new Scene::OptixMesh(mesh_loader.loadMeshDataEasy("disc.obj"), context, optix_dir));
 
-		createMeshInstances(top_level_group, spacejet->getGeometry(), material, 0 );
-		//createMeshInstances(top_level_group, disc->getGeometry(), material, 1 );
-		//createMeshInstances(top_level_group, big_cube->getGeometry(), material, 2 );
-		
-		/* mark acceleration as dirty */
+		createMeshInstances(top_level_group, hin_logo, material, 0 );
+		//createMeshInstances(top_level_group, disc, material, 1 );
+
 		top_level_acceleration->markDirty();
 	}
 
@@ -189,8 +302,12 @@ public:
 	Mesh-class (actually instance, but store GEO in assetgr, but keeping concepts
 	clean & clear is better. one data -> one Mesh -> many instances/scene nodes
 	*/
-	void createMeshInstances(optix::Group top_level_group, optix::Geometry mesh, optix::Material material, int material_setting)
+	void createMeshInstances(optix::Group top_level_group, Scene::OptixMeshPtr optixMesh, optix::Material material, int material_setting)
 	{
+		scene_objects.push_back( optixMesh );
+
+		optix::Geometry mesh = optixMesh->getGeometry();
+
 		optix::GeometryInstance instance = context->createGeometryInstance();
 		instance->setGeometry(mesh);
 		instance->setMaterialCount(1);
@@ -198,7 +315,7 @@ public:
 
 		// jet disc cube
 		if (material_setting == 0 ) {
-			setInstanceMaterialParams( instance, glm::vec3(0.2f,0.2f,0.2f), glm::vec3(0.f,0.f,0.f), 0.0f );
+			setInstanceMaterialParams( instance, glm::vec3(0.6f,0.6f,0.7f), glm::vec3(0.2f,0.2f,0.6f), 10.0f );
 		} else if ( material_setting == 1 ) {
 			setInstanceMaterialParams( instance, glm::vec3(0.0f,0.0f,0.2f), glm::vec3(0.8f,0.8f,0.8f), 10.f );
 		} else if (material_setting==2) {
@@ -238,20 +355,18 @@ public:
 		top_level_group->setChild(cnt-1, mesh_xfrom );
 	}
 
-	void createFloor(optix::Group top_level_group, optix::Material material)
+	void createFloor(optix::Group top_level_group, optix::Geometry box, optix::Material material)
 	{
 		optix::GeometryInstance instance = context->createGeometryInstance();
-		instance->setGeometry(createBoxGeometry());
+		instance->setGeometry(box);
 		instance->setMaterialCount(1);
 		instance->setMaterial(0, material );
-		setInstanceMaterialParams( instance, glm::vec3(0.5f,0.1f,0.1f), glm::vec3(0.5f,0.5f,0.5f), 3.f );
+		setInstanceMaterialParams( instance, glm::vec3(0.5f,0.5f,0.1f), glm::vec3(0.8f,0.8f,0.8f), 5.f );
 
-		/* create group to hold instance transform */
 		optix::GeometryGroup geometrygroup = context->createGeometryGroup();
 		geometrygroup->setChildCount(1);
 		geometrygroup->setChild(0,instance);
 
-		/* create acceleration object for group and specify some build hints*/
 		optix::Acceleration acceleration = context->createAcceleration("Bvh", "Bvh");
 		geometrygroup->setAcceleration(acceleration);
 		acceleration->markDirty();
@@ -260,11 +375,9 @@ public:
 		mesh_xfrom->setChild( geometrygroup );
 		
 		glm::mat4 xform(1.f);
-		// TRS
-		xform = glm::translate( xform, 0.f, 3.f, 0.f );
-		xform = glm::scale(xform, 25.f, 1.f, 25.f);
-		
-		
+		xform = glm::translate( xform, 0.f, -15.f, 0.f );
+		xform = glm::scale(xform, 500.f, 1.f, 500.f);
+		xform = glm::transpose(xform);
 		mesh_xfrom->setMatrix( 0, glm::value_ptr(xform), 0 );
 
 		int cnt = top_level_group->getChildCount()+1;
@@ -272,11 +385,31 @@ public:
 		top_level_group->setChild(cnt-1, mesh_xfrom );
 	}
 
+	glm::vec3 getLorenzAttractorDelta( glm::vec3 &p, int num_points )
+	{
+		float r=28;
+		float s=10; // "Prandtl number" fluid viscosity / thermal conductivity, Lorenz chose 10
+		float b=8.0/3.0;
+
+		float imax = (float)num_points;
+		float f = imax/(imax/100.0f);
+
+		glm::vec3 delta( s*(p.y - p.x), 
+				         r*p.x - p.y - p.x*p.z, 
+						 p.x*p.y - b*p.z);
+		return delta/f;
+	}
+
 	void createBoxInstances(optix::Group top_level_group, optix::Geometry box, optix::Material material)
 	{
-		static const int NUM_BOXES = 24;
+		static const int NUM_BOXES = 1024;
 		transforms.resize(NUM_BOXES);
 
+		glm::vec3 lorenz_pos(0.1f, 0.0f, 0.0f);
+
+		/* create acceleration object for group and specify some build hints*/
+		cube_acceleration = context->createAcceleration("Bvh", "Bvh");
+		
 		for ( int i = 0; i < NUM_BOXES; ++i )
 		{
 			/* Create this geometry instance */
@@ -284,7 +417,6 @@ public:
 			instance->setGeometry(box);
 			instance->setMaterialCount(1);
 			instance->setMaterial(0, material);
-			
 			float kd_slider = (float)i / (float)(NUM_BOXES-1);
 			setInstanceMaterialParams( instance, glm::vec3(kd_slider, 0.0f, 1.0f-kd_slider), glm::vec3(0.2f,0.2f,0.2f), 1.f );
 
@@ -292,16 +424,20 @@ public:
 			optix::GeometryGroup geometrygroup = context->createGeometryGroup();
 			geometrygroup->setChildCount(1);
 			geometrygroup->setChild(0,instance);
+			geometrygroup->setAcceleration(cube_acceleration);
 
-			/* create acceleration object for group and specify some build hints*/
-			optix::Acceleration acceleration = context->createAcceleration("Bvh", "Bvh");
-			geometrygroup->setAcceleration(acceleration);
-			acceleration->markDirty();
+			glm::vec3 delta = getLorenzAttractorDelta( lorenz_pos, NUM_BOXES );
+			lorenz_pos += delta;
 
 			transforms[i] = context->createTransform();
 			transforms[i]->setChild( geometrygroup );
-			float seperation = 1.1f;
-			glm::mat4 xform = glm::transpose(glm::translate( glm::mat4(1.f), i*seperation - (NUM_BOXES-1)*seperation*.5f,  0.f, 0.f ) );
+			//float seperation = 1.1f;
+			//glm::vec3 pos( i*seperation - (NUM_BOXES-1)*seperation*.5f,  0.f, 0.f );
+			glm::mat4 xform(1.0f);
+			xform = glm::translate( xform, lorenz_pos + glm::vec3(-25.f,5.f,-100.f) );
+			xform = xform * glm::mat4_cast(glm::normalize(glm::quat(1.f, delta)));
+			xform = glm::scale(xform, glm::vec3(0.5f) );
+			xform = glm::transpose(xform);
 			transforms[i]->setMatrix( 0, glm::value_ptr(xform), 0 );
 
 			/* Place these geometrygroups as children of the top level object */
@@ -309,6 +445,7 @@ public:
 			top_level_group->setChildCount(cnt);
 			top_level_group->setChild(cnt-1, transforms[i] );
 		}
+		cube_acceleration->markDirty();
 	}
 
 	optix::Geometry createBoxGeometry()
@@ -331,85 +468,22 @@ public:
 		return box_geo;
 	}
 
-	void updateCamera(bool key_left, bool key_right, bool key_back, bool key_fwd, 
-					 glm::vec2 mouse_coords, bool mouse_button_down, float deltaTime)
-	{
-		fps_camera.update( key_left, key_right, key_back, key_fwd, mouse_coords, mouse_button_down, deltaTime );
-		glm::vec3 eyePos = fps_camera.getPos();
-		float aspect = width/(float)height;
-		glm::vec3 u = aspect * fps_camera.getStrafeDirection();
-		glm::vec3 v = fps_camera.getUpDirection();
-		glm::vec3 w = 2.2f * fps_camera.getLookDirection();
-		
-		optixCamVars.eyePos->set3fv(&eyePos.x);
-		optixCamVars.u->set3fv(&u.x);
-		optixCamVars.v->set3fv(&v.x);
-		optixCamVars.w->set3fv(&w.x);
-	}
-
-	void animate()
-	{
-		float t = fTime->getFloat();
-		glm::mat4 identity(1.f);		
-		int num = transforms.size();
-		for (size_t i=0; i<transforms.size(); ++i){
-			float a = 6.28f * i/(float)num;
-			glm::vec3 pos( cos(a), sin(4.f*a+t)*0.25f, sin(a) );
-			pos *= 5.f;
-
-			glm::mat4 xform = glm::translate( identity, pos );
-			xform = glm::transpose(xform);
-
-			if ( i==0 ) {
-				// T*R*S
-				glm::mat4 xform(1.0f);
-				xform = glm::translate(xform, glm::vec3(0.f, -3.f, 0.f) );
-				xform = glm::scale(xform, 25.f, 1.f, 25.f);
-				
-				transforms[i]->setMatrix( true, glm::value_ptr(xform),  0 );
-			} else {
-				transforms[i]->setMatrix( false, glm::value_ptr(xform),  0 );
-			}
-		}
-
-		//top_level_acceleration->markDirty();
-	}
-
-	~OptixScene()
-	{
-		out_buffer_obj->unregisterGLBuffer();
-		context->destroy();
-	}
-
-	optix::Variable getFTime()
-	{
-		return fTime;
-	}
-
-	optix::Buffer getOutBuffer()
-	{
-		return out_buffer_obj;
-	}
-
-	optix::Context getContext()
-	{
-		return context;
-	}
 public:
 	Render::PBO *pbo;
 private:
-	optix::Context context;
-	optix::Buffer out_buffer_obj;
-	optix::Variable fTime;
-	std::vector<optix::Transform> transforms;
-	optix::Acceleration top_level_acceleration;
-
-	Scene::OptixMeshPtr spacejet;
-	Scene::OptixMeshPtr disc;
-	Scene::OptixMeshPtr	big_cube;
-	Scene::FirstPersonCamera fps_camera;
-	std::string optix_dir;
-	std::string resource_dir;
-	int width;
-	int height;
+	optix::Context                   context;
+	optix::Buffer                    out_buffer_obj;
+	optix::Variable                  fTime;
+	optix::Variable                  out_buffer;
+	
+	std::vector<optix::Transform>    transforms;
+	optix::Acceleration              top_level_acceleration;
+	optix::Acceleration              cube_acceleration;
+	
+	std::vector<Scene::OptixMeshPtr> scene_objects;
+	Scene::FirstPersonCameraPtr      fps_camera;
+	std::string                      optix_dir;
+	std::string                      resource_dir;
+	int                              width;
+	int                              height;
 };
