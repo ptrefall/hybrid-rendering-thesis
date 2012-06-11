@@ -56,23 +56,27 @@ public:
 		return context;
 	}
 
+	void moveCameraVertical(bool key_down, bool key_up, float deltaTime)
+	{
+		float dy = key_up - key_down;
+		fps_camera->move( glm::vec3(0.f, dy, 0.f), deltaTime );
+	}
+
 	void updateCamera(bool key_left, bool key_right, bool key_back, bool key_fwd, 
 					 glm::vec2 mouse_coords, bool mouse_button_down, float deltaTime)
 	{
 		fps_camera->update( key_left, key_right, key_back, key_fwd, mouse_coords, mouse_button_down, deltaTime );
-		
+
+		static float time = 0.f;
+		time += deltaTime;
+
 		float aspect = width/(float)height;
-		float inv_aspect = height/(float)width;
+		float vfov = fps_camera->getFovDegrees() * (3.14f/180.f);
+		float screenDist = 1.0 / tan(vfov * 0.5);
 
-		float vertical_fov = fps_camera->getFov();
-		float horizontal_fov = vertical_fov * aspect;
-
-		float screenDist = 1.0 / tan(vertical_fov * 0.5);
-		
 		glm::vec3 eyePos = fps_camera->getPos();
-
-		glm::vec3 u = fps_camera->getStrafeDirection();
-		glm::vec3 v = inv_aspect * fps_camera->getUpDirection();
+		glm::vec3 u = aspect * fps_camera->getStrafeDirection();
+		glm::vec3 v = fps_camera->getUpDirection();
 		glm::vec3 w = screenDist * fps_camera->getLookDirection();
 		
 		optixCamVars.eyePos->set3fv(&eyePos.x);
@@ -95,32 +99,28 @@ public:
 		this->height = height;
 		std::cout << "resizing buffers to " << width << " " << height << std::endl;
 		
-		glViewport(0,0,width,height);
-		fps_camera->updateProjection(width, height, 45.f, 0.01f, 1000.f);
-
 		// We don't want to allocate 0 memory for the PBOs
 		width = width == 0 ? 1 : width; 
 		height = height == 0 ? 1 : height; 
 
+		out_buffer_obj->setSize(width,height);
+
 		try {
 			// resize PBOs
 			out_buffer_obj->unregisterGLBuffer();
-			//out_buffer_obj->destroy();
-
-			glBindBuffer(GL_PIXEL_UNPACK_BUFFER, pbo->getHandle() );
-			glBufferData(GL_PIXEL_UNPACK_BUFFER, 4*width*height*sizeof(char), 0, GL_STREAM_READ);
+			glBindBuffer(GL_PIXEL_UNPACK_BUFFER, out_buffer_obj->getGLBOId() );
+			glBufferData(GL_PIXEL_UNPACK_BUFFER, out_buffer_obj->getElementSize() * width * height, 0, GL_STREAM_DRAW);
 			glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
 			out_buffer_obj->registerGLBuffer();
-
-			//out_buffer_obj = context->createBufferFromGLBO(RT_BUFFER_OUTPUT, pbo->getHandle() );
-			out_buffer_obj->setFormat(RT_FORMAT_UNSIGNED_BYTE4);
-			out_buffer_obj->setSize(width,height);
 
 		} catch ( optix::Exception& e ) {
 			std::cout << e.what() << std::endl;
 			system("pause");
 			exit(-1);
 		}
+
+		glViewport(0,0,width,height);
+		fps_camera->updateProjection(width, height, 75.f, 0.01f, 1000.f);
 	}
 
 	void animate()
@@ -200,7 +200,7 @@ private:
 
 		/* Create shared GL/CUDA PBO */
 		int element_size = 4 * sizeof(char);
-		pbo = new Render::PBO(element_size * width * height, GL_STREAM_READ, true);
+		pbo = new Render::PBO(element_size * width * height, GL_STREAM_DRAW, true);
 		out_buffer_obj = context->createBufferFromGLBO(RT_BUFFER_OUTPUT, pbo->getHandle() );
 		out_buffer_obj->setFormat(RT_FORMAT_UNSIGNED_BYTE4);
 		out_buffer_obj->setSize(width,height);
@@ -209,7 +209,7 @@ private:
 
 		fps_camera = std::shared_ptr<Scene::FirstPersonCamera>( Scene::FirstPersonCamera::getSingleton() );
 		fps_camera->lookAt( glm::vec3(15.0f, 15.0f, 15.0f), glm::vec3(0.f), glm::vec3(0.f, 1.f, 0.f) );
-		fps_camera->updateProjection(width, height, 45.f, 0.01f, 1000.f);
+		fps_camera->updateProjection(width, height, 75.f, 0.01f, 1000.f);
 		fps_camera->setSpeed( 20.f );
 	}
 
@@ -255,10 +255,10 @@ private:
 		File::MeshLoader mesh_loader(model_dir);
 		// TODO destruction
 		auto hin_logo = std::shared_ptr<Scene::OptixMesh>( new Scene::OptixMesh(mesh_loader.loadMeshDataEasy("hin_logo.3ds"), context, optix_dir));
-		//auto disc = std::shared_ptr<Scene::OptixMesh>( new Scene::OptixMesh(mesh_loader.loadMeshDataEasy("disc.obj"), context, optix_dir));
+		auto disc = std::shared_ptr<Scene::OptixMesh>( new Scene::OptixMesh(mesh_loader.loadMeshDataEasy("disc.obj"), context, optix_dir));
 
 		createMeshInstances(top_level_group, hin_logo, material, 0 );
-		//createMeshInstances(top_level_group, disc, material, 1 );
+		createMeshInstances(top_level_group, disc, material, 1 );
 
 		top_level_acceleration->markDirty();
 	}

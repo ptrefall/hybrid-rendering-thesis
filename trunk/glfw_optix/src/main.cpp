@@ -113,6 +113,7 @@ public:
 
 		int mouse_x, mouse_y;
 		glfwGetMousePos(wnd, &mouse_x, &mouse_y );
+		myScene->moveCameraVertical( glfwGetKey(wnd, 'Q')==1, glfwGetKey(wnd, 'E')==1, delta_time );
 		myScene->updateCamera( glfwGetKey(wnd, 'A')==1, glfwGetKey(wnd, 'D')==1, glfwGetKey(wnd, 'S')==1, glfwGetKey(wnd, 'W')==1,
 			                    glm::vec2((float)mouse_x, (float)mouse_y), glfwGetMouseButton(wnd,0)==1, delta_time );
 		myScene->animate();
@@ -141,11 +142,6 @@ public:
 	void resize(int w, int h)
 	{
 		myScene->resize(w,h);
-
-		//outputTex.bind();
-		//glTexImage2D(GL_TEXTURE_2D, 0, outputTex.getFormat(), w, h, 0, outputTex.getInternalFormat(), outputTex.getType(), 0);
-		//glTexImage2D(GL_TEXTURE_2D, 0, outputTex.getInternalFormat(), w, h, 0, outputTex.getFormat(), outputTex.getType(), 0);
-		//outputTex.unbind();
 	}
 
 	void destroy()
@@ -215,6 +211,9 @@ public:
 
 	void resize(int w, int h)
 	{
+		this->width = w;
+		this->height = h;
+
 		if ( myRender ) myRender->resize(w,h);
 	}
 

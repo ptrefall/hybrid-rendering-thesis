@@ -22,6 +22,8 @@ public:
 	void update(bool left_key, bool right_key, bool back_key, bool forwards_key,
 		glm::vec2 mouse_coords, bool mouse_is_down, float delta );
 
+	void move(const glm::vec3& direction, float delta);
+
 	glm::vec3 getStrafeDirection() { return glm::vec3(world_to_view[0].x, world_to_view[1].x, world_to_view[2].x); }
 
 	glm::vec3 getUpDirection() { return glm::vec3(world_to_view[0].y, world_to_view[1].y, world_to_view[2].y); }
@@ -38,8 +40,8 @@ public:
 		this->cameraForward = cameraForward;
 	}
 
-	float getFov(){return vFov;}
-	void setFov( float vFov ){ this->vFov = vFov;}
+	float getFovDegrees(){return vFov;}
+	void setFovDegrees( float vFov ){ this->vFov = vFov;}
 
     void setNearDist(float near_dist) { this->near_dist = near_dist; }
 	float getNearDist() { return near_dist; }
