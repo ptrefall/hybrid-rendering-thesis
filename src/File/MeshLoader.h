@@ -29,6 +29,12 @@ namespace File
 			Scene::MeshDataPtr data;
 
 			auto scene = importer->ReadFile(base_dir + filename, aiProcessPreset_TargetRealtime_Fast);
+			if ( scene == nullptr ) {
+				printf("can't find mesh %s\n", filename);
+				#ifdef WIN32
+					__debugbreak();
+				#endif
+			}
 			for(unsigned int n = 0; n < scene->mNumMeshes; n++)
 			{
 				auto scene_mesh = scene->mMeshes[n];

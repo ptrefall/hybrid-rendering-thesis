@@ -4,8 +4,6 @@
 #include <iostream>
 #include <memory>
 
-
-
 #include <Render/Tex2D.h>
 #include <Render/Shader.h>
 #include <Render/PBO.h>
@@ -39,10 +37,10 @@ public:
 			"out vec2 t;\n"
 			"void main ()\n"
 			"{\n"
-			"gl_Position = vec4( position.x, position.y, 0.0, 1.0);\n"
-			"vec2 madd = vec2(0.5,0.5);\n"
-			"vec2 pos_norm = position; // vertices go from 0,0 to 1,1\n"
-			"t = (pos_norm * madd) + madd; // Scale to 0-1 range\n"
+			"  gl_Position = vec4( position.x, position.y, 0.0, 1.0);\n"
+			"  vec2 madd = vec2(0.5,0.5);\n"
+			"  vec2 pos_norm = position; // vertices go from 0,0 to 1,1\n"
+			"  t = (pos_norm * madd) + madd; // Scale to 0-1 range\n"
 			"}\n";
 		
 		std::string fragment_src = \
@@ -52,8 +50,8 @@ public:
 			"uniform sampler2D tex0;\n"
 			"void main()\n"
 			"{\n"
-			"out_FragColor = texture(tex0,t.xy);\n"
-			//"out_FragColor = vec4(t.x,t.y,1.0,1.0);\n"
+			"  out_FragColor = texture(tex0,t.xy);\n"
+			//"  out_FragColor = vec4(t.x,t.y,1.0,1.0);\n"
 			"}\n";
 		screen_quad_shader = std::unique_ptr<Render::Shader>( new Render::Shader(vertex_src, "", fragment_src ) );
 
@@ -117,11 +115,7 @@ public:
 		myScene->updateCamera( glfwGetKey(wnd, 'A')==1, glfwGetKey(wnd, 'D')==1, glfwGetKey(wnd, 'S')==1, glfwGetKey(wnd, 'W')==1,
 			                    glm::vec2((float)mouse_x, (float)mouse_y), glfwGetMouseButton(wnd,0)==1, delta_time );
 		myScene->animate();
-			
-		RTsize width, height;
-		myScene->getOutBuffer()->getSize(width, height);
-		optix::Context context = myScene->getContext();
-		context->launch(0 /*entry point*/, width, height );
+		myScene->launch();
 
 		glActiveTexture(GL_TEXTURE0 + 0);
 		pbo2Tex();
@@ -137,6 +131,23 @@ public:
 		glEnable(GL_DEPTH_TEST);
 		glClear(GL_DEPTH_BUFFER_BIT);
 		myScene->renderRaster();
+
+		int w,h;
+		if ( glfwGetKey(wnd, '1') ) {
+			w = 320; h=240;
+			glfwSetWindowSize(wnd,w,h);
+			resize(w,h);
+		}
+		if ( glfwGetKey(wnd, '2') ) {
+			w = 800; h=600;
+			glfwSetWindowSize(wnd,w,h);
+			resize(w,h);
+		}
+		if ( glfwGetKey(wnd, '3') ) {
+			w = 1024; h=768;
+			glfwSetWindowSize(wnd,w,h);
+			resize(w,h);
+		}
 	}
 	
 	void resize(int w, int h)
