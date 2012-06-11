@@ -21,6 +21,7 @@ file(GLOB 		  HYBRID_HEADER
 	${CMAKE_SOURCE_DIR}/src/Render/VAO.h
 	${CMAKE_SOURCE_DIR}/src/Render/VBO.h
 	${CMAKE_SOURCE_DIR}/src/Render/PBO.h
+	${CMAKE_SOURCE_DIR}/src/Render/Uniform.h
 	${CMAKE_SOURCE_DIR}/src/Scene/Quad.h
 	${CMAKE_SOURCE_DIR}/src/Scene/proto_camera.h
 	
@@ -38,6 +39,7 @@ file(GLOB 		  HYBRID_SOURCE
 	${CMAKE_SOURCE_DIR}/src/Render/VAO.cpp
 	${CMAKE_SOURCE_DIR}/src/Render/VBO.cpp
 	${CMAKE_SOURCE_DIR}/src/Render/PBO.cpp
+	${CMAKE_SOURCE_DIR}/src/Render/Uniform.cpp
 	${CMAKE_SOURCE_DIR}/src/Scene/Quad.cpp
 	${CMAKE_SOURCE_DIR}/src/Scene/proto_camera.cpp
 	
