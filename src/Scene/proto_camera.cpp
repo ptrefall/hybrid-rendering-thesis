@@ -41,6 +41,7 @@ FirstPersonCamera::FirstPersonCamera()
 
 const glm::mat4 &FirstPersonCamera::updateProjection(unsigned int w, unsigned int h, float vFov, float near, float far)
 {
+	this->vFov = vFov;
 	view_to_clip = glm::perspective<float>(vFov, w/(float)h, near, far);
 	return view_to_clip;
 }
@@ -78,4 +79,12 @@ void FirstPersonCamera::update(bool left_key, bool right_key, bool back_key, boo
 	world_to_view = glm::mat4_cast(orientation); // keep Quat & Matrix in sync
 	world_to_view = glm::translate( glm::mat4_cast(orientation) , -pos);
 	old_mouse = mouse_coords;
-}				  
+}
+
+void FirstPersonCamera::move(const glm::vec3& direction, float delta)
+{
+    if ( glm::length2(direction) ) {
+		float speed = delta * movementUnitsPerSecond; // meters per second
+        pos += speed * glm::normalize(direction);
+	}
+}
