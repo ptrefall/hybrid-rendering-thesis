@@ -90,68 +90,27 @@ void OptixRender::createGBuffers()
 }
 
 
-// C++ version of sutil.c code
-void CalculateCameraVariables(  glm::vec3 eye, glm::vec3 lookAt, glm::vec3 up,
-                                float hfov,
-                                float aspect_ratio,
-                                glm::vec3& U,
-                                glm::vec3& V,
-                                glm::vec3& W )
-{
-  
-  W = lookAt - eye;  /* Do not normalize W -- it implies focal length */
-  U = glm::normalize( glm::cross(W, up) );
-  V = glm::normalize( glm::cross( U, W ) );
-  float wlen = sqrtf( glm::dot( W, W ) );
-  float ulen = wlen * tanf( hfov / 2.0f * 3.14159265358979323846f / 180.0f );
-  float vlen =  ulen/aspect_ratio;
-  U *= ulen;
-  V *= vlen;
-}
-
-void CalculateCameraVariables(  float hfov,
-                                float aspect_ratio,
-                                glm::vec3& U,
-                                glm::vec3& V,
-                                glm::vec3& W )
-{
-    auto &cam = Scene::FirstPersonCamera::getSingleton();
-    glm::vec3 side = cam->getStrafeDirection();
-    glm::vec3 up = cam->getUpDirection();
-    glm::vec3 fwd = cam->getLookDirection();
-
-    // set up the coordinate system
-    W = fwd;//glm::normalize (fwd); 
-    U = side;//glm::normalize (glm::cross(up, W));
-    V = up;//glm::normalize (glm::cross(W, U));
-
-    float wlen = sqrtf( glm::dot( W, W ) );
-    float ulen = wlen * tanf( glm::radians(hfov) / 2.0f );
-    U *= ulen;
-    float vlen = ulen/aspect_ratio;
-    V *= vlen;
-}
-
 void OptixRender::render()
 {
 	auto camera = Scene::FirstPersonCamera::getSingleton();
 	auto &world_to_view = camera->getWorldToViewMatrix();
-	auto pos = camera->getPos();
- 
-    float aspect_ratio = static_cast<float>(width) / static_cast<float>(height);
-    float inv_aspect_ratio = static_cast<float>(height) / static_cast<float>(width);
-    
-    float vfov = camera->getFov();
-    float hfov = vfov * aspect_ratio;
+	
+	// Calculate camera vectors
+	{
+		float aspect = width/(float)height;
+		float vfov = camera->getFovDegrees() * (3.14f/180.f);
+		float screenDist = 1.0 / tan(vfov * 0.5);
 
-    glm::vec3 U,V,W;
-    //CalculateCameraVariables( hfov, aspect_ratio, U, V, W );
-    CalculateCameraVariables( pos, pos+camera->getLookDirection(), camera->getUpDirection(), hfov, aspect_ratio, U, V, W );
+		glm::vec3 eyePos = camera->getPos();
+		glm::vec3 u = aspect * camera->getStrafeDirection();
+		glm::vec3 v = camera->getUpDirection();
+		glm::vec3 w = screenDist * camera->getLookDirection();
 
-    context["eye"]->set3fv( glm::value_ptr(pos) );
-    context["U"]->set3fv( glm::value_ptr(U) );
-    context["V"]->set3fv( glm::value_ptr(V) );
-    context["W"]->set3fv( glm::value_ptr(W) );
+		context["eye"]->set3fv( glm::value_ptr(eyePos) );
+		context["U"]->set3fv( glm::value_ptr(u) );
+		context["V"]->set3fv( glm::value_ptr(v) );
+		context["W"]->set3fv( glm::value_ptr(w) );
+	}
 
 	//Upload rasterized g-buffer info here:
 	auto raster_fbo = g_buffer_pass->getFBO();
@@ -162,17 +121,8 @@ void OptixRender::render()
 	g_buffer_position_pbo->bufferFromTextureOnGPU(raster_position, 0);
 	g_buffer_normal_pbo->bufferFromTextureOnGPU(raster_normal, 0);
 
-	//auto gl_id_handle = g_buffer->getGLBOId();
-	//static bool glbuffer_registered = true;
 	try {
-		//if(!glbuffer_registered)
-		//{
-		//	g_buffer->registerGLBuffer();
-		//	glbuffer_registered = true;
-		//}
 		context->launch(0, width,height);
-		//g_buffer->unregisterGLBuffer();
-		//glbuffer_registered = false;
 	} catch (optix::Exception& e) {
 		std::cout << e.getErrorString();
 		return; 
