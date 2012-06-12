@@ -1,10 +1,9 @@
 #include "OptixMesh.h"
 #include "proto_camera.h"
-#include "Light.h"
 
 #include "../Render/ATTRIB.h"
 #include "../Render/ShaderConstants.h"
-
+#include "Mesh.h"
 
 #include <glm/ext.hpp>
 #include <vector>
@@ -12,37 +11,53 @@
 using namespace Scene;
 using namespace glm;
 
-OptixMesh::OptixMesh(MeshDataPtr data, optix::Context rtContext, const std::string &ptx_dir)
-	: Mesh(data)
+void setupMaterial(optix::GeometryInstance instance)
 {
-	int num_indices = data->indices.size();
-	int num_triangles = data->indices.size() / 3;
-	int num_vertices = data->vertices.size() / 3;
-	int num_normals = data->normals.size() / 3;
+	glm::vec3 ambient = glm::vec3(0.2f, 0.2f,0.2f);
+	glm::vec3 kd = glm::vec3(0.5f, 0.5f,0.5f);
+	glm::vec3 ks = glm::vec3(0.5f, 0.5f,0.5f); 
+	glm::vec3 ka = glm::vec3(0.8f, 0.8f,0.8f); 					 
+	glm::vec3 reflectivity = glm::vec3(0.8f);
+	float shinyness = 10.f;
+	optix::Variable var_kd =             instance->declareVariable("Kd");
+	optix::Variable var_ks =             instance->declareVariable("Ks");
+	optix::Variable var_ka =             instance->declareVariable("Ka");
+	optix::Variable var_expv =           instance->declareVariable("phong_exp");
+	optix::Variable var_reflectivity =   instance->declareVariable("reflectivity");
+	optix::Variable var_ambient =        instance->declareVariable("ambient_light_color");
+	var_ambient->set3fv( glm::value_ptr(ambient) );
+	var_kd->set3fv( glm::value_ptr(kd) );
+	var_ks->set3fv( glm::value_ptr(ks) );
+	var_ka->set3fv( glm::value_ptr(ka) );
+	var_reflectivity->set3fv( glm::value_ptr(reflectivity) );
+	var_expv->setFloat(shinyness);
 
-	rtModel = rtContext->createGeometry();
-	rtModel->setPrimitiveCount( num_triangles );
-	rtModel->setIntersectionProgram( rtContext->createProgramFromPTXFile( ptx_dir+"triangle_mesh_small.cu.ptx", "mesh_intersect" ) );
-	rtModel->setBoundingBoxProgram( rtContext->createProgramFromPTXFile( ptx_dir+"triangle_mesh_small.cu.ptx", "mesh_bounds" ) );
-	
-	//int num_vertex_attributes = 3; // allways has verts
-	//if(data->hasNormals() ) num_vertex_attributes += 3;
-	//if(data->hasBitangents() ) num_vertex_attributes += 3;
-	//if(data->hasTexCoords() ) num_vertex_attributes += 2;
-	//if(data->hasColors() ) num_vertex_attributes += 4;
+}
 
-	optix::Buffer vertex_buffer = rtContext->createBufferFromGLBO(RT_BUFFER_INPUT, vbo->getHandle() );
-    vertex_buffer->setFormat(RT_FORMAT_USER);
-    vertex_buffer->setElementSize(3*sizeof(float));
-    vertex_buffer->setSize(num_vertices + num_normals);
-    rtModel["vertex_buffer"]->setBuffer(vertex_buffer);
+OptixMesh::OptixMesh(const Scene::MeshPtr &triangle_mesh, optix::Geometry &geo, optix::Material &material)
+                     : triangle_mesh(triangle_mesh)
 
-    optix::Buffer index_buffer = rtContext->createBufferFromGLBO(RT_BUFFER_INPUT, ibo->getHandle() );
-	index_buffer->setFormat(RT_FORMAT_INT3);
-    index_buffer->setSize( num_triangles );
-    rtModel["index_buffer"]->setBuffer(index_buffer);
+{
+	/////////////////////////////////
+	optix::Context ctx = geo->getContext();
+	instance = ctx->createGeometryInstance();
+	instance->setGeometry(geo);
+	instance->setMaterialCount(1);
+	instance->setMaterial(0, material);
+	setupMaterial(instance);
 
-	rtModel["normal_offset"]->setInt( num_normals );
+	/* create group to hold instance transform */
+	optix::GeometryGroup geometrygroup = ctx->createGeometryGroup();
+	geometrygroup->setChildCount(1);
+	geometrygroup->setChild(0,instance);
+
+	acceleration = ctx->createAcceleration("Bvh", "Bvh"); // classic
+	geometrygroup->setAcceleration(acceleration);
+	acceleration->markDirty();
+
+	transform = ctx->createTransform();
+	transform->setChild( geometrygroup );
+	/////////////////////////////////
 
 	std::string vs = "#version 330 core\n"
 	"#define DIFFUSE  0\n"
@@ -138,9 +153,18 @@ void OptixMesh::render(const Render::ShaderPtr &active_program)
 	//if(material)
 		//material->bind_id(active_program->getFS());
 
-	vao->bind();
+	triangle_mesh->getVao()->bind();
 
-	glDrawElements(GL_TRIANGLES, ibo->size(), GL_UNSIGNED_INT, BUFFER_OFFSET(0));
+	glDrawElements(GL_TRIANGLES, triangle_mesh->getIbo()->size(), GL_UNSIGNED_INT, BUFFER_OFFSET(0));
+}
+
+void OptixMesh::updateTransform()
+{
+	//glm::mat4 model = glm::translate(mesh->getPosition()) * glm::mat4_cast(mesh->getOrientation()) * glm::scale(mesh->getScale());
+	glm::mat4 model = glm::translate(position) * glm::mat4_cast(orientation) * glm::scale(scale);
+	model = glm::transpose(model);
+	transform->setMatrix(false, glm::value_ptr(model), nullptr );
+	acceleration->markDirty();
 }
 
 
