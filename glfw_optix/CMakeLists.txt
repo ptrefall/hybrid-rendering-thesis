@@ -28,6 +28,7 @@ file(GLOB 		  HYBRID_HEADER
 	${CMAKE_SOURCE_DIR}/src/Scene/SceneNode.h
 	${CMAKE_SOURCE_DIR}/src/Scene/Mesh.h
 	${CMAKE_SOURCE_DIR}/src/Scene/OptixMesh.h
+	${CMAKE_SOURCE_DIR}/src/Scene/OptixNode.h
 	${CMAKE_SOURCE_DIR}/src/File/MeshLoader.h
 )
 file(GLOB 		  HYBRID_SOURCE
@@ -46,6 +47,7 @@ file(GLOB 		  HYBRID_SOURCE
 	${CMAKE_SOURCE_DIR}/src/Scene/SceneNode.cpp
 	${CMAKE_SOURCE_DIR}/src/Scene/Mesh.cpp
 	${CMAKE_SOURCE_DIR}/src/Scene/OptixMesh.cpp
+	${CMAKE_SOURCE_DIR}/src/Scene/OptixNode.cpp
 	${CMAKE_SOURCE_DIR}/src/File/MeshLoader.cpp
 )
 

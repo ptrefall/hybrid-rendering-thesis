@@ -38,17 +38,12 @@ OptixMesh::OptixMesh(MeshDataPtr data, optix::Context rtContext, const std::stri
     rtModel["vertex_buffer"]->setBuffer(vertex_buffer);
 
     optix::Buffer index_buffer = rtContext->createBufferFromGLBO(RT_BUFFER_INPUT, ibo->getHandle() );
-    index_buffer->setFormat(RT_FORMAT_INT3);
+	index_buffer->setFormat(RT_FORMAT_INT3);
     index_buffer->setSize( num_triangles );
     rtModel["index_buffer"]->setBuffer(index_buffer);
 
 	rtModel["normal_offset"]->setInt( num_normals );
 
-	init();
-}
-
-void OptixMesh::init()
-{
 	std::string vs = "#version 330 core\n"
 	"#define DIFFUSE  0\n"
 	"#define POSITION	1\n"
@@ -117,11 +112,11 @@ void OptixMesh::init()
 	uni_normal_to_view		= std::shared_ptr<Render::Uniform>( new Render::Uniform(boring_shader->getVS(), "Normal_to_View") );
 }
 
-void OptixMesh::renderReal(/*const Render::ShaderPtr &active_program*/)
+void OptixMesh::render(const Render::ShaderPtr &active_program)
 {
 	boring_shader->bind();
 
-	object_to_world = glm::translate(position) /* * glm::mat4_cast(node_orientation)*/ * glm::scale(scale);
+	object_to_world = glm::translate(position) * glm::mat4_cast(orientation) * glm::scale(scale);
 	auto &world_to_view = FirstPersonCamera::getSingleton()->getWorldToViewMatrix();
 	auto &view_to_clip = FirstPersonCamera::getSingleton()->getViewToClipMatrix();
 	auto normal_to_view = transpose(inverse(mat3(world_to_view * object_to_world)));
