@@ -10,18 +10,13 @@
   * Research cutting edge methods of raytracing.
   * Evaluate cutting edge raytracing tools/engines.
     * [http://www.nvidia.com/object/optix.html OptiX]
-==== Voxels ====
-  * sensible dataset to visualize.
-  * Evaluate cutting edge voxel data storage libraries.
-    * [https://sites.google.com/site/field3d/ Field3D]
-==== Cloud ====
 ==== GPU Architecture =====
   * Research GPU programming. What programs map well to GPU's? Explore the costs of memory-access (Arrays of Structs vs Structs of Arrays layout, linked lists vs arrays, program flow ( branching ) and loops.
 
 == Paper ==
 == Programming ==
 ==== Framework ====
-  * Set up basic deferred rasterization render pipeline.
+  * Set up basic deferred rasterization render pipeline. Done.
   * Use file watcher to reload edited data files at runtime.
   * Set up scene and engine using data files for easy parameter tweaking.
   * Rewrite render pipeline into something flexible enough to give mix-and-match support to rasterization and raytracing techniques.
@@ -29,8 +24,9 @@
 ==== Rasterization ====
   * Vanilla deferred shading integration based on [http://www.codinglabs.net/tutorial_simple_def_rendering.aspx Coding Labs]'s article.
 ==== Raytracing ====
-==== Voxels ====
-==== Cloud ====
 
+Evaluate "forward vs deferred collab with raytracer". Try variations on render order. When does it make sense to run raster first? Ray first?
 
-= FIXED TODO's =
+For example:
+1. render forward to texture.
+2. raytrace, compose ray image with forward image.
