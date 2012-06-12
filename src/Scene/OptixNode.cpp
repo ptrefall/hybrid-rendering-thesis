@@ -54,7 +54,9 @@ OptixNode::OptixNode(const OptixMeshPtr &mesh, optix::Material material)
 
 void OptixNode::render(const Render::ShaderPtr &active_program)
 {
-	object_to_world = glm::translate(position) * glm::mat4_cast(orientation) * glm::scale(scale);
+	mesh->setPosition(position);
+	mesh->setOrientation(orientation);
+	mesh->setScale(scale);
 	mesh->render(nullptr);
 }
 
