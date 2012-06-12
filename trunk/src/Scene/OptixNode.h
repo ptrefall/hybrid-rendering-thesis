@@ -7,6 +7,39 @@
 #include <glm/ext.hpp>
 #include <memory>
 
+
+
+/*                          
+
+                                                                      +------------------+
+                                                                      |   SceneNode      |
+                                                                      |------------------|
+                                                                      |vRender           |
+                                                                      |vSet pos,ori,scale|
+                                                                      |vSetTexture       |
+                                                                      +-----^------------+
+                                                                            |
+                                                                            |
+        +-------------------+-----------------------+-----------------------+-------+
+        |                   |                       |                               |
+        |                   |                       |                        +------+------+
+        |                   |                       |                        |  Mesh       |
+        |                   |                       |                        |-------------|
+    +---+--------+   +------+-----+          +------+-------+                |+ctor(data)  |
+    |  CUBE      |   |  BARTMesh  |          | OptixNode    |                |-vao,vbo,ibo |
+    |------------|   |------------|          |--------------|                +-------^-----+
+    |-vao,vbo,ibo|   |-vao,vbo,ibo|          |-mesh         +--------+               |
+    +------------+   +------------|          |-transform    |        |               |
+                                             |-instance     |        |       +-------+--------+
+                                             |-acceleration |        +-------+ OptixMesh      |
+                                             +--------------+                |----------------|
+                                                                             |+getGeom        |
+                                                                             |+render         |
+                                                                             |-shader         |
+                                                                             |-optix::Geometry|
+                                                                             +----------------+
+*/
+
 namespace Scene
 {
 	class OptixNode;

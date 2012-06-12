@@ -54,7 +54,7 @@ namespace Scene
 
 		Render::MaterialPtr material;
 
-		glm::mat4 object_to_world; // TODO remove?
+		glm::mat4 object_to_world;
 		glm::vec3 position;
 		glm::quat orientation;
 		glm::vec3 scale;

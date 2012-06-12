@@ -65,12 +65,13 @@ public:
 	void moveCameraVertical(bool key_down, bool key_up, float deltaTime)
 	{
 		float dy = key_up - key_down;
-		fps_camera->move( glm::vec3(0.f, dy, 0.f), deltaTime );
+		Scene::FirstPersonCamera::getSingleton()->move( glm::vec3(0.f, dy, 0.f), deltaTime );
 	}
 
 	void updateCamera(bool key_left, bool key_right, bool key_back, bool key_fwd, 
 					 glm::vec2 mouse_coords, bool mouse_button_down, float deltaTime)
 	{
+		auto fps_camera = Scene::FirstPersonCamera::getSingleton();
 		fps_camera->update( key_left, key_right, key_back, key_fwd, mouse_coords, mouse_button_down, deltaTime );
 
 		static float time = 0.f;
@@ -93,7 +94,8 @@ public:
 
 	void renderRaster()
 	{
-		//scene_instances[0]->render(nullptr);
+		scene_instances[3]->render(nullptr);
+		scene_instances[5]->render(nullptr);
 		//for ( size_t i=0; i<scene_instances.size(); ++i ){
 		//	scene_instances[i]->render(nullptr);
 		//}
@@ -110,7 +112,7 @@ public:
 		height = height == 0 ? 1 : height; 
 
 		glViewport(0,0,width,height);
-		fps_camera->updateProjection(width, height, 75.f, 0.01f, 1000.f);
+		Scene::FirstPersonCamera::getSingleton()->updateProjection(width, height, 75.f, 0.01f, 1000.f);
 
 		out_buffer_obj->setSize(width,height);
 
@@ -206,7 +208,7 @@ private:
 		
 		out_buffer_var->set(out_buffer_obj);
 
-		fps_camera = Scene::FirstPersonCameraPtr( Scene::FirstPersonCamera::getSingleton() );
+		auto fps_camera = Scene::FirstPersonCameraPtr( Scene::FirstPersonCamera::getSingleton() );
 		fps_camera->lookAt( glm::vec3(15.0f, 15.0f, 15.0f), glm::vec3(0.f), glm::vec3(0.f, 1.f, 0.f) );
 		fps_camera->updateProjection(width, height, 75.f, 0.01f, 1000.f);
 		fps_camera->setSpeed( 20.f );
@@ -443,7 +445,6 @@ private:
 	std::vector<Scene::OptixNodePtr> scene_instances;
 	
 	std::vector<BasicLight>          lights;
-	Scene::FirstPersonCameraPtr      fps_camera;
 	std::string                      optix_dir;
 	std::string                      resource_dir;
 	int                              width;
