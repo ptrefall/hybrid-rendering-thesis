@@ -36,6 +36,10 @@ namespace Scene
 		virtual void setOrientation(const glm::quat &orientation) { this->orientation = orientation; }
 		virtual void setScale(const glm::vec3 &scale) { this->scale = scale; }
 
+		virtual glm::vec3 getPosition() { return position; }
+		virtual glm::quat getOrientation() { return orientation; }
+		virtual glm::vec3 getScale() { return scale; }
+
 		void setTexture(int slot, const Render::Tex2DPtr &tex, const Render::UniformPtr &uniform, const Render::SamplerPtr &sampler);
 		virtual void setTexture(int slot, const Render::Tex2DPtr &tex, const std::string &uni_name) {}
 		void setTexture(int slot, const Render::Tex2DArrayPtr &tex_array, const Render::UniformPtr &uniform, const Render::SamplerPtr &sampler);

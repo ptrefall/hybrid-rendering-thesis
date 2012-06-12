@@ -41,8 +41,10 @@ namespace Scene
 	public:
 		Mesh(MeshDataPtr data);
 
-		//void render(const Render::ShaderPtr &active_program) override;
-
+		virtual void render(const Render::ShaderPtr &active_program) {};
+		Render::VAOPtr getVao(){return vao;}
+		Render::VBOPtr getVbo(){return vbo;}
+		Render::IBOPtr getIbo(){return ibo;}
 	protected:
 		Render::VAOPtr vao;
 		Render::VBOPtr vbo;
