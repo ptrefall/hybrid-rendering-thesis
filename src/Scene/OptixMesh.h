@@ -27,7 +27,6 @@ namespace Scene
  		virtual void setOrientation(const glm::quat &orientation) { this->orientation = orientation; updateTransform(); }
  		virtual void setScale(const glm::vec3 &scale) { this->scale = scale; updateTransform(); }
 
-		optix::Geometry getGeometry() const { return rtModel; };
 		optix::Transform getTransform() {return transform;} // for top level group registration
 	private:
 		void updateTransform();

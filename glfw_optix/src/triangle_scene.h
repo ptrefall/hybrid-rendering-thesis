@@ -260,10 +260,14 @@ private:
 		top_level_group = context->createGroup();
 		optix::Variable top_object = context->declareVariable("top_object");
 		top_object->set( top_level_group );
-		optix::Variable top_shadower = context->declareVariable("top_shadower");
-		top_shadower->set(top_level_group);
 		top_level_acceleration = context->createAcceleration("Bvh", "Bvh");
 		top_level_group->setAcceleration(top_level_acceleration);
+
+		recieve_shadow_group = context->createGroup();
+		recieve_shadow_group->setAcceleration( context->createAcceleration("Bvh", "Bvh") );
+		optix::Variable top_shadower = context->declareVariable("top_shadower");
+		top_shadower->set(recieve_shadow_group);
+		addToTopLevel( recieve_shadow_group );
 
 		optix::Material material = createMaterial(); // createNormalDebugMaterial
 		
@@ -288,20 +292,21 @@ private:
 			hin_logo_instance->setPosition( glm::vec3(xform[3]) );
 			hin_logo_instance->setOrientation( glm::quat_cast(xform) );
 			scene_instances.push_back(hin_logo_instance);
+
+			addToShadowGroup( hin_logo_instance->getTransform() );
 		}
 		
 		auto disc_instance = Scene::OptixMeshPtr( new Scene::OptixMesh(geo_disc.triMesh, geo_disc.rtGeo, material) );
 		scene_instances.push_back(disc_instance);
+		addToShadowGroup( disc_instance->getTransform() );
 
 		// create ico sphere for each light
 		for (size_t i=0; i<lights.size(); ++i){
 			auto ico_instance = Scene::OptixMeshPtr( new Scene::OptixMesh(geo_ico.triMesh, geo_ico.rtGeo, material) );
 			ico_instance->setPosition( glm::vec3(lights[i].pos.x,lights[i].pos.y,lights[i].pos.z) );
 			scene_instances.push_back(ico_instance);
-		}
 
-		for ( size_t i=0; i<scene_instances.size(); ++i) {
-			addToTopLevel( scene_instances[i]->getTransform() );
+			addToTopLevel( ico_instance->getTransform() );
 		}
 
 		top_level_acceleration->markDirty();
@@ -310,13 +315,13 @@ private:
 	optix::Material createMaterial()
 	{
 		//std::string path_to_ptx = optix_dir + "\\phong.cu.ptx";
-		std::string path_to_ptx = optix_dir + "\\tut1_diffuse.cu.ptx";
+		std::string path_to_ptx = optix_dir + "\\tut3_shadows.cu.ptx";
 		optix::Program closest_hit_program = context->createProgramFromPTXFile( path_to_ptx, "closest_hit_radiance" );
-		//optix::Program any_hit_program = context->createProgramFromPTXFile( path_to_ptx, "any_hit_shadow" );
+		optix::Program any_hit_program = context->createProgramFromPTXFile( path_to_ptx, "any_hit_shadow" );
 
 		optix::Material mat = context->createMaterial();
 		mat->setClosestHitProgram(0, closest_hit_program);
-		//mat->setAnyHitProgram(1, any_hit_program);
+		mat->setAnyHitProgram(1, any_hit_program);
 		return mat;
 	}
 
@@ -381,11 +386,22 @@ private:
 		acceleration->markDirty();
 	}
 
-	void addToTopLevel(optix::Transform transform)
+	template< typename T >
+	inline 
+	void addToTopLevel(T child) // optix::Transform
 	{
 		int count = top_level_group->getChildCount();
 		top_level_group->setChildCount( count + 1 );
-		top_level_group->setChild(count, transform );
+		top_level_group->setChild(count, child );
+	}
+
+	template< typename T >
+	inline 
+	void addToShadowGroup(T child) // optix::Transform
+	{
+		int count = recieve_shadow_group->getChildCount();
+		recieve_shadow_group->setChildCount( count + 1 );
+		recieve_shadow_group->setChild(count, child );
 	}
 
 	glm::vec3 getLorenzAttractorDelta( glm::vec3 &p, int num_points )
@@ -477,6 +493,7 @@ private:
 	std::vector<optix::Transform>    transforms;
 	optix::Group                     top_level_group;
 	optix::Acceleration              top_level_acceleration;
+	optix::Group                     recieve_shadow_group;
 	// having one shared accel improved perf,
 	// having one shared group did not improved perf.
 	optix::Acceleration              cube_acceleration; 
