@@ -21,12 +21,10 @@ namespace Scene
 	{
 	public:
 		OptixMesh(MeshDataPtr data, optix::Context rtContext, const std::string &ptx_dir);
-		void init();
-		virtual void render(const Render::ShaderPtr &active_program){}
-		virtual void renderReal();
+		virtual void render(const Render::ShaderPtr &active_program);
 		void setTexture(int slot, const Render::Tex2DPtr &tex, const std::string &uni_name) override;
 
-		optix::Geometry getGeometry() const { return rtModel;};
+		optix::Geometry getGeometry() const { return rtModel; };
 	private:
 		optix::Geometry rtModel;
 		Render::ShaderPtr boring_shader;

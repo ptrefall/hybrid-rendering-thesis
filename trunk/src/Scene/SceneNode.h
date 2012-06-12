@@ -8,6 +8,7 @@
 #include "../Render/Shader.h"
 
 #include <glm/glm.hpp>
+#include <glm/gtx/quaternion.hpp>
 
 #include <unordered_map>
 #include <memory>
@@ -32,6 +33,7 @@ namespace Scene
 		void setObjectToWorldMatrix(const glm::mat4 &object_to_world) { this->object_to_world = object_to_world; }
 
 		virtual void setPosition(const glm::vec3 &position) { this->position = position; }
+		virtual void setOrientation(const glm::quat &orientation) { this->orientation = orientation; }
 		virtual void setScale(const glm::vec3 &scale) { this->scale = scale; }
 
 		void setTexture(int slot, const Render::Tex2DPtr &tex, const Render::UniformPtr &uniform, const Render::SamplerPtr &sampler);
@@ -52,8 +54,9 @@ namespace Scene
 
 		Render::MaterialPtr material;
 
-		glm::mat4 object_to_world;
-		glm::vec3 position; // TODO remove position, now that we have a mat4?
+		glm::mat4 object_to_world; // TODO remove?
+		glm::vec3 position;
+		glm::quat orientation;
 		glm::vec3 scale;
 	};
 }
