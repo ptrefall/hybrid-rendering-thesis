@@ -17,8 +17,9 @@ rtDeclareVariable(optix::Ray,          ray,              rtCurrentRay, );
 rtDeclareVariable(float,               t_hit,            rtIntersectionDistance, );
 
 rtDeclareVariable(float3, Ka, , );
+rtDeclareVariable(float3, Ks, , );
 rtDeclareVariable(float3, Kd, , );
-
+rtDeclareVariable(float,  phong_exp, , );
 rtDeclareVariable(float3, ambient_light_color, , );
 rtBuffer<BasicLight> lights; 
 
@@ -34,8 +35,15 @@ RT_PROGRAM void closest_hit_radiance()
 		BasicLight light = lights[i];
 		float3 L = normalize(light.pos - hit_point);
 		float nDl = dot( ffnormal, L);
-		if( nDl > 0 )
-			color += Kd * nDl * light.color;
+		if( nDl > 0.f ) {
+			float3 Lc = light.color;
+			color += Kd * nDl * Lc;
+			float3 H = normalize( L-ray.direction );
+			float nDh = dot( ffnormal, H );
+			if ( nDh > 0.f ) {
+				color += Ks * Lc * pow(nDh, phong_exp);
+			}
+		}
 	}
 	prd_radiance.result = color;
 }
