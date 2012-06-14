@@ -34,9 +34,10 @@ void setupMaterial(optix::GeometryInstance instance)
 
 }
 
-OptixMesh::OptixMesh(const Scene::MeshPtr &triangle_mesh, optix::Geometry &geo, optix::Material &material)
+OptixMesh::OptixMesh(const Scene::MeshPtr &triangle_mesh, optix::Geometry &geo, optix::Group &parent_group, optix::Material &material)
                      : triangle_mesh(triangle_mesh)
-
+					 , parent_group(parent_group)
+					 , material(material)
 {
 	/////////////////////////////////
 	optix::Context ctx = geo->getContext();
@@ -47,7 +48,7 @@ OptixMesh::OptixMesh(const Scene::MeshPtr &triangle_mesh, optix::Geometry &geo, 
 	setupMaterial(instance);
 
 	/* create group to hold instance transform */
-	optix::GeometryGroup geometrygroup = ctx->createGeometryGroup();
+	geometrygroup = ctx->createGeometryGroup();
 	geometrygroup->setChildCount(1);
 	geometrygroup->setChild(0,instance);
 
@@ -55,8 +56,16 @@ OptixMesh::OptixMesh(const Scene::MeshPtr &triangle_mesh, optix::Geometry &geo, 
 	geometrygroup->setAcceleration(acceleration);
 	acceleration->markDirty();
 
+	dummy = ctx->createGroup();
+	dummy->setChildCount(0);
+	dummy->setAcceleration( ctx->createAcceleration("NoAccel", "NoAccel" ) );
 	transform = ctx->createTransform();
-	transform->setChild( geometrygroup );
+	addToScene();
+
+	int count = parent_group->getChildCount();
+	parent_group->setChildCount(count+1);
+	parent_group->setChild(count, transform);
+	
 	/////////////////////////////////
 
 	std::string vs = "#version 330 core\n"

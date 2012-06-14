@@ -1,3 +1,5 @@
+#include "OptixTriMeshLoader.h"
+
 #include <Optix/optixu/optixpp_namespace.h>
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
@@ -10,49 +12,7 @@
 
 #include "commonStructs.h"
 
-struct OptixGeometryAndTriMesh_t
-{
-	optix::Geometry rtGeo;
-	Scene::MeshPtr triMesh;
-};
 
-class OptixTriangleGeometry
-{
-public:
-	static OptixGeometryAndTriMesh_t fromMeshData(Scene::MeshDataPtr data, optix::Context rtContext, const std::string &ptx_dir)
-	{
-		auto mesh = Scene::MeshPtr( new Scene::Mesh(data) );
-
-		int num_indices = data->indices.size();
-		int num_triangles = data->indices.size() / 3;
-		int num_vertices = data->vertices.size() / 3;
-		int num_normals = data->normals.size() / 3;
-
-		optix::Geometry rtModel = rtContext->createGeometry();
-		rtModel->setPrimitiveCount( num_triangles );
-		optix::Program isect_program = rtContext->createProgramFromPTXFile( ptx_dir+"triangle_mesh_small.cu.ptx", "mesh_intersect" );
-		optix::Program bbox_program = rtContext->createProgramFromPTXFile( ptx_dir+"triangle_mesh_small.cu.ptx", "mesh_bounds" );
-
-		rtModel->setIntersectionProgram( isect_program );
-		rtModel->setBoundingBoxProgram( bbox_program );
-	
-		optix::Buffer vertex_buffer = rtContext->createBufferFromGLBO(RT_BUFFER_INPUT, mesh->getVbo()->getHandle() );
-		vertex_buffer->setFormat(RT_FORMAT_USER);
-		vertex_buffer->setElementSize(3*sizeof(float));
-		vertex_buffer->setSize(num_vertices + num_normals);
-		rtModel["vertex_buffer"]->setBuffer(vertex_buffer);
-
-		optix::Buffer index_buffer = rtContext->createBufferFromGLBO(RT_BUFFER_INPUT, mesh->getIbo()->getHandle() );
-		index_buffer->setFormat(RT_FORMAT_INT3);
-		index_buffer->setSize( num_triangles );
-		rtModel["index_buffer"]->setBuffer(index_buffer);
-
-		rtModel["normal_offset"]->setInt( num_normals );
-
-		OptixGeometryAndTriMesh_t out = {rtModel, mesh};
-		return out;
-	}
-};
 
 class OptixScene
 {
@@ -138,7 +98,7 @@ public:
 
 	void renderRaster()
 	{
-		scene_instances[3]->render(nullptr);
+		//scene_instances[3]->render(nullptr);
 		scene_instances[5]->render(nullptr);
 		//for ( size_t i=0; i<scene_instances.size(); ++i ){
 			//scene_instances[i]->render(nullptr);
@@ -182,6 +142,16 @@ public:
 		//float t = fTime->getFloat();
 		// remember to recalc accel when moving objects
 		//top_level_acceleration->markDirty();
+	}
+
+	void addTo()
+	{
+		scene_instances[3]->addToScene();
+	}
+
+	void removeFrom()
+	{
+		scene_instances[3]->removeFromScene();
 	}
 
 private:
@@ -269,7 +239,8 @@ private:
 		top_shadower->set(recieve_shadow_group);
 		addToTopLevel( recieve_shadow_group );
 
-		optix::Material material = createMaterial(); // createNormalDebugMaterial
+		optix::Material material = createMaterial();
+		optix::Material debug_normals_material = createNormalDebugMaterial();
 		
 		optix::Geometry box = createBoxGeometry();
 		createFloor(box, material);
@@ -278,9 +249,10 @@ private:
 		std::string model_dir = resource_dir + "models\\";
 		File::MeshLoader mesh_loader(model_dir);
 
-		auto geo_hin = OptixTriangleGeometry::fromMeshData(mesh_loader.loadMeshDataEasy("hin_logo.3ds"), context, optix_dir);
-		auto geo_disc = OptixTriangleGeometry::fromMeshData(mesh_loader.loadMeshDataEasy("disc.obj"), context, optix_dir);
-		auto geo_ico = OptixTriangleGeometry::fromMeshData(mesh_loader.loadMeshDataEasy("icosphere.3ds"), context, optix_dir);
+		auto geo_hin = OptixTriMeshLoader::fromMeshData(mesh_loader.loadMeshDataEasy("hin_logo.3ds"), context, optix_dir);
+		auto geo_disc = OptixTriMeshLoader::fromMeshData(mesh_loader.loadMeshDataEasy("disc.obj"), context, optix_dir);
+		auto geo_ico = OptixTriMeshLoader::fromMeshData(mesh_loader.loadMeshDataEasy("icosphere.3ds"), context, optix_dir);
+		auto geo_quad = OptixTriMeshLoader::fromMeshData(mesh_loader.loadMeshDataEasy("quad.obj"), context, optix_dir);
 
 		// Create a few logos in a circle
 		for ( int i=0; i<12; i++ ) {
@@ -288,26 +260,40 @@ private:
 			// translate, then rotate
 			glm::mat4 xform = glm::rotate(ang_degs, 0.f,1.f,0.f) * glm::translate(0.f, 0.f, 15.f);
 
-			auto hin_logo_instance = Scene::OptixMeshPtr( new Scene::OptixMesh(geo_hin.triMesh, geo_hin.rtGeo, material) );
+			auto hin_logo_instance = Scene::OptixMeshPtr( new Scene::OptixMesh(geo_hin.triMesh, geo_hin.rtGeo, recieve_shadow_group, material) );
 			hin_logo_instance->setPosition( glm::vec3(xform[3]) );
 			hin_logo_instance->setOrientation( glm::quat_cast(xform) );
 			scene_instances.push_back(hin_logo_instance);
-
-			addToShadowGroup( hin_logo_instance->getTransform() );
 		}
 		
-		auto disc_instance = Scene::OptixMeshPtr( new Scene::OptixMesh(geo_disc.triMesh, geo_disc.rtGeo, material) );
+		auto disc_instance = Scene::OptixMeshPtr( new Scene::OptixMesh(geo_disc.triMesh, geo_disc.rtGeo, recieve_shadow_group, material) );
 		scene_instances.push_back(disc_instance);
-		addToShadowGroup( disc_instance->getTransform() );
+
+		auto quad_instance = Scene::OptixMeshPtr( new Scene::OptixMesh(geo_quad.triMesh, geo_quad.rtGeo, recieve_shadow_group, material) );
+		scene_instances.push_back(quad_instance);
 
 		// create ico sphere for each light
 		for (size_t i=0; i<lights.size(); ++i){
-			auto ico_instance = Scene::OptixMeshPtr( new Scene::OptixMesh(geo_ico.triMesh, geo_ico.rtGeo, material) );
+			auto ico_instance = Scene::OptixMeshPtr( new Scene::OptixMesh(geo_ico.triMesh, geo_ico.rtGeo, top_level_group, debug_normals_material) );
 			ico_instance->setPosition( glm::vec3(lights[i].pos.x,lights[i].pos.y,lights[i].pos.z) );
 			scene_instances.push_back(ico_instance);
-
-			addToTopLevel( ico_instance->getTransform() );
 		}
+
+		/*ini::Parser config(resource_dir + "ini\\scene.ini");
+		auto scene_dir = config.getString("load", "dir", "procedural\\");
+		auto scene_file = config.getString("load", "scene", "balls.nff");
+
+		std::vector<Scene::SceneNodePtr> nodes = bart_loader->load(scene_dir, scene_file);
+		for(auto it=begin(nodes); it!=end(nodes); ++it)
+		{
+			Scene::SceneNodePtr &node = *it;
+			node->setObjectToWorldUniform( g_buffer_pass->getObjectToWorldUniform() );
+			node->setWorldToViewUniform(   g_buffer_pass->getWorldToViewUniform()   );
+			node->setViewToClipUniform(    g_buffer_pass->getViewToClipUniform()    );
+			node->setNormalToViewUniform(  g_buffer_pass->getNormalToViewUniform()  );
+			//node->setTexture(array_tex, tex_sampler, array_sampler);
+		}
+		addList( nodes );*/
 
 		top_level_acceleration->markDirty();
 	}
@@ -315,7 +301,7 @@ private:
 	optix::Material createMaterial()
 	{
 		//std::string path_to_ptx = optix_dir + "\\phong.cu.ptx";
-		std::string path_to_ptx = optix_dir + "\\tut3_shadows.cu.ptx";
+		std::string path_to_ptx = optix_dir + "\\tut4_reflect.cu.ptx";
 		optix::Program closest_hit_program = context->createProgramFromPTXFile( path_to_ptx, "closest_hit_radiance" );
 		optix::Program any_hit_program = context->createProgramFromPTXFile( path_to_ptx, "any_hit_shadow" );
 
