@@ -215,7 +215,7 @@ void SceneManager::initScene(	const File::AssetManagerPtr &asset_manager,
 		sphere->setPosition( glm::vec3(1,-1,6) );
 	}
 
-	/*ini::Parser config(resource_dir + "ini\\scene.ini");
+	ini::Parser config(resource_dir + "ini\\scene.ini");
 	auto scene_dir = config.getString("load", "dir", "procedural\\");
 	auto scene_file = config.getString("load", "scene", "balls.nff");
 
@@ -229,5 +229,5 @@ void SceneManager::initScene(	const File::AssetManagerPtr &asset_manager,
 		node->setNormalToViewUniform(	g_buffer_pass->getNormalToViewUniform());
 		//node->setTexture(array_tex, tex_sampler, array_sampler);
 	}
-	addList( nodes );*/
+	addList( nodes );
 }

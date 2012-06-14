@@ -52,6 +52,7 @@ RT_PROGRAM void mesh_intersect( int primIdx )
 	float  t, beta, gamma;
 
 	if( intersect_triangle( ray, p0, p1, p2, n, t, beta, gamma ) ) {
+		if ( dot(ray.direction, n) < 0 ) // lazy backface culling
 		if(  rtPotentialIntersection( t ) ) {
 			
 			geometric_normal = normalize( n );
