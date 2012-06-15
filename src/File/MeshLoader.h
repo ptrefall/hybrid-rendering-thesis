@@ -1,6 +1,8 @@
 #pragma once
 
+
 #include "../Scene/Mesh.h"
+#include "../Scene/MeshData_t.h"
 
 #include <AssImp\mesh.h>
 #include <AssImp\scene.h>

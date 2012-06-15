@@ -26,7 +26,7 @@ MeshLoader::~MeshLoader()
 
 Scene::MeshDataPtr MeshLoader::loadMeshData(aiMesh *mesh)
 {
-	auto data = std::make_shared<Scene::MeshData>();
+	auto data = std::make_shared<Scene::MeshData_t>();
 
 	if(mesh->HasFaces())
 	{

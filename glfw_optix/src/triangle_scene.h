@@ -9,6 +9,10 @@
 #include <Scene/OptixMesh.h>
 #include <Scene/Mesh.h>
 #include <File/MeshLoader.h>
+#include <File/BARTLoader2.h>
+#include <Scene/BARTMesh.h>
+#include <File/AssetManager.h>
+#include <Parser/INIParser.h>
 
 #include "commonStructs.h"
 
@@ -98,8 +102,6 @@ public:
 
 	void renderRaster()
 	{
-		//scene_instances[3]->render(nullptr);
-		scene_instances[5]->render(nullptr);
 		//for ( size_t i=0; i<scene_instances.size(); ++i ){
 			//scene_instances[i]->render(nullptr);
 		//}
@@ -223,6 +225,8 @@ private:
 		fps_camera->lookAt( glm::vec3(15.0f, 15.0f, 15.0f), glm::vec3(0.f), glm::vec3(0.f, 1.f, 0.f) );
 		fps_camera->updateProjection(width, height, 75.f, 0.01f, 1000.f);
 		fps_camera->setSpeed( 20.f );
+
+		createBoringShader();
 	}
 
 	void createInstances()
@@ -241,36 +245,39 @@ private:
 
 		optix::Material material = createMaterial();
 		optix::Material debug_normals_material = createNormalDebugMaterial();
+		optix::Material glass_mat = createGlassMaterial();
 		
 		optix::Geometry box = createBoxGeometry();
 		createFloor(box, material);
-		createBoxInstances(box, material);
 
 		std::string model_dir = resource_dir + "models\\";
 		File::MeshLoader mesh_loader(model_dir);
 
-		auto geo_hin = OptixTriMeshLoader::fromMeshData(mesh_loader.loadMeshDataEasy("hin_logo.3ds"), context, optix_dir);
-		auto geo_disc = OptixTriMeshLoader::fromMeshData(mesh_loader.loadMeshDataEasy("disc.obj"), context, optix_dir);
+		//auto geo_hin = OptixTriMeshLoader::fromMeshData(mesh_loader.loadMeshDataEasy("hin_logo.3ds"), context, optix_dir);
+		//auto geo_disc = OptixTriMeshLoader::fromMeshData(mesh_loader.loadMeshDataEasy("disc.obj"), context, optix_dir);
 		auto geo_ico = OptixTriMeshLoader::fromMeshData(mesh_loader.loadMeshDataEasy("icosphere.3ds"), context, optix_dir);
-		auto geo_quad = OptixTriMeshLoader::fromMeshData(mesh_loader.loadMeshDataEasy("quad.obj"), context, optix_dir);
+		
 
 		// Create a few logos in a circle
-		for ( int i=0; i<12; i++ ) {
-			float ang_degs = i/12.f * 360.f;
-			// translate, then rotate
-			glm::mat4 xform = glm::rotate(ang_degs, 0.f,1.f,0.f) * glm::translate(0.f, 0.f, 15.f);
+		//for ( int i=0; i<12; i++ ) {
+		//	float ang_degs = i/12.f * 360.f;
+		//	// translate, then rotate
+		//	glm::mat4 xform = glm::rotate(ang_degs, 0.f,1.f,0.f) * glm::translate(0.f, 0.f, 15.f);
 
-			auto hin_logo_instance = Scene::OptixMeshPtr( new Scene::OptixMesh(geo_hin.triMesh, geo_hin.rtGeo, recieve_shadow_group, material) );
-			hin_logo_instance->setPosition( glm::vec3(xform[3]) );
-			hin_logo_instance->setOrientation( glm::quat_cast(xform) );
-			scene_instances.push_back(hin_logo_instance);
-		}
+		//	optix::Material mtl;
+		//	if ( i==0 ) {
+		//		mtl = glass_mat;
+		//	} else {
+		//		mtl = material;
+		//	}
+		//	auto hin_logo_instance = Scene::OptixMeshPtr( new Scene::OptixMesh(geo_hin.triMesh, geo_hin.rtGeo, recieve_shadow_group, mtl) );
+		//	hin_logo_instance->setPosition( glm::vec3(xform[3]) );
+		//	hin_logo_instance->setOrientation( glm::quat_cast(xform) );
+		//	scene_instances.push_back(hin_logo_instance);
+		//}
 		
-		auto disc_instance = Scene::OptixMeshPtr( new Scene::OptixMesh(geo_disc.triMesh, geo_disc.rtGeo, recieve_shadow_group, material) );
-		scene_instances.push_back(disc_instance);
-
-		auto quad_instance = Scene::OptixMeshPtr( new Scene::OptixMesh(geo_quad.triMesh, geo_quad.rtGeo, recieve_shadow_group, material) );
-		scene_instances.push_back(quad_instance);
+		//auto disc_instance = Scene::OptixMeshPtr( new Scene::OptixMesh(geo_disc.triMesh, geo_disc.rtGeo, recieve_shadow_group, material) );
+		//scene_instances.push_back(disc_instance);
 
 		// create ico sphere for each light
 		for (size_t i=0; i<lights.size(); ++i){
@@ -279,21 +286,36 @@ private:
 			scene_instances.push_back(ico_instance);
 		}
 
-		/*ini::Parser config(resource_dir + "ini\\scene.ini");
+		ini::Parser config(resource_dir + "ini\\scene.ini");
 		auto scene_dir = config.getString("load", "dir", "procedural\\");
 		auto scene_file = config.getString("load", "scene", "balls.nff");
+		
+		asset_manager = File::AssetManagerPtr( new File::AssetManager(resource_dir) );
+		File::BARTLoader2 bart_loader( asset_manager, resource_dir+"bart_scenes\\" );
 
-		std::vector<Scene::SceneNodePtr> nodes = bart_loader->load(scene_dir, scene_file);
+		std::vector<Scene::BARTMeshPtr> nodes = bart_loader.load(scene_dir, scene_file);
 		for(auto it=begin(nodes); it!=end(nodes); ++it)
 		{
-			Scene::SceneNodePtr &node = *it;
-			node->setObjectToWorldUniform( g_buffer_pass->getObjectToWorldUniform() );
-			node->setWorldToViewUniform(   g_buffer_pass->getWorldToViewUniform()   );
-			node->setViewToClipUniform(    g_buffer_pass->getViewToClipUniform()    );
-			node->setNormalToViewUniform(  g_buffer_pass->getNormalToViewUniform()  );
+			//Scene::SceneNodePtr &node = *it;
+			Scene::BARTMeshPtr &node = *it;
+
+			auto bartGeo = OptixTriMeshLoader::fromMeshData( node->getMeshData() , context, optix_dir);
+			auto instance = Scene::OptixMeshPtr( new Scene::OptixMesh(bartGeo.triMesh, bartGeo.rtGeo, top_level_group, debug_normals_material) );
+			//ico_instance->setPosition( glm::vec3(lights[i].pos.x,lights[i].pos.y,lights[i].pos.z) );
+			//instance->setPosition( node->getPosition() );
+			//instance->setOrientation( node->getOrientation() );
+			//instance->setScale( node->getScale() );
+			instance->setObjectToWorldMatrix( node->getObjectToWorldMatrix() );
+			scene_instances.push_back(instance);
+
+			// can still do this on OptixMesh:
+			//node->setObjectToWorldUniform( g_buffer_pass->getObjectToWorldUniform() );
+			//node->setWorldToViewUniform(   g_buffer_pass->getWorldToViewUniform()   );
+			//node->setViewToClipUniform(    g_buffer_pass->getViewToClipUniform()    );
+			//node->setNormalToViewUniform(  g_buffer_pass->getNormalToViewUniform()  );
 			//node->setTexture(array_tex, tex_sampler, array_sampler);
 		}
-		addList( nodes );*/
+		//addList( nodes );
 
 		top_level_acceleration->markDirty();
 	}
@@ -309,6 +331,32 @@ private:
 		mat->setClosestHitProgram(0, closest_hit_program);
 		mat->setAnyHitProgram(1, any_hit_program);
 		return mat;
+	}
+
+	optix::Material createGlassMaterial()
+	{
+		std::string path_to_ptx = optix_dir + "\\glass.cu.ptx";
+		optix::Program closest_hit_program = context->createProgramFromPTXFile( path_to_ptx, "closest_hit_radiance" );
+		optix::Program any_hit_program = context->createProgramFromPTXFile( path_to_ptx, "any_hit_shadow" );
+
+		optix::Material glass_matl = context->createMaterial();
+		glass_matl->setClosestHitProgram(0, closest_hit_program);
+		glass_matl->setAnyHitProgram(1, any_hit_program);
+
+		//glass_matl["importance_cutoff"]->setFloat( 1e-2f );
+		glass_matl["cutoff_color"]->setFloat( 0.034f, 0.055f, 0.085f );
+		glass_matl["fresnel_exponent"]->setFloat( 3.0f );
+		glass_matl["fresnel_minimum"]->setFloat( 0.1f );
+		glass_matl["fresnel_maximum"]->setFloat( 1.0f );
+		glass_matl["refraction_index"]->setFloat( 1.4f );
+		glass_matl["refraction_color"]->setFloat( 1.0f, 1.0f, 1.0f );
+		glass_matl["reflection_color"]->setFloat( 1.0f, 1.0f, 1.0f );
+		glass_matl["refraction_maxdepth"]->setInt( 10 );
+		glass_matl["reflection_maxdepth"]->setInt( 5 );
+		glm::vec3 extinction(.83f, .83f, .83f);
+		glass_matl["extinction_constant"]->setFloat( log(extinction.x), log(extinction.y), log(extinction.z) );
+		glass_matl["shadow_attenuation"]->setFloat( 0.6f, 0.6f, 0.6f );
+		return glass_matl;
 	}
 
 	optix::Material createNormalDebugMaterial()
@@ -390,64 +438,6 @@ private:
 		recieve_shadow_group->setChild(count, child );
 	}
 
-	glm::vec3 getLorenzAttractorDelta( glm::vec3 &p, int num_points )
-	{
-		float r=28;
-		float s=10; // "Prandtl number" fluid viscosity / thermal conductivity, Lorenz chose 10
-		float b=8.0/3.0;
-
-		float imax = (float)num_points;
-		float f = imax/(imax/100.0f);
-
-		glm::vec3 delta( s*(p.y - p.x), 
-				         r*p.x - p.y - p.x*p.z, 
-						 p.x*p.y - b*p.z);
-		return delta/f;
-	}
-
-	void createBoxInstances(optix::Geometry box, optix::Material material)
-	{
-		static const int NUM_BOXES = 1024;
-		transforms.resize(NUM_BOXES);
-
-		glm::vec3 lorenz_pos(0.1f, 0.0f, 0.0f);
-
-		/* create acceleration object for group and specify some build hints*/
-		cube_acceleration = context->createAcceleration("Bvh", "Bvh");
-		
-		for ( int i = 0; i < NUM_BOXES; ++i )
-		{
-			/* Create this geometry instance */
-			optix::GeometryInstance instance = context->createGeometryInstance();
-			instance->setGeometry(box);
-			instance->setMaterialCount(1);
-			instance->setMaterial(0, material);
-			float kd_slider = (float)i / (float)(NUM_BOXES-1);
-			setInstanceMaterialParams( instance, glm::vec3(0.2f,0.2f,0.2f), glm::vec3(kd_slider, 0.0f, 1.0f-kd_slider)  );
-
-			/* create group to hold instance transform */
-			optix::GeometryGroup geometrygroup = context->createGeometryGroup();
-			geometrygroup->setChildCount(1);
-			geometrygroup->setChild(0,instance);
-			geometrygroup->setAcceleration(cube_acceleration);
-
-			glm::vec3 delta = getLorenzAttractorDelta( lorenz_pos, NUM_BOXES );
-			lorenz_pos += delta;
-
-			transforms[i] = context->createTransform();
-			addToTopLevel(transforms[i]);
-			transforms[i]->setChild( geometrygroup );
-			
-			glm::mat4 xform(1.0f);
-			xform = glm::translate( xform, lorenz_pos + glm::vec3(-25.f,5.f,-100.f) );
-			xform = xform * glm::mat4_cast(glm::normalize(glm::quat(1.f, delta)));
-			xform = glm::scale(xform, glm::vec3(0.5f) );
-			xform = glm::transpose(xform);
-			transforms[i]->setMatrix( 0, glm::value_ptr(xform), 0 );
-		}
-		cube_acceleration->markDirty();
-	}
-
 	optix::Geometry createBoxGeometry()
 	{
 		float     box_min[3];
@@ -468,6 +458,72 @@ private:
 		return box_geo;
 	}
 
+	void createBoringShader()
+	{
+		std::string vs = "#version 330 core\n"
+		"#define DIFFUSE  0\n"
+		"#define POSITION	1\n"
+		"#define NORMAL   2\n"
+		"#define TEXCOORD	3\n"
+	
+		"uniform mat4 Object_to_World;\n"
+		"uniform mat4 World_to_View;\n"
+		"uniform mat4 View_to_Clip;\n"
+		"uniform mat3 Normal_to_View;\n"
+	
+		"layout(location = POSITION) in vec3 Position_os;\n"	//object space
+		"layout(location = NORMAL)   in vec3 Normal_os;\n"	//object space
+		"layout(location = TEXCOORD) in vec2 TexCoord;\n"
+
+		"out gl_PerVertex\n"
+		"{\n"
+		" vec4 gl_Position;\n"
+		"};\n"
+
+		"out block\n"
+		"{"
+		" vec4 position_ws;\n"	//world space
+		" vec4 position_vs;\n" 	//view space
+		" vec3 normal_vs;\n" 	//view space
+		" vec2 texcoord;\n"
+		"} Vertex;\n"
+
+		"void main( void )\n"
+		"{"
+		"  Vertex.texcoord      = TexCoord;\n"
+		"  Vertex.normal_vs     = normalize(Normal_to_View * Normal_os);\n"		//Object space to View space
+	
+		"  Vertex.position_ws   = Object_to_World * vec4(Position_os, 1.0);\n"	    //Object space to World space
+		"  Vertex.position_vs   = World_to_View * Vertex.position_ws;\n"           //World  space to View  space
+		"  gl_Position          = View_to_Clip  * Vertex.position_vs;\n"			//View   space to Clip  space
+		// MODEL =      Object_to_World
+		// VIEW =       World_to_View
+		// PROJECTION = View_to_Clip
+		//"  gl_Position          = View_to_Clip * World_to_View * Object_to_World * vec4(Position_os, 1.0);\n"			//View   space to Clip  space
+		"}\n";
+
+		std::string fs = "#version 330\n"
+			"#define DIFFUSE  0\n"
+			"#define POSITION	1\n"
+			"#define NORMAL   2\n"
+			"#define TEXCOORD	3\n"
+			"in block\n"
+			"{\n"
+			"  vec4 position_ws;\n"	//world space
+			"  vec4 position_vs;\n" 	//view space
+			"  vec3 normal_vs;\n"    //view space
+			"  vec2 texcoord;\n"
+			"} Vertex;\n"
+			"\n"
+			"layout(location = 0, index = 0) out vec4 out_FragColor;\n"
+			"void main()\n"
+			"{\n"
+			"out_FragColor = vec4(Vertex.normal_vs*0.5+0.5, 0.0);\n"
+			"}\n";
+
+		boring_shader = std::shared_ptr<Render::Shader>( new Render::Shader(vs, "", fs) );
+	}
+
 public:
 	Render::PBO *pbo;
 private:
@@ -476,17 +532,17 @@ private:
 	optix::Variable                  out_buffer_var;
 	optix::Variable                  fTime;
 	
-	std::vector<optix::Transform>    transforms;
 	optix::Group                     top_level_group;
 	optix::Acceleration              top_level_acceleration;
 	optix::Group                     recieve_shadow_group;
-	// having one shared accel improved perf,
-	// having one shared group did not improved perf.
-	optix::Acceleration              cube_acceleration; 
 	
 	std::vector<Scene::OptixMeshPtr> scene_instances;
+
+	File::AssetManagerPtr            asset_manager;
 	
 	std::vector<BasicLight>          lights;
+	Render::ShaderPtr                boring_shader;
+
 	std::string                      optix_dir;
 	std::string                      resource_dir;
 	int                              width;

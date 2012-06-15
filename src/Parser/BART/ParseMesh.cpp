@@ -5,6 +5,7 @@
 #include "..\..\Scene\BARTMesh.h"
 #include "..\..\Kernel.h"
 #include "..\..\Scene\SceneManager.h"
+#include "..\..\Scene\MeshData_t.h"
 #include "..\..\Render\Passes\GBuffer\GBuffer_Pass.h"
 
 #include <sstream>
@@ -55,39 +56,37 @@ void ParseMesh::parse(FILE *fp, const std::string &base_dir, const std::string &
    else
       throw std::runtime_error("Error: expected 'triangles' in mesh.");
 
-   /* add a mesh here
-    * e.g.,viAddMesh(verts,num_verts,norms,num_norms,txts,num_txts,texturename,indices,num_tris);
-    */
-   // TODO use opengl indexed
-	size_t coordIdx = 0;
-	std::vector<glm::vec3> vertCoords;
-	std::vector<glm::vec3> vertNormals;
-	std::vector<glm::vec2> texCoords;
-	std::vector<unsigned int> fakeIndices;
-	for (int i=0; i<num_tris*3; i++)
-	{
-		glm::vec3 n0;
-		glm::vec2 t0;
+   // add a mesh here
+   // e.g.,viAddMesh(verts,num_verts,norms,num_norms,txts,num_txts,texturename,indices,num_tris);
 
-		// incrementing base index if optional data exists [tex] [norm] vert []-means optional
-		if ( txts.size() > 0 ) {
-			t0 = txts[ indices[coordIdx++] ]; 
-		}
-		if ( norms.size() > 0 ) {
-			n0 = norms[ indices[coordIdx++] ]; 
-		}
-		glm::vec3 v0 = verts[ indices[coordIdx++] ];
+   auto meshData = std::make_shared<Scene::MeshData_t>();
+   size_t coordIdx = 0;
+   for (int i=0; i<num_tris*3; i++)
+   {
+	   // incrementing base index if optional data exists [tex] [norm] vert []-means optional
+	   if ( txts.size() > 0 ) {
+		   glm::vec2 tex = txts[ indices[coordIdx++] ]; 
 
+		   meshData->texcoords.push_back( tex.x );
+		   meshData->texcoords.push_back( tex.y );
+	   }
+	   if ( norms.size() > 0 ) {
+		   glm::vec3 n = norms[ indices[coordIdx++] ]; 
 
-		//protowizard::Vertex_VNT vtx( v0, n0, t0 );
-		//vertices.push_back(vtx);
-		vertCoords.push_back(v0);
-		vertNormals.push_back(n0);
-		texCoords.push_back(t0);
-		fakeIndices.push_back(i);
-	}
+		   meshData->normals.push_back( n.x );
+		   meshData->normals.push_back( n.y );
+		   meshData->normals.push_back( n.z );
+	   }
 
-	addMesh(vertCoords, vertNormals, texCoords, fakeIndices, active, asset_manager);
+	   glm::vec3 v = verts[ indices[coordIdx++] ];
+	   meshData->vertices.push_back( v.x );
+	   meshData->vertices.push_back( v.y );
+	   meshData->vertices.push_back( v.z );
+
+	   meshData->indices.push_back( i );
+   }
+
+   addMesh(meshData, active, asset_manager);
 }
 
 void ParseMesh::getVectors(FILE *fp,char *type, std::vector<glm::vec3>& vecs)
@@ -189,32 +188,20 @@ void ParseMesh::getTriangles(FILE *fp,int *num_tris,std::vector<unsigned int>& i
    *num_tris=num;
 }
 
-void ParseMesh::addMesh(	const std::vector<glm::vec3> &vertCoords,
-							const std::vector<glm::vec3> &vertNormals,
-							const std::vector<glm::vec2> &texCoords,
-							const std::vector<unsigned int> &indices, 
-							File::BART::active_def &active,
-							const File::AssetManagerPtr &asset_manager)
+void ParseMesh::addMesh( const Scene::MeshDataPtr &meshData, File::BART::active_def &active , const File::AssetManagerPtr &asset_manager)
 {
 	if( active.sceneNode->name == "root" )
 		throw std::runtime_error("Active SceneNode was root when parsing mesh!");
 
-	auto mesh = std::make_shared<Scene::BARTMesh>( vertCoords, vertNormals, texCoords, indices );
+	//auto mesh = std::make_shared<Scene::BARTMesh>( meshData );
 	
-	if ( active.texture != "" ) {
-		Render::UniformPtr tex_sampler = std::make_shared<Render::Uniform>(Kernel::getSingleton()->getSceneManager()->getGBufferPass()->getShader()->getFS(), "diffuse_tex");
-		auto tex2d = asset_manager->getTex2DAbsolutePath( active.texture, true );
-		Render::SamplerPtr dummy_sampler; // TODO
-		//auto tex2d = asset_manager->getTex2DAbsolutePath( active.texture ); 
-		//mesh->setTexture( tex2d, nullptr, nullptr );
+	//if ( active.texture != "" ) {
+	//	Render::UniformPtr tex_sampler = std::make_shared<Render::Uniform>(Kernel::getSingleton()->getSceneManager()->getGBufferPass()->getShader()->getFS(), "diffuse_tex");
+	//	auto tex2d = asset_manager->getTex2DAbsolutePath( active.texture, true );
+	//	Render::SamplerPtr dummy_sampler; // TODO
+	//	mesh->setTexture(0, tex2d, tex_sampler, dummy_sampler ); 
+	//}
 
-		// TODO, load texture from. Save in a map.
-		// could also just save all tex path's, then load all at once, and assign
-		// Tex2DPtr's in end. 
-		// active.texture
-		mesh->setTexture(0, tex2d, tex_sampler, dummy_sampler ); 
-	}
-
-	mesh->setMaterial( active.extMaterial );
-	active.sceneNode->addMesh( mesh );
+	//mesh->setMaterial( active.extMaterial );
+	active.sceneNode->addMesh( meshData );
 }
