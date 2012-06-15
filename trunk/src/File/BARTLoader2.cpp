@@ -158,7 +158,7 @@ void BARTLoader2::parseFile(const std::string &file_path)
 			Parser::BART::ParseKeyFrames::parse(f.get(), mAnimations);
 			break;
 		case 'm':  /* triangle mesh */
-			Parser::BART::ParseMesh::parse(f.get(), base_dir, sceneFolder, active, asset_manager);
+			Parser::BART::ParseMesh::parse(f.get(), file_path, base_dir, sceneFolder, active, asset_manager);
 			break;
 		default:    /* unknown */
 			throw std::runtime_error("unknown NFF primitive code: " + ch);

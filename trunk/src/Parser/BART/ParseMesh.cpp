@@ -15,7 +15,7 @@ using namespace Parser;
 using namespace BART;
 
 
-void ParseMesh::parse(FILE *fp, const std::string &base_dir, const std::string &sceneFolder, File::BART::active_def &active, const File::AssetManagerPtr &asset_manager)
+void ParseMesh::parse(FILE *fp, const std::string &parse_file_name, const std::string &base_dir, const std::string &sceneFolder, File::BART::active_def &active, const File::AssetManagerPtr &asset_manager)
 {
    char str[200];
    int num_tris = 0;
@@ -60,6 +60,11 @@ void ParseMesh::parse(FILE *fp, const std::string &base_dir, const std::string &
    // e.g.,viAddMesh(verts,num_verts,norms,num_norms,txts,num_txts,texturename,indices,num_tris);
 
    auto meshData = std::make_shared<Scene::MeshData_t>();
+
+   std::string file_only(parse_file_name);
+   file_only = file_only.substr(file_only.find_last_of("\\")+1, file_only.size()-1 );
+   //file_only = file_only.substr(0, file_only.find_last_of("\\"));
+   meshData->name = file_only;
    size_t coordIdx = 0;
    for (int i=0; i<num_tris*3; i++)
    {
