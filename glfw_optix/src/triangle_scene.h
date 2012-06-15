@@ -156,6 +156,22 @@ public:
 		scene_instances[3]->removeFromScene();
 	}
 
+	void updateLights()
+	{
+		void* light_buffer_data = light_buffer_obj->map();
+
+		for ( int i=0; i<lights.size(); i++ ) {
+			lights[i].pos.y += 0.01f;
+
+			((BasicLight*)light_buffer_data)[i] = lights[i];
+			scene_light_meshes[i]->setPosition( glm::vec3(lights[i].pos.x, lights[i].pos.y, lights[i].pos.z) );
+		}
+		
+		light_buffer_obj->unmap();
+		light_buffer->set(light_buffer_obj);
+	}
+
+
 private:
 	void init()
 	{
@@ -164,32 +180,13 @@ private:
 		context->setEntryPointCount(1);
 		context->setStackSize(2048);
 		out_buffer_var = context->declareVariable("output_buffer");
-		optix::Variable light_buffer = context->declareVariable("lights");
+		light_buffer = context->declareVariable("lights");
 		context->declareVariable("max_depth")->setInt(3);
 		context->declareVariable("radiance_ray_type")->setUint(0u);
 		context->declareVariable("shadow_ray_type")->setUint(1u);
 		context->declareVariable("scene_epsilon")->setFloat(1e-4f);
 
-		/* Lights buffer */
-		BasicLight light;
-		light.color.x = 0.9f;
-		light.color.y = 0.9f;
-		light.color.z = 0.9f;
-		light.pos.x   = 0.0f;
-		light.pos.y   = 20.0f;
-		light.pos.z   = 20.0f;
-		light.casts_shadow = 1;
-		light.padding      = 0u;
-
-		optix::Buffer light_buffer_obj = context->createBuffer(RT_BUFFER_INPUT, RT_FORMAT_USER, sizeof(BasicLight) );
-		light_buffer_obj->setElementSize( sizeof(BasicLight) );
-		light_buffer_obj->setSize(1);
-		void* light_buffer_data = light_buffer_obj->map();
-		((BasicLight*)light_buffer_data)[0] = light;
-		light_buffer_obj->unmap();
-		light_buffer->set(light_buffer_obj);
-
-		lights.push_back( light );
+		setupLights();
 
 		/* Ray gen program */
 		std::string path_to_ptx = optix_dir + "\\pinhole_camera.cu.ptx";
@@ -229,6 +226,54 @@ private:
 		createBoringShader();
 	}
 
+	void setupLights()
+	{
+		/* Lights buffer */
+		BasicLight light0;
+		light0.color.x = 0.25f;
+		light0.color.y = 0.25f;
+		light0.color.z = 0.25f;
+		light0.pos.x   = 1.6f;
+		light0.pos.y   = 0.4f;
+		light0.pos.z   = 0.8f;
+		light0.casts_shadow = 1;
+		light0.padding      = 0u;
+
+		BasicLight light1;
+		light1.color.x = 0.25f;
+		light1.color.y = 0.25f;
+		light1.color.z = 0.25f;
+		light1.pos.x   = 2.0f;
+		light1.pos.y   = 0.8f;
+		light1.pos.z   = 1.2f;
+		light1.casts_shadow = 1;
+		light1.padding      = 0u;
+
+		BasicLight light2;
+		light2.color.x = 0.25f;
+		light2.color.y = 0.25f;
+		light2.color.z = 0.25f;
+		light2.pos.x   = 2.2;
+		light2.pos.y   = 1.2f;
+		light2.pos.z   = 1.6f;
+		light2.casts_shadow = 1;
+		light2.padding      = 0u;
+
+		light_buffer_obj = context->createBuffer(RT_BUFFER_INPUT, RT_FORMAT_USER, sizeof(BasicLight) );
+		light_buffer_obj->setElementSize( sizeof(BasicLight) );
+		light_buffer_obj->setSize(3);
+		void* light_buffer_data = light_buffer_obj->map();
+		((BasicLight*)light_buffer_data)[0] = light0;
+		((BasicLight*)light_buffer_data)[1] = light1;
+		((BasicLight*)light_buffer_data)[2] = light2;
+		light_buffer_obj->unmap();
+		light_buffer->set(light_buffer_obj);
+
+		lights.push_back( light0 );
+		lights.push_back( light1 );
+		lights.push_back( light2 );
+	}
+
 	void createInstances()
 	{
 		top_level_group = context->createGroup();
@@ -260,6 +305,7 @@ private:
 			auto ico_instance = Scene::OptixMeshPtr( new Scene::OptixMesh(geo_ico.triMesh, geo_ico.rtGeo, top_level_group, debug_normals_material) );
 			ico_instance->setPosition( glm::vec3(lights[i].pos.x,lights[i].pos.y,lights[i].pos.z) );
 			scene_instances.push_back(ico_instance);
+			scene_light_meshes.push_back(ico_instance);
 		}
 
 		ini::Parser config(resource_dir + "ini\\scene.ini");
@@ -282,7 +328,7 @@ private:
 			}
 
 			auto bartGeo = OptixTriMeshLoader::fromMeshData( node->getMeshData() , context, optix_dir);
-			auto instance = Scene::OptixMeshPtr( new Scene::OptixMesh(bartGeo.triMesh, bartGeo.rtGeo, top_level_group, mtl ) );
+			auto instance = Scene::OptixMeshPtr( new Scene::OptixMesh(bartGeo.triMesh, bartGeo.rtGeo, recieve_shadow_group, mtl ) );
 			//ico_instance->setPosition( glm::vec3(lights[i].pos.x,lights[i].pos.y,lights[i].pos.z) );
 			//instance->setPosition( node->getPosition() );
 			//instance->setOrientation( node->getOrientation() );
@@ -305,7 +351,7 @@ private:
 	optix::Material createMaterial()
 	{
 		//std::string path_to_ptx = optix_dir + "\\phong.cu.ptx";
-		std::string path_to_ptx = optix_dir + "\\tut4_reflect.cu.ptx";
+		std::string path_to_ptx = optix_dir + "\\tut3_shadows.cu.ptx";
 		optix::Program closest_hit_program = context->createProgramFromPTXFile( path_to_ptx, "closest_hit_radiance" );
 		optix::Program any_hit_program = context->createProgramFromPTXFile( path_to_ptx, "any_hit_shadow" );
 
@@ -519,10 +565,14 @@ private:
 	optix::Group                     recieve_shadow_group;
 	
 	std::vector<Scene::OptixMeshPtr> scene_instances;
+	std::vector<Scene::OptixMeshPtr> scene_light_meshes;
+	
 
 	File::AssetManagerPtr            asset_manager;
 	
 	std::vector<BasicLight>          lights;
+	optix::Buffer                    light_buffer_obj;
+	optix::Variable                  light_buffer;
 	Render::ShaderPtr                boring_shader;
 
 	std::string                      optix_dir;
