@@ -30,8 +30,8 @@ namespace Scene
 		void setViewToClipUniform(const Render::UniformPtr &uni_view_to_clip) { this->uni_view_to_clip = uni_view_to_clip; }
 		void setNormalToViewUniform(const Render::UniformPtr &uni_normal_to_view) { this->uni_normal_to_view = uni_normal_to_view; }
 
-		void setObjectToWorldMatrix(const glm::mat4 &object_to_world) { this->object_to_world = object_to_world; }
-
+		virtual void setObjectToWorldMatrix(const glm::mat4 &object_to_world) { this->object_to_world = object_to_world; }
+		
 		virtual void setPosition(const glm::vec3 &position) { this->position = position; }
 		virtual void setOrientation(const glm::quat &orientation) { this->orientation = orientation; }
 		virtual void setScale(const glm::vec3 &scale) { this->scale = scale; }
@@ -39,6 +39,7 @@ namespace Scene
 		virtual glm::vec3 getPosition() { return position; }
 		virtual glm::quat getOrientation() { return orientation; }
 		virtual glm::vec3 getScale() { return scale; }
+		glm::mat4 getObjectToWorldMatrix() { return object_to_world; }
 
 		void setTexture(int slot, const Render::Tex2DPtr &tex, const Render::UniformPtr &uniform, const Render::SamplerPtr &sampler);
 		virtual void setTexture(int slot, const Render::Tex2DPtr &tex, const std::string &uni_name) {}

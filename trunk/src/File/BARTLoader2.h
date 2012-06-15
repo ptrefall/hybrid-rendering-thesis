@@ -4,6 +4,12 @@
 
 struct AnimationList;
 
+namespace Scene
+{
+	class BARTMesh;
+	typedef std::shared_ptr<BARTMesh> BARTMeshPtr;
+}
+
 namespace File
 {
 	class BARTLoader2;
@@ -16,7 +22,9 @@ namespace File
 	public:
 		BARTLoader2(const AssetManagerPtr &asset_manager, const std::string &base_dir);
 		
-		std::vector<Scene::SceneNodePtr> load(const std::string& sceneFolder, const std::string& mainSceneFile);
+		
+		//std::vector<Scene::SceneNodePtr> &load(const std::string& sceneFolder, const std::string& mainSceneFile);
+		std::vector<Scene::BARTMeshPtr> &load(const std::string& sceneFolder, const std::string& mainSceneFile);
 
 	private:
 		std::string base_dir;
@@ -36,8 +44,8 @@ namespace File
 		void parseFile(const std::string &file_path);
 		void parseInclude(FILE *fp);
 
-		void recursiveSetMaterialState( const BART::InternalSceneNodePtr& node );
-		void flattenSceneGraph( const BART::InternalSceneNodePtr &node, const glm::mat4 &parentXform );
+		void setMaterialState_r( const BART::InternalSceneNodePtr& node );
+		void flattenSceneGraph_r( const BART::InternalSceneNodePtr &node, const glm::mat4 &parentXform );
 
 		///////////////////////////////////
 		// MISC INTERNAL PARSING DATA
@@ -57,7 +65,7 @@ namespace File
 		std::vector<BART::light_t> lightList;
 		std::vector<Render::MaterialPtr> materialList; // TODO, store in AssetMgr
 
-		std::vector<Scene::SceneNodePtr> sceneNodeList;
+		std::vector<Scene::BARTMeshPtr> sceneNodeList;
 		BART::InternalSceneNodePtr sceneRoot;
 	};
 }

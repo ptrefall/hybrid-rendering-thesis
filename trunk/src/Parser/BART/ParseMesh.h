@@ -10,6 +10,10 @@ namespace File {
 	class AssetManager; typedef std::shared_ptr<AssetManager> AssetManagerPtr;
 }
 
+namespace Scene {
+	struct MeshData_t; typedef std::shared_ptr<MeshData_t> MeshDataPtr;
+}
+
 namespace Parser { namespace BART
 {
 	class ParseMesh
@@ -22,11 +26,6 @@ namespace Parser { namespace BART
 		static void getTextureCoords(FILE *fp,char *texturename,std::vector<glm::vec2>& txts);
 		static void getTriangles(FILE *fp,int *num_tris,std::vector<unsigned int>& indices, bool hasNorms, bool hasTexCoords);
 
-		static void addMesh(	const std::vector<glm::vec3> &vertCoords, const std::vector<glm::vec3> &vertNormals, 
-								const std::vector<glm::vec2> &texCoords, const std::vector<unsigned int> &indices, 
-								File::BART::active_def &active,
-								const File::AssetManagerPtr &asset_manager);
-
-		
+		static void addMesh( const Scene::MeshDataPtr &meshData, File::BART::active_def &active, const File::AssetManagerPtr &asset_manager);
 	};
 }}

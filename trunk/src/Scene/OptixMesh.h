@@ -23,9 +23,12 @@ namespace Scene
 		virtual void render(const Render::ShaderPtr &active_program);
 		void setTexture(int slot, const Render::Tex2DPtr &tex, const std::string &uni_name) override;
 
-		virtual void setPosition(const glm::vec3 &position) { this->position = position; updateTransform(); }
- 		virtual void setOrientation(const glm::quat &orientation) { this->orientation = orientation; updateTransform(); }
- 		virtual void setScale(const glm::vec3 &scale) { this->scale = scale; updateTransform(); }
+		virtual void setObjectToWorldMatrix(const glm::mat4 &object_to_world) { this->object_to_world = object_to_world; updateTransformFromMatrix(object_to_world); }
+
+
+		virtual void setPosition(const glm::vec3 &position) { this->position = position; updateTransformFromPosOriScale(); }
+ 		virtual void setOrientation(const glm::quat &orientation) { this->orientation = orientation; updateTransformFromPosOriScale(); }
+ 		virtual void setScale(const glm::vec3 &scale) { this->scale = scale; updateTransformFromPosOriScale(); }
 
 		void removeFromScene()
 		{
@@ -40,7 +43,8 @@ namespace Scene
 		}
 
 	private:
-		void updateTransform();
+		void updateTransformFromMatrix( const glm::mat4 &m );
+		void updateTransformFromPosOriScale();
 	private:
 		optix::Geometry         rtModel;
 		optix::Transform        transform; // needs to be registered to top level group to render
@@ -49,7 +53,7 @@ namespace Scene
 		optix::GeometryGroup    geometrygroup;
 		optix::Acceleration     acceleration; // needs update when transform changes
 		optix::Group            parent_group; // for top level group registration
-		Render::ShaderPtr       boring_shader;
+		
 		Scene::MeshPtr          triangle_mesh;
 
 		optix::Group            dummy; // toggle rendering

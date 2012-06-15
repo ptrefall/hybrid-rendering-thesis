@@ -26,7 +26,7 @@ BARTLoader2::BARTLoader2(const AssetManagerPtr &asset_manager, const std::string
 {
 }
 
-std::vector<Scene::SceneNodePtr> BARTLoader2::load(const std::string& sceneFolder, const std::string& mainSceneFile)
+std::vector<Scene::BARTMeshPtr> &BARTLoader2::load(const std::string& sceneFolder, const std::string& mainSceneFile)
 {
 	this->sceneFolder = sceneFolder;
 	this->mainSceneFile = mainSceneFile;
@@ -38,7 +38,7 @@ std::vector<Scene::SceneNodePtr> BARTLoader2::load(const std::string& sceneFolde
 	pushNode("root", glm::mat4(1.0f));
 	parseFile(base_dir + sceneFolder + mainSceneFile);
 
-	flattenSceneGraph( sceneRoot, glm::mat4(1.f) );
+	flattenSceneGraph_r( sceneRoot, glm::mat4(1.f) );
 	return sceneNodeList;
 }
 
@@ -193,7 +193,7 @@ void BARTLoader2::parseInclude(FILE *fp)
 		auto subtreeAtInc = (*sceneNodeIt).second;
 		assert( subtreeAtInc->name == "null" );
 		active.sceneNode->add( subtreeAtInc );
-		recursiveSetMaterialState( active.sceneNode );
+		setMaterialState_r( active.sceneNode );
 		//printf("attaching subtree to %s::%s\n", active.sceneNode->fileScope.c_str(), active.sceneNode->name.c_str() );
 		//subtreeAtInc->visit(0);
 	}
@@ -224,12 +224,12 @@ void BARTLoader2::parseInclude(FILE *fp)
 	Since .aff files are only loaded once, load the state of a node associated
 	with material state from that file
 */
-void BARTLoader2::recursiveSetMaterialState( const BART::InternalSceneNodePtr& node ) 
+void BARTLoader2::setMaterialState_r( const BART::InternalSceneNodePtr& node ) 
 {
 	if ( node->meshes.size() ) {
-		recursiveSetMaterialState( node->children.front() );
+		setMaterialState_r( node->children.front() );
 
-		const Scene::BARTMeshPtr& leaf = node->meshes.front();
+		//const Scene::BARTMeshPtr& leaf = node->meshes.front();
 		// TODO:
 		//auto it = MeshMatMap.find(leaf);
 		//if ( it != MeshMatMap.end() ) {
@@ -243,22 +243,22 @@ void BARTLoader2::recursiveSetMaterialState( const BART::InternalSceneNodePtr& n
 	}
 }
 
-void BARTLoader2::flattenSceneGraph( const BART::InternalSceneNodePtr &node, const glm::mat4 &parentXform )
+void BARTLoader2::flattenSceneGraph_r( const BART::InternalSceneNodePtr &node, const glm::mat4 &parentXform )
 {
-	glm::mat4 combinedXform = parentXform * node->tform; // local xform then global xform
+	glm::mat4 combinedXform = parentXform * node->tform; // first apply local- then parent xform
 	for(auto it=begin(node->meshes); it!=end(node->meshes); ++it )
 	{
 		auto &pMesh = *it;
 
-		// copy ctor is less obvious imo... but, saves having to write getter's.
-		//Scene::MeshPtr finalMesh = std::shared_ptr<Scene::Mesh>( new Scene::Mesh( pMesh->getVao(), pMesh->getVbo(), pMesh->getIbo() ) );
-		auto finalMesh = std::make_shared<Scene::BARTMesh>(*pMesh.get());
+		auto finalMesh = std::make_shared<Scene::BARTMesh>( pMesh );
 		finalMesh->setObjectToWorldMatrix( combinedXform ); // still need to use global xform.
+		//finalMesh->setPosition( glm::vec3(combinedXform[3]) );
+		//finalMesh->setOrientation( glm::quat_cast(combinedXform) ); // TODO: could make a set(pos,ori,scale)FromMatrix
 		sceneNodeList.push_back( finalMesh );
 	}
 
 	for(auto it=begin(node->children); it!=end(node->children); ++it )
-		flattenSceneGraph( *it, combinedXform );
+		flattenSceneGraph_r( *it, combinedXform );
 }
 
 ////////////////////////////////////////////////////
@@ -277,7 +277,7 @@ void File::BART::InternalSceneNode::add( InternalSceneNodePtr child )
 	children.push_back(child);
 }
 
-void File::BART::InternalSceneNode::addMesh( Scene::BARTMeshPtr& m ) 
+void File::BART::InternalSceneNode::addMesh( const Scene::MeshDataPtr &m ) 
 {
 	meshes.push_back(m);
 }
