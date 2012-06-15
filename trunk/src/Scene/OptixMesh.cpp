@@ -120,6 +120,7 @@ void OptixMesh::updateTransformFromPosOriScale()
 	model = glm::transpose(model);
 	transform->setMatrix(false, glm::value_ptr(model), nullptr );
 	acceleration->markDirty();
+	parent_group->getAcceleration()->markDirty();
 }
 
 
