@@ -224,7 +224,7 @@ private:
 		auto fps_camera = Scene::FirstPersonCameraPtr( Scene::FirstPersonCamera::getSingleton() );
 		fps_camera->lookAt( glm::vec3(15.0f, 15.0f, 15.0f), glm::vec3(0.f), glm::vec3(0.f, 1.f, 0.f) );
 		fps_camera->updateProjection(width, height, 75.f, 0.01f, 1000.f);
-		fps_camera->setSpeed( 20.f );
+		fps_camera->setSpeed( 5.f );
 
 		createBoringShader();
 	}
@@ -243,42 +243,18 @@ private:
 		top_shadower->set(recieve_shadow_group);
 		addToTopLevel( recieve_shadow_group );
 
-		optix::Material material = createMaterial();
+		optix::Material phong_material = createMaterial();
 		optix::Material debug_normals_material = createNormalDebugMaterial();
 		optix::Material glass_mat = createGlassMaterial();
 		
 		optix::Geometry box = createBoxGeometry();
-		createFloor(box, material);
+		createFloor(box, phong_material);
 
 		std::string model_dir = resource_dir + "models\\";
 		File::MeshLoader mesh_loader(model_dir);
 
-		//auto geo_hin = OptixTriMeshLoader::fromMeshData(mesh_loader.loadMeshDataEasy("hin_logo.3ds"), context, optix_dir);
-		//auto geo_disc = OptixTriMeshLoader::fromMeshData(mesh_loader.loadMeshDataEasy("disc.obj"), context, optix_dir);
 		auto geo_ico = OptixTriMeshLoader::fromMeshData(mesh_loader.loadMeshDataEasy("icosphere.3ds"), context, optix_dir);
 		
-
-		// Create a few logos in a circle
-		//for ( int i=0; i<12; i++ ) {
-		//	float ang_degs = i/12.f * 360.f;
-		//	// translate, then rotate
-		//	glm::mat4 xform = glm::rotate(ang_degs, 0.f,1.f,0.f) * glm::translate(0.f, 0.f, 15.f);
-
-		//	optix::Material mtl;
-		//	if ( i==0 ) {
-		//		mtl = glass_mat;
-		//	} else {
-		//		mtl = material;
-		//	}
-		//	auto hin_logo_instance = Scene::OptixMeshPtr( new Scene::OptixMesh(geo_hin.triMesh, geo_hin.rtGeo, recieve_shadow_group, mtl) );
-		//	hin_logo_instance->setPosition( glm::vec3(xform[3]) );
-		//	hin_logo_instance->setOrientation( glm::quat_cast(xform) );
-		//	scene_instances.push_back(hin_logo_instance);
-		//}
-		
-		//auto disc_instance = Scene::OptixMeshPtr( new Scene::OptixMesh(geo_disc.triMesh, geo_disc.rtGeo, recieve_shadow_group, material) );
-		//scene_instances.push_back(disc_instance);
-
 		// create ico sphere for each light
 		for (size_t i=0; i<lights.size(); ++i){
 			auto ico_instance = Scene::OptixMeshPtr( new Scene::OptixMesh(geo_ico.triMesh, geo_ico.rtGeo, top_level_group, debug_normals_material) );
@@ -298,9 +274,15 @@ private:
 		{
 			//Scene::SceneNodePtr &node = *it;
 			Scene::BARTMeshPtr &node = *it;
+			Scene::MeshDataPtr meshData = node->getMeshData();
+			
+			optix::Material mtl = phong_material;
+			if ( meshData->name == "dragon.aff" ) {
+				mtl = glass_mat;
+			}
 
 			auto bartGeo = OptixTriMeshLoader::fromMeshData( node->getMeshData() , context, optix_dir);
-			auto instance = Scene::OptixMeshPtr( new Scene::OptixMesh(bartGeo.triMesh, bartGeo.rtGeo, top_level_group, debug_normals_material) );
+			auto instance = Scene::OptixMeshPtr( new Scene::OptixMesh(bartGeo.triMesh, bartGeo.rtGeo, top_level_group, mtl ) );
 			//ico_instance->setPosition( glm::vec3(lights[i].pos.x,lights[i].pos.y,lights[i].pos.z) );
 			//instance->setPosition( node->getPosition() );
 			//instance->setOrientation( node->getOrientation() );

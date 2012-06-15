@@ -19,7 +19,7 @@ namespace Parser { namespace BART
 	class ParseMesh
 	{
 	public:
-		static void parse(FILE* f, const std::string &base_dir, const std::string &sceneFolder, File::BART::active_def &active, const File::AssetManagerPtr &asset_manager);
+		static void parse(FILE* f, const std::string &parse_file_name, const std::string &base_dir, const std::string &sceneFolder, File::BART::active_def &active, const File::AssetManagerPtr &asset_manager);
 
 	private:
 		static void getVectors(FILE *fp,char *type, std::vector<glm::vec3>& vecs);

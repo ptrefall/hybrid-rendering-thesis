@@ -13,11 +13,11 @@ using namespace glm;
 
 void setupMaterial(optix::GeometryInstance instance)
 {
-	glm::vec3 ambient = glm::vec3(0.2f, 0.2f,0.2f);
-	glm::vec3 kd = glm::vec3(0.5f, 0.5f,0.5f);
-	glm::vec3 ks = glm::vec3(0.5f, 0.5f,0.5f); 
-	glm::vec3 ka = glm::vec3(0.8f, 0.8f,0.8f); 					 
-	glm::vec3 reflectivity = glm::vec3(0.8f);
+	glm::vec3 ambient = glm::vec3(0.1f);
+	glm::vec3 kd = glm::vec3(0.5f);
+	glm::vec3 ks = glm::vec3(0.5f); 
+	glm::vec3 ka = glm::vec3(0.25f); 					 
+	glm::vec3 reflectivity = glm::vec3(0.1f);
 	float shinyness = 10.f;
 	optix::Variable var_kd =             instance->declareVariable("Kd");
 	optix::Variable var_ks =             instance->declareVariable("Ks");
