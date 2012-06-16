@@ -1,0 +1,24 @@
+
+                     top_level_group
+                         ^
+  top_level_acc          |
+  (NoAccel)              |
+                 +-------+------------+
+                 |                    |
+                 +                    +
+    recieve_shadows_group           light mesh transform
+             ^                                  +
+             |                                  |
+             +                                  +
+       OptixMesh transform                   OptixMesh transform
+              ^                                     ^
+              +                                     +
+         GeometryGroup                         GeometryGroup
+          ^       ^                             ^       ^
+          |       +                             |       +
+  accel+--+    GeometryInstance         accel+--+    GeometryInstance
+  (Bvh)           ^      ^              (NoAccel)       ^      ^
+                  |      |                              |      |
+                  +      +                              +      +
+           Geometry     Material0                Geometry     Material0
+                        (phong or glass)                       (debug normals)
