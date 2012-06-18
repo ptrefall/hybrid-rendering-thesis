@@ -36,10 +36,10 @@ namespace Render
 		void bind_id(unsigned int active_program);
 		void bind_data(unsigned int active_program);
 
+	public:
+		glm::vec3 ambient, diffuse, specular, pp_t_ior;
 	private:
 		unsigned int id;
-		glm::vec3 ambient, diffuse, specular, pp_t_ior;
-
 		UniformPtr u_id, u_amb, u_diff, u_spec, u_pp_t_ior;
 	};
 }

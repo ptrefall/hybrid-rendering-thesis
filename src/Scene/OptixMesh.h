@@ -19,7 +19,7 @@ namespace Scene
 	class OptixMesh : public SceneNode
 	{
 	public:
-		OptixMesh(const Scene::MeshPtr &triangle_mesh, optix::Geometry &geo, optix::Group &parent_group, optix::Material &material);
+		OptixMesh(const Scene::MeshPtr &triangle_mesh, optix::Geometry &geo, optix::Group &parent_group, /*optix::Acceleration &acceleration,*/ optix::Material &optix_material);
 		virtual void render(const Render::ShaderPtr &active_program);
 		void setTexture(int slot, const Render::Tex2DPtr &tex, const std::string &uni_name) override;
 
@@ -29,6 +29,8 @@ namespace Scene
 		virtual void setPosition(const glm::vec3 &position) { this->position = position; updateTransformFromPosOriScale(); }
  		virtual void setOrientation(const glm::quat &orientation) { this->orientation = orientation; updateTransformFromPosOriScale(); }
  		virtual void setScale(const glm::vec3 &scale) { this->scale = scale; updateTransformFromPosOriScale(); }
+
+		virtual void setMaterial(const Render::MaterialPtr &material) { this->material = material; updateOptixMaterial(); }
 
 		void removeFromScene()
 		{
@@ -45,17 +47,18 @@ namespace Scene
 	private:
 		void updateTransformFromMatrix( const glm::mat4 &m );
 		void updateTransformFromPosOriScale();
+		void updateOptixMaterial();
+		void setupMaterial();
 	private:
 		optix::Geometry         rtModel;
 		optix::Transform        transform; // needs to be registered to top level group to render
 		optix::GeometryInstance instance;  // get/set geometry & material on instance
-		optix::Material         material;
+		optix::Material         optix_material;
 		optix::GeometryGroup    geometrygroup;
 		optix::Acceleration     acceleration; // needs update when transform changes
 		optix::Group            parent_group; // for top level group registration
-		
-		Scene::MeshPtr          triangle_mesh;
 
+		Scene::MeshPtr          triangle_mesh;
 		optix::Group            dummy; // toggle rendering
 	};
 }

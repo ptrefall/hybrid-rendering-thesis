@@ -10,6 +10,9 @@ OptixTriMeshLoader::OptixGeometryAndTriMesh_t OptixTriMeshLoader::fromMeshData(S
 	int num_triangles = data->indices.size() / 3;
 	int num_vertices = data->vertices.size() / 3;
 	int num_normals = data->normals.size() / 3;
+	int num_texCoords = data->texcoords.size() / 2;
+	int numTangents = data->tangents.size() / 3;
+	int numBiTangents = data->bitangents.size() / 3;
 
 	optix::Geometry rtModel = rtContext->createGeometry();
 	rtModel->setPrimitiveCount( num_triangles );
@@ -22,7 +25,7 @@ OptixTriMeshLoader::OptixGeometryAndTriMesh_t OptixTriMeshLoader::fromMeshData(S
 	optix::Buffer vertex_buffer = rtContext->createBufferFromGLBO(RT_BUFFER_INPUT, mesh->getVbo()->getHandle() );
 	vertex_buffer->setFormat(RT_FORMAT_USER);
 	vertex_buffer->setElementSize(3*sizeof(float));
-	vertex_buffer->setSize(num_vertices + num_normals);
+	vertex_buffer->setSize(num_vertices + num_normals + num_texCoords + numTangents + numBiTangents);
 	rtModel["vertex_buffer"]->setBuffer(vertex_buffer);
 
 	optix::Buffer index_buffer = rtContext->createBufferFromGLBO(RT_BUFFER_INPUT, mesh->getIbo()->getHandle() );

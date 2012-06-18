@@ -19,6 +19,7 @@ namespace Scene
 		void render(const Render::ShaderPtr &active_program) override;
 
 		const MeshDataPtr &getMeshData() { return meshData; }
+		const Render::MaterialPtr &getMaterial() { return material; }
 	private:
 		MeshDataPtr meshData;
 	};

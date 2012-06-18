@@ -16,7 +16,16 @@
 
 #include "commonStructs.h"
 
-
+struct light_t{
+	glm::vec3 pos; // 12
+	glm::vec3 color; // 12
+	int casts_shadow; // 4
+	int padding; // 4
+	light_t(const glm::vec3 &pos, const glm::vec3 &color) 
+		: pos(pos), color(color), casts_shadow(1), padding(0)
+	{
+	}
+};
 
 class OptixScene
 {
@@ -158,17 +167,17 @@ public:
 
 	void updateLights()
 	{
-		void* light_buffer_data = light_buffer_obj->map();
+		//void* light_buffer_data = light_buffer_obj->map();
 
-		for ( int i=0; i<lights.size(); i++ ) {
-			lights[i].pos.y += 0.01f;
+		//for ( int i=0; i<lights.size(); i++ ) {
+		//	lights[i].pos.y += 0.01f;
 
-			((BasicLight*)light_buffer_data)[i] = lights[i];
-			scene_light_meshes[i]->setPosition( glm::vec3(lights[i].pos.x, lights[i].pos.y, lights[i].pos.z) );
-		}
-		
-		light_buffer_obj->unmap();
-		light_buffer->set(light_buffer_obj);
+		//	((BasicLight*)light_buffer_data)[i] = lights[i];
+		//	scene_light_meshes[i]->setPosition( glm::vec3(lights[i].pos.x, lights[i].pos.y, lights[i].pos.z) );
+		//}
+		//
+		//light_buffer_obj->unmap();
+		//light_buffer->set(light_buffer_obj);
 	}
 
 
@@ -228,50 +237,30 @@ private:
 
 	void setupLights()
 	{
-		/* Lights buffer */
-		BasicLight light0;
-		light0.color.x = 0.25f;
-		light0.color.y = 0.25f;
-		light0.color.z = 0.25f;
-		light0.pos.x   = 1.6f;
-		light0.pos.y   = 0.4f;
-		light0.pos.z   = 0.8f;
-		light0.casts_shadow = 1;
-		light0.padding      = 0u;
+		glm::vec3 color1( 0.3f, 0.3f, 0.3f );
+		glm::vec3 color2( 0.4f, 0.4f, 0.4f );
 
-		BasicLight light1;
-		light1.color.x = 0.25f;
-		light1.color.y = 0.25f;
-		light1.color.z = 0.25f;
-		light1.pos.x   = 2.0f;
-		light1.pos.y   = 0.8f;
-		light1.pos.z   = 1.2f;
-		light1.casts_shadow = 1;
-		light1.padding      = 0u;
+		lights.push_back( light_t( glm::vec3(2.15f,2.00f,0.90f), color1 ) );
+		lights.push_back( light_t( glm::vec3(2.35f,2.00f,0.90f), color1 ) );
+		lights.push_back( light_t( glm::vec3(2.15f,2.00f,1.10f), color1 ) );
+		lights.push_back( light_t( glm::vec3(2.35f,2.00f,1.10f), color1 ) );
 
-		BasicLight light2;
-		light2.color.x = 0.25f;
-		light2.color.y = 0.25f;
-		light2.color.z = 0.25f;
-		light2.pos.x   = 2.2;
-		light2.pos.y   = 1.2f;
-		light2.pos.z   = 1.6f;
-		light2.casts_shadow = 1;
-		light2.padding      = 0u;
+		lights.push_back( light_t( glm::vec3(0.25f,1.35f,1.00f), color2 ) );
+		lights.push_back( light_t( glm::vec3(4.35f,1.35f,1.00f), color2 ) );
+		
 
-		light_buffer_obj = context->createBuffer(RT_BUFFER_INPUT, RT_FORMAT_USER, sizeof(BasicLight) );
-		light_buffer_obj->setElementSize( sizeof(BasicLight) );
-		light_buffer_obj->setSize(3);
+
+		light_buffer_obj = context->createBuffer(RT_BUFFER_INPUT, RT_FORMAT_USER, sizeof(light_t) );
+		light_buffer_obj->setElementSize( sizeof(light_t) );
+		light_buffer_obj->setSize(lights.size());
 		void* light_buffer_data = light_buffer_obj->map();
-		((BasicLight*)light_buffer_data)[0] = light0;
-		((BasicLight*)light_buffer_data)[1] = light1;
-		((BasicLight*)light_buffer_data)[2] = light2;
+		for (size_t i=0; i<lights.size(); i++) {
+			((light_t*)light_buffer_data)[i] = lights[i];
+		}
 		light_buffer_obj->unmap();
 		light_buffer->set(light_buffer_obj);
 
-		lights.push_back( light0 );
-		lights.push_back( light1 );
-		lights.push_back( light2 );
+
 	}
 
 	void createInstances()
@@ -279,7 +268,7 @@ private:
 		top_level_group = context->createGroup();
 		optix::Variable top_object = context->declareVariable("top_object");
 		top_object->set( top_level_group );
-		top_level_acceleration = context->createAcceleration("Bvh", "Bvh");
+		top_level_acceleration = context->createAcceleration("NoAccel", "NoAccel");
 		top_level_group->setAcceleration(top_level_acceleration);
 
 		recieve_shadow_group = context->createGroup();
@@ -292,8 +281,23 @@ private:
 		optix::Material debug_normals_material = createNormalDebugMaterial();
 		optix::Material glass_mat = createGlassMaterial();
 		
-		optix::Geometry box = createBoxGeometry();
-		createFloor(box, phong_material);
+		//optix::Geometry box = createBoxGeometry();
+		//createFloor(box, phong_material);
+
+		//optix::Acceleration bvhAccel = context->createAcceleration("Bvh", "Bvh"); // classic
+		//optix::Acceleration noAccel = context->createAcceleration("NoAccel", "NoAccel");
+
+
+		//optix::Group mesh_no_shadow_group = context->createGroup();
+		//optix::Group mesh_shadow_group = context->createGroup();
+		//mesh_no_shadow_group->setAcceleration(noAccel);
+		//mesh_shadow_group->setAcceleration(bvhAccel);
+
+//Invalid context (Details: Function "_rtContextCompile" caught exception: Validation error: Inconsistent scope lookups in PTX code
+//(Program attached to different object types), [10486106])
+
+		//addToTopLevel(mesh_no_shadow_group);
+		//addToShadowGroup(mesh_shadow_group);
 
 		std::string model_dir = resource_dir + "models\\";
 		File::MeshLoader mesh_loader(model_dir);
@@ -302,7 +306,7 @@ private:
 		
 		// create ico sphere for each light
 		for (size_t i=0; i<lights.size(); ++i){
-			auto ico_instance = Scene::OptixMeshPtr( new Scene::OptixMesh(geo_ico.triMesh, geo_ico.rtGeo, top_level_group, debug_normals_material) );
+			auto ico_instance = Scene::OptixMeshPtr( new Scene::OptixMesh(geo_ico.triMesh, geo_ico.rtGeo, top_level_group, /*noAccel,*/ debug_normals_material) );
 			ico_instance->setPosition( glm::vec3(lights[i].pos.x,lights[i].pos.y,lights[i].pos.z) );
 			scene_instances.push_back(ico_instance);
 			scene_light_meshes.push_back(ico_instance);
@@ -328,12 +332,13 @@ private:
 			}
 
 			auto bartGeo = OptixTriMeshLoader::fromMeshData( node->getMeshData() , context, optix_dir);
-			auto instance = Scene::OptixMeshPtr( new Scene::OptixMesh(bartGeo.triMesh, bartGeo.rtGeo, recieve_shadow_group, mtl ) );
+			auto instance = Scene::OptixMeshPtr( new Scene::OptixMesh(bartGeo.triMesh, bartGeo.rtGeo, recieve_shadow_group, /*bvhAccel,*/ mtl ) );
 			//ico_instance->setPosition( glm::vec3(lights[i].pos.x,lights[i].pos.y,lights[i].pos.z) );
 			//instance->setPosition( node->getPosition() );
 			//instance->setOrientation( node->getOrientation() );
 			//instance->setScale( node->getScale() );
 			instance->setObjectToWorldMatrix( node->getObjectToWorldMatrix() );
+			instance->setMaterial( node->getMaterial() );
 			scene_instances.push_back(instance);
 
 			// can still do this on OptixMesh:
@@ -570,7 +575,7 @@ private:
 
 	File::AssetManagerPtr            asset_manager;
 	
-	std::vector<BasicLight>          lights;
+	std::vector<light_t>             lights;
 	optix::Buffer                    light_buffer_obj;
 	optix::Variable                  light_buffer;
 	Render::ShaderPtr                boring_shader;

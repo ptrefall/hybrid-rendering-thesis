@@ -96,11 +96,15 @@ void ParsePoly::parse(FILE *fp)
 			texCoords.push_back( texCoords[2] );
 		}
 		// Expecting triangles, so expect num verts to be divisable by 3.
-		if( vertCoords.size() % 3 != 0 )
-			throw std::runtime_error("polygon or patch vertex count was not dividable by 3!");
+		//if( vertCoords.size() % 3 != 0 )
+			//throw std::runtime_error("polygon or patch vertex count was not dividable by 3!");
 		
-		calcNormals( vertCoords, vertNormals  );
-		addPoly( vertCoords, vertNormals, texCoords );
+		// need to triangulate poly, as it can be a convex hull
+		// for now, only add tris
+		if( vertCoords.size() % 3 ) {
+			calcNormals( vertCoords, vertNormals  );
+			addPoly( vertCoords, vertNormals, texCoords );
+		}
     }
 }
 

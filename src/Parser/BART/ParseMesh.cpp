@@ -61,10 +61,12 @@ void ParseMesh::parse(FILE *fp, const std::string &parse_file_name, const std::s
 
    auto meshData = std::make_shared<Scene::MeshData_t>();
 
-   std::string file_only(parse_file_name);
-   file_only = file_only.substr(file_only.find_last_of("\\")+1, file_only.size()-1 );
-   //file_only = file_only.substr(0, file_only.find_last_of("\\"));
-   meshData->name = file_only;
+   // strip folders if any
+   if ( parse_file_name.find('\\') != std::string::npos ) {
+	meshData->name = parse_file_name.substr(parse_file_name.find_last_of("\\")+1, parse_file_name.size()-1 );
+   } else {
+	meshData->name = parse_file_name;
+   }
    size_t coordIdx = 0;
    for (int i=0; i<num_tris*3; i++)
    {
@@ -208,5 +210,5 @@ void ParseMesh::addMesh( const Scene::MeshDataPtr &meshData, File::BART::active_
 	//}
 
 	//mesh->setMaterial( active.extMaterial );
-	active.sceneNode->addMesh( meshData );
+	active.sceneNode->addMeshMaterialPair( meshData, active.extMaterial );
 }
