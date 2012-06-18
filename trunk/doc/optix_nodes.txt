@@ -1,23 +1,26 @@
 
-                     top_level_group
-                         ^
+      +------------->top_level_group (connected to top_object)
+      +                  ^
   top_level_acc          |
   (NoAccel)              |
                  +-------+------------+
                  |                    |
                  +                    +
     recieve_shadows_group           light mesh transform
-             ^                                  +
+		 (connected to top_shadow)
+             ^                                  ^
              |                                  |
              +                                  +
        OptixMesh transform                   OptixMesh transform
               ^                                     ^
+              |                                     |
               +                                     +
          GeometryGroup                         GeometryGroup
           ^       ^                             ^       ^
-          |       +                             |       +
-  accel+--+    GeometryInstance         accel+--+    GeometryInstance
-  (Bvh)           ^      ^              (NoAccel)       ^      ^
+     +----+       |                             |       |
+ accel            +                       +-----+       +
+ (Bvh)         GeometryInstance         accel        GeometryInstance
+                  ^      ^              (NoAccel)       ^      ^
                   |      |                              |      |
                   +      +                              +      +
            Geometry     Material0                Geometry     Material0

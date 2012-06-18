@@ -44,7 +44,7 @@ namespace Scene
 		void setTexture(int slot, const Render::Tex2DPtr &tex, const Render::UniformPtr &uniform, const Render::SamplerPtr &sampler);
 		virtual void setTexture(int slot, const Render::Tex2DPtr &tex, const std::string &uni_name) {}
 		void setTexture(int slot, const Render::Tex2DArrayPtr &tex_array, const Render::UniformPtr &uniform, const Render::SamplerPtr &sampler);
-		void setMaterial(const Render::MaterialPtr &material) { this->material = material; }
+		virtual void setMaterial(const Render::MaterialPtr &material) { this->material = material; }
 
 	protected:
 		Render::UniformPtr uni_object_to_world;

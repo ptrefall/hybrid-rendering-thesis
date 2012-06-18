@@ -208,7 +208,7 @@ void BARTLoader2::parseInclude(FILE *fp)
 			try {
 				parseFile(base_dir+sceneFolder+filename);  /* parse the file recursively */
 			} catch(std::exception &e) {
-				throw std::runtime_error("Error: could not open include file: " + std::string(filename));
+				throw std::runtime_error("Error: could not parse: " + std::string(filename) + " reason: "+ e.what());
 			}
 
 			popNode();
@@ -248,9 +248,11 @@ void BARTLoader2::flattenSceneGraph_r( const BART::InternalSceneNodePtr &node, c
 	glm::mat4 combinedXform = parentXform * node->tform; // first apply local- then parent xform
 	for(auto it=begin(node->meshes); it!=end(node->meshes); ++it )
 	{
-		auto &pMesh = *it;
+		auto &pMesh = it->mesh;
+		auto &pMaterial = it->material;
 
 		auto finalMesh = std::make_shared<Scene::BARTMesh>( pMesh );
+		finalMesh->setMaterial( pMaterial );
 		finalMesh->setObjectToWorldMatrix( combinedXform ); // still need to use global xform.
 		//finalMesh->setPosition( glm::vec3(combinedXform[3]) );
 		//finalMesh->setOrientation( glm::quat_cast(combinedXform) ); // TODO: could make a set(pos,ori,scale)FromMatrix
@@ -277,9 +279,10 @@ void File::BART::InternalSceneNode::add( InternalSceneNodePtr child )
 	children.push_back(child);
 }
 
-void File::BART::InternalSceneNode::addMesh( const Scene::MeshDataPtr &m ) 
+void File::BART::InternalSceneNode::addMeshMaterialPair( const Scene::MeshDataPtr &mesh, const Render::MaterialPtr &material )
 {
-	meshes.push_back(m);
+	MeshMaterialPair_t pair = {mesh,material};
+	meshes.push_back( pair );
 }
 
 void File::BART::InternalSceneNode::visit(int spaces) 
