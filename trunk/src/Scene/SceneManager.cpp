@@ -219,15 +219,16 @@ void SceneManager::initScene(	const File::AssetManagerPtr &asset_manager,
 	auto scene_dir = config.getString("load", "dir", "procedural\\");
 	auto scene_file = config.getString("load", "scene", "balls.nff");
 
-	std::vector<Scene::SceneNodePtr> nodes = bart_loader->load(scene_dir, scene_file);
+	auto nodes = bart_loader->load(scene_dir, scene_file);
 	for(auto it=begin(nodes); it!=end(nodes); ++it)
 	{
-		Scene::SceneNodePtr &node = *it;
+		auto &node = *it;
 		node->setObjectToWorldUniform(	g_buffer_pass->getObjectToWorldUniform());
 		node->setWorldToViewUniform(	g_buffer_pass->getWorldToViewUniform());
 		node->setViewToClipUniform(		g_buffer_pass->getViewToClipUniform());
 		node->setNormalToViewUniform(	g_buffer_pass->getNormalToViewUniform());
 		//node->setTexture(array_tex, tex_sampler, array_sampler);
 	}
-	addList( nodes );
+	for(unsigned int i = 0; i < nodes.size(); i++)
+		add(nodes[i]);
 }
