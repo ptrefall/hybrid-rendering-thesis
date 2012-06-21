@@ -210,5 +210,5 @@ void ParseMesh::addMesh( const Scene::MeshDataPtr &meshData, File::BART::active_
 	//}
 
 	//mesh->setMaterial( active.extMaterial );
-	active.sceneNode->addMeshMaterialPair( meshData, active.extMaterial );
+	active.sceneNode->setMeshMaterial( meshData, active.extMaterial );
 }

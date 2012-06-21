@@ -112,7 +112,9 @@ public:
 	void renderRaster()
 	{
 		//for ( size_t i=0; i<scene_instances.size(); ++i ){
-			//scene_instances[i]->render(nullptr);
+		//	if ( scene_instances[i]->getName() != "dragon.aff" ) {
+		//		scene_instances[i]->render( boring_shader );
+		//	}
 		//}
 	}
 
@@ -154,32 +156,6 @@ public:
 		// remember to recalc accel when moving objects
 		//top_level_acceleration->markDirty();
 	}
-
-	void addTo()
-	{
-		scene_instances[3]->addToScene();
-	}
-
-	void removeFrom()
-	{
-		scene_instances[3]->removeFromScene();
-	}
-
-	void updateLights()
-	{
-		//void* light_buffer_data = light_buffer_obj->map();
-
-		//for ( int i=0; i<lights.size(); i++ ) {
-		//	lights[i].pos.y += 0.01f;
-
-		//	((BasicLight*)light_buffer_data)[i] = lights[i];
-		//	scene_light_meshes[i]->setPosition( glm::vec3(lights[i].pos.x, lights[i].pos.y, lights[i].pos.z) );
-		//}
-		//
-		//light_buffer_obj->unmap();
-		//light_buffer->set(light_buffer_obj);
-	}
-
 
 private:
 	void init()
@@ -280,33 +256,21 @@ private:
 		optix::Material phong_material = createMaterial();
 		optix::Material debug_normals_material = createNormalDebugMaterial();
 		optix::Material glass_mat = createGlassMaterial();
+
+		optix::Program isect_program = context->createProgramFromPTXFile( optix_dir+"triangle_mesh_small.cu.ptx", "mesh_intersect" );
+		optix::Program bbox_program = context->createProgramFromPTXFile( optix_dir+"triangle_mesh_small.cu.ptx", "mesh_bounds" );
 		
 		//optix::Geometry box = createBoxGeometry();
 		//createFloor(box, phong_material);
 
-		//optix::Acceleration bvhAccel = context->createAcceleration("Bvh", "Bvh"); // classic
-		//optix::Acceleration noAccel = context->createAcceleration("NoAccel", "NoAccel");
-
-
-		//optix::Group mesh_no_shadow_group = context->createGroup();
-		//optix::Group mesh_shadow_group = context->createGroup();
-		//mesh_no_shadow_group->setAcceleration(noAccel);
-		//mesh_shadow_group->setAcceleration(bvhAccel);
-
-//Invalid context (Details: Function "_rtContextCompile" caught exception: Validation error: Inconsistent scope lookups in PTX code
-//(Program attached to different object types), [10486106])
-
-		//addToTopLevel(mesh_no_shadow_group);
-		//addToShadowGroup(mesh_shadow_group);
-
 		std::string model_dir = resource_dir + "models\\";
 		File::MeshLoader mesh_loader(model_dir);
 
-		auto geo_ico = OptixTriMeshLoader::fromMeshData(mesh_loader.loadMeshDataEasy("icosphere.3ds"), context, optix_dir);
+		auto geo_ico = OptixTriMeshLoader::fromMeshData(mesh_loader.loadMeshDataEasy("icosphere.3ds"), context, isect_program, bbox_program);
 		
 		// create ico sphere for each light
 		for (size_t i=0; i<lights.size(); ++i){
-			auto ico_instance = Scene::OptixMeshPtr( new Scene::OptixMesh(geo_ico.triMesh, geo_ico.rtGeo, top_level_group, /*noAccel,*/ debug_normals_material) );
+			auto ico_instance = Scene::OptixMeshPtr( new Scene::OptixMesh(geo_ico.triMesh, geo_ico.rtGeo, top_level_group, debug_normals_material) );
 			ico_instance->setPosition( glm::vec3(lights[i].pos.x,lights[i].pos.y,lights[i].pos.z) );
 			scene_instances.push_back(ico_instance);
 			scene_light_meshes.push_back(ico_instance);
@@ -326,30 +290,24 @@ private:
 			Scene::BARTMeshPtr &node = *it;
 			Scene::MeshDataPtr meshData = node->getMeshData();
 			
-			optix::Material mtl = phong_material;
-			if ( meshData->name == "dragon.aff" ) {
-				mtl = glass_mat;
-			}
+			//optix::Material mtl = phong_material;
+			//if ( meshData->name == "dragon.aff" ) {
+			//	mtl = glass_mat;
+			//}
 
-			auto bartGeo = OptixTriMeshLoader::fromMeshData( node->getMeshData() , context, optix_dir);
-			auto instance = Scene::OptixMeshPtr( new Scene::OptixMesh(bartGeo.triMesh, bartGeo.rtGeo, recieve_shadow_group, /*bvhAccel,*/ mtl ) );
-			//ico_instance->setPosition( glm::vec3(lights[i].pos.x,lights[i].pos.y,lights[i].pos.z) );
-			//instance->setPosition( node->getPosition() );
-			//instance->setOrientation( node->getOrientation() );
-			//instance->setScale( node->getScale() );
+			auto bartGeo = OptixTriMeshLoader::fromMeshData( meshData , context, isect_program, bbox_program);
+			auto instance = Scene::OptixMeshPtr( new Scene::OptixMesh( bartGeo.triMesh, bartGeo.rtGeo, recieve_shadow_group, debug_normals_material ) );
 			instance->setObjectToWorldMatrix( node->getObjectToWorldMatrix() );
 			instance->setMaterial( node->getMaterial() );
+			//instance->removeFromScene();
+			/*
+			if ( meshData->name != "dragon.aff" ) {
+				instance->removeFromScene();
+			}
+			*/
 			scene_instances.push_back(instance);
-
-			// can still do this on OptixMesh:
-			//node->setObjectToWorldUniform( g_buffer_pass->getObjectToWorldUniform() );
-			//node->setWorldToViewUniform(   g_buffer_pass->getWorldToViewUniform()   );
-			//node->setViewToClipUniform(    g_buffer_pass->getViewToClipUniform()    );
-			//node->setNormalToViewUniform(  g_buffer_pass->getNormalToViewUniform()  );
-			//node->setTexture(array_tex, tex_sampler, array_sampler);
 		}
-		//addList( nodes );
-
+		
 		top_level_acceleration->markDirty();
 	}
 

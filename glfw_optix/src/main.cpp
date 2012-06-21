@@ -109,25 +109,6 @@ public:
 		optix::Variable fTime = myScene->getFTime();
 		fTime->setFloat( (float)time );
 
-		static bool delay = false;
-		if ( glfwGetKey(wnd, 'T')==1 && !delay ) {
-			myScene->addTo();
-			delay = true;
-		} else if ( glfwGetKey(wnd, 'T')==1 && delay){
-			myScene->removeFrom();
-			delay = false;
-		}
-
-		// TODO what a lazy guy... :<
-		static bool delay2 = false;
-		if ( glfwGetKey(wnd, 'L')==1 && !delay2 ) {
-			myScene->updateLights();
-			delay2 = true;
-		} else if ( glfwGetKey(wnd, 'L')==1 && delay2){
-			myScene->updateLights();
-			delay2 = false;
-		}
-
 		int mouse_x, mouse_y;
 		glfwGetMousePos(wnd, &mouse_x, &mouse_y );
 		myScene->moveCameraVertical( glfwGetKey(wnd, 'Q')==1, glfwGetKey(wnd, 'E')==1, delta_time );

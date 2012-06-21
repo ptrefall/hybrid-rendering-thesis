@@ -2,7 +2,7 @@
 
 //using namespace OptixTriMeshLoader;
 
-OptixTriMeshLoader::OptixGeometryAndTriMesh_t OptixTriMeshLoader::fromMeshData(Scene::MeshDataPtr data, optix::Context rtContext, const std::string &ptx_dir)
+OptixTriMeshLoader::OptixGeometryAndTriMesh_t OptixTriMeshLoader::fromMeshData(Scene::MeshDataPtr data, optix::Context rtContext, optix::Program &isect_program, optix::Program &bbox_program )
 {
 	auto mesh = Scene::MeshPtr( new Scene::Mesh(data) );
 
@@ -16,15 +16,17 @@ OptixTriMeshLoader::OptixGeometryAndTriMesh_t OptixTriMeshLoader::fromMeshData(S
 
 	optix::Geometry rtModel = rtContext->createGeometry();
 	rtModel->setPrimitiveCount( num_triangles );
-	optix::Program isect_program = rtContext->createProgramFromPTXFile( ptx_dir+"triangle_mesh_small.cu.ptx", "mesh_intersect" );
-	optix::Program bbox_program = rtContext->createProgramFromPTXFile( ptx_dir+"triangle_mesh_small.cu.ptx", "mesh_bounds" );
 
 	rtModel->setIntersectionProgram( isect_program );
 	rtModel->setBoundingBoxProgram( bbox_program );
 	
 	optix::Buffer vertex_buffer = rtContext->createBufferFromGLBO(RT_BUFFER_INPUT, mesh->getVbo()->getHandle() );
 	vertex_buffer->setFormat(RT_FORMAT_USER);
-	vertex_buffer->setElementSize(3*sizeof(float));
+	// actally, vertexbuffer elements are potentially larger than 3 floats, but, optix doesn't support this kind of use.
+	// it works with acceleration structures like Bvh, but not SBvh and Kdtree that expect elementSize and buffer size
+	// to correspond number vertices with or without stride. for these to work, one must allways fill inn all attributes 
+	// (vert, norm, tangent, bitangent, texcoord), or create seperate buffers for each attribute.
+	vertex_buffer->setElementSize( 3*sizeof(float));
 	vertex_buffer->setSize(num_vertices + num_normals + num_texCoords + numTangents + numBiTangents);
 	rtModel["vertex_buffer"]->setBuffer(vertex_buffer);
 

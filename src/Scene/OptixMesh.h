@@ -19,7 +19,7 @@ namespace Scene
 	class OptixMesh : public SceneNode
 	{
 	public:
-		OptixMesh(const Scene::MeshPtr &triangle_mesh, optix::Geometry &geo, optix::Group &parent_group, /*optix::Acceleration &acceleration,*/ optix::Material &optix_material);
+		OptixMesh(const Scene::MeshPtr &triangle_mesh, optix::Geometry &geo, optix::Group &parent_group, optix::Material &optix_material);
 		virtual void render(const Render::ShaderPtr &active_program);
 		void setTexture(int slot, const Render::Tex2DPtr &tex, const std::string &uni_name) override;
 

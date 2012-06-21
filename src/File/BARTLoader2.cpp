@@ -226,7 +226,8 @@ void BARTLoader2::parseInclude(FILE *fp)
 */
 void BARTLoader2::setMaterialState_r( const BART::InternalSceneNodePtr& node ) 
 {
-	if ( node->meshes.size() ) {
+	if ( node->children.size() )
+	{
 		setMaterialState_r( node->children.front() );
 
 		//const Scene::BARTMeshPtr& leaf = node->meshes.front();
@@ -243,19 +244,16 @@ void BARTLoader2::setMaterialState_r( const BART::InternalSceneNodePtr& node )
 	}
 }
 
-void BARTLoader2::flattenSceneGraph_r( const BART::InternalSceneNodePtr &node, const glm::mat4 &parentXform )
+
+void BARTLoader2::flattenSceneGraph_r( const BART::InternalSceneNodePtr &node, const glm::mat4 &parentXform /*bool flattenTransform*/)
 {
 	glm::mat4 combinedXform = parentXform * node->tform; // first apply local- then parent xform
-	for(auto it=begin(node->meshes); it!=end(node->meshes); ++it )
+	
+	if ( node->mesh.get() != nullptr )
 	{
-		auto &pMesh = it->mesh;
-		auto &pMaterial = it->material;
-
-		auto finalMesh = std::make_shared<Scene::BARTMesh>( pMesh );
-		finalMesh->setMaterial( pMaterial );
+		auto finalMesh = std::make_shared<Scene::BARTMesh>( node->mesh );
+		finalMesh->setMaterial( node->material );
 		finalMesh->setObjectToWorldMatrix( combinedXform ); // still need to use global xform.
-		//finalMesh->setPosition( glm::vec3(combinedXform[3]) );
-		//finalMesh->setOrientation( glm::quat_cast(combinedXform) ); // TODO: could make a set(pos,ori,scale)FromMatrix
 		sceneNodeList.push_back( finalMesh );
 	}
 
@@ -279,10 +277,13 @@ void File::BART::InternalSceneNode::add( InternalSceneNodePtr child )
 	children.push_back(child);
 }
 
-void File::BART::InternalSceneNode::addMeshMaterialPair( const Scene::MeshDataPtr &mesh, const Render::MaterialPtr &material )
+void File::BART::InternalSceneNode::setMeshMaterial( const Scene::MeshDataPtr &mesh, const Render::MaterialPtr &material )
 {
-	MeshMaterialPair_t pair = {mesh,material};
-	meshes.push_back( pair );
+	if ( this->mesh.get() != nullptr ) {
+		throw std::runtime_error("tried set on InternalSceneNode that already has a mesh");
+	}
+	this->mesh = mesh;
+	this->material = material;
 }
 
 void File::BART::InternalSceneNode::visit(int spaces) 
@@ -298,7 +299,7 @@ void File::BART::InternalSceneNode::visit(int spaces)
 	else
 		std::cout << "visit " << name;
 
-	if ( meshes.size() ) 
+	if ( mesh.get() != nullptr ) 
 		std::cout << " has geo ";
 	std::cout << std::endl;
 

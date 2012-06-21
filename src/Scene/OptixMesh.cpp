@@ -11,10 +11,9 @@
 using namespace Scene;
 using namespace glm;
 
-OptixMesh::OptixMesh(const Scene::MeshPtr &triangle_mesh, optix::Geometry &geo, optix::Group &parent_group, /*optix::Acceleration &acceleration,*/ optix::Material &optix_material)
+OptixMesh::OptixMesh(const Scene::MeshPtr &triangle_mesh, optix::Geometry &geo, optix::Group &parent_group, optix::Material &optix_material)
                      : triangle_mesh(triangle_mesh)
 					 , parent_group(parent_group)
-					 //, acceleration(acceleration)
 					 , optix_material(optix_material)
 {
 	/////////////////////////////////
@@ -48,9 +47,7 @@ OptixMesh::OptixMesh(const Scene::MeshPtr &triangle_mesh, optix::Geometry &geo, 
 
 void OptixMesh::render(const Render::ShaderPtr &active_program)
 {
-	static bool bad_practice = true;
-	if ( bad_practice ) {
-		bad_practice = false;
+	if ( uni_object_to_world.get() == nullptr ) {
 		uni_object_to_world		= std::shared_ptr<Render::Uniform>( new Render::Uniform(active_program->getVS(), "Object_to_World") );
 		uni_world_to_view		= std::shared_ptr<Render::Uniform>( new Render::Uniform(active_program->getVS(), "World_to_View") );
 		uni_view_to_clip		= std::shared_ptr<Render::Uniform>( new Render::Uniform(active_program->getVS(), "View_to_Clip") );
