@@ -31,12 +31,6 @@ namespace File
 		   ungetc(ch,f);
 		}
 
-		struct MeshMaterialPair_t
-		{
-			Scene::MeshDataPtr mesh;
-			Render::MaterialPtr material;
-		};
-
 		class InternalSceneNode;
 		typedef std::shared_ptr<InternalSceneNode> InternalSceneNodePtr;
 		class InternalSceneNode
@@ -44,13 +38,14 @@ namespace File
 		public:
 			InternalSceneNode(const std::string& name);
 			void add( InternalSceneNodePtr child );
-			void addMeshMaterialPair( const Scene::MeshDataPtr &mesh, const Render::MaterialPtr &material );
+			void setMeshMaterial( const Scene::MeshDataPtr &mesh, const Render::MaterialPtr &material );
 			void visit(int spaces);
 
 			std::string name;
 			std::string fileScope;
 			std::vector<InternalSceneNodePtr> children;
-			std::vector<MeshMaterialPair_t> meshes;
+			Scene::MeshDataPtr mesh;
+			Render::MaterialPtr material;
 			glm::mat4 tform;
 		};
 

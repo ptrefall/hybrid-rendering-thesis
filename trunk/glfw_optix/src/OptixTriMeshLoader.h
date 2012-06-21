@@ -15,5 +15,5 @@ public:
 		Scene::MeshPtr triMesh;
 	};
 
-	static OptixGeometryAndTriMesh_t fromMeshData(Scene::MeshDataPtr data, optix::Context rtContext, const std::string &ptx_dir);
+	static OptixGeometryAndTriMesh_t fromMeshData(Scene::MeshDataPtr data, optix::Context rtContext, optix::Program &isect_program, optix::Program &bbox_program);
 };
