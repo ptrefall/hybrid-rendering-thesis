@@ -1,0 +1,35 @@
+#include <optix/optix.h>
+#include <optix/optix_math.h>
+
+
+struct PerRayData_deferred
+{
+  float3 diffuse;  //12
+  float3 position; //12
+  float3 normal;   //12, 4*3*12=144bytes
+};
+
+rtDeclareVariable(PerRayData_deferred, prd_deferred, rtPayload, );
+rtDeclareVariable(optix::Ray,          ray,          rtCurrentRay, );
+rtDeclareVariable(float,               t_hit,        rtIntersectionDistance, );
+
+// hitpoint parameters
+rtDeclareVariable(float3, texcoord, attribute texcoord, ); 
+rtDeclareVariable(float3, shading_normal, attribute shading_normal, );
+rtTextureSampler<float4, 2>     kd_map; // surface texture
+
+RT_PROGRAM void diffuse()
+{
+	prd_deferred.diffuse = make_float3( tex2D( kd_map, texcoord.x, texcoord.y ) );
+}
+
+RT_PROGRAM void position() //equiv to vertex shader Vertex.position_vs.xyz;
+{
+	float3 hit_point = ray.origin + t_hit * ray.direction;
+	prd_deferred.position = rtTransformPoint(RT_OBJECT_TO_WORLD, hit_point);
+}
+
+RT_PROGRAM void normal()
+{
+	prd_deferred.normal = rtTransformNormal(RT_OBJECT_TO_WORLD, shading_normal);
+}
