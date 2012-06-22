@@ -281,12 +281,12 @@ private:
 		asset_manager = File::AssetManagerPtr( new File::AssetManager(resource_dir) );
 		File::BARTLoader2 bart_loader( asset_manager, resource_dir+"bart_scenes\\" );
 
-		std::vector<Scene::BARTMeshPtr> nodes = bart_loader.load(scene_dir, scene_file);
+		auto nodes = bart_loader.load(scene_dir, scene_file);
 		for(auto it=begin(nodes); it!=end(nodes); ++it)
 		{
 			//Scene::SceneNodePtr &node = *it;
-			Scene::BARTMeshPtr &node = *it;
-			Scene::MeshDataPtr meshData = node->getMeshData();
+			auto &node = *it;
+			Scene::MeshDataPtr meshData = node.mesh;
 			
 			//optix::Material mtl = phong_material;
 			//if ( meshData->name == "dragon.aff" ) {
@@ -295,8 +295,8 @@ private:
 
 			auto bartGeo = OptixTriMeshLoader::fromMeshData( meshData , context, isect_program, bbox_program);
 			auto instance = Scene::OptixMeshPtr( new Scene::OptixMesh( bartGeo.triMesh, bartGeo.rtGeo, recieve_shadow_group, debug_normals_material ) );
-			instance->setObjectToWorldMatrix( node->getObjectToWorldMatrix() );
-			instance->setMaterial( node->getMaterial() );
+			instance->setObjectToWorldMatrix( node.xform );
+			instance->setMaterial( node.material );
 			//instance->removeFromScene();
 			/*
 			if ( meshData->name != "dragon.aff" ) {
