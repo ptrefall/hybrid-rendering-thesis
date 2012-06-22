@@ -265,13 +265,13 @@ private:
 		File::MeshLoader mesh_loader(model_dir);
 
 		auto icosphereMeshData = mesh_loader.loadMeshDataEasy("icosphere.3ds");
-		
 		auto icoGeometryAndMesh = OptixTriMeshLoader::fromMeshData( icosphereMeshData, context, isect_program, bbox_program);
-		scene_instances.push_back( icoGeometryAndMesh.triMesh );
 		
 		// create ico sphere for each light
 		for (size_t i=0; i<lights.size(); ++i){
-			auto ico_instance = Scene::OptixInstancePtr( new Scene::OptixInstance(icoGeometryAndMesh.rtGeo, top_level_group, debug_normals_material) );
+			auto triMesh = icoGeometryAndMesh.triMesh;
+			auto ico_instance = Scene::OptixInstancePtr( new Scene::OptixInstance(triMesh->getVao(), triMesh->getVbo(), triMesh->getIbo(), 
+				                                                                  icoGeometryAndMesh.rtGeo, top_level_group, debug_normals_material) );
 			ico_instance->setPosition( glm::vec3(lights[i].pos.x,lights[i].pos.y,lights[i].pos.z) );
 			scene_instances.push_back(ico_instance);
 			scene_light_meshes.push_back(ico_instance);
@@ -289,13 +289,15 @@ private:
 		{
 			auto &bartNode = *it;
 			
-			auto geometryAndMesh = OptixTriMeshLoader::fromMeshData( bartNode.meshData , context, isect_program, bbox_program);
-			auto optixInstance = Scene::OptixInstancePtr( new Scene::OptixInstance( geometryAndMesh.rtGeo, recieve_shadow_group, debug_normals_material ) );
+			auto geometryAndMesh = OptixTriMeshLoader::fromMeshData( bartNode.meshData , context, isect_program, bbox_program );
+			auto triMesh = geometryAndMesh.triMesh;
+			auto optixInstance = Scene::OptixInstancePtr( 
+				                 new Scene::OptixInstance( triMesh->getVao(), triMesh->getVbo(), triMesh->getIbo(), 
+								                           geometryAndMesh.rtGeo, recieve_shadow_group, debug_normals_material ) );
 			optixInstance->setObjectToWorldMatrix( bartNode.xform );
 			optixInstance->setMaterial( bartNode.material );
 
 			scene_instances.push_back(optixInstance);
-			scene_instances.push_back( geometryAndMesh.triMesh );
 		}
 		
 		top_level_acceleration->markDirty();
@@ -517,8 +519,8 @@ private:
 	optix::Acceleration              top_level_acceleration;
 	optix::Group                     recieve_shadow_group;
 	
-	std::vector<Scene::SceneNodePtr> scene_instances;
-	std::vector<Scene::SceneNodePtr> scene_light_meshes;
+	std::vector<Scene::OptixInstancePtr> scene_instances;
+	std::vector<Scene::OptixInstancePtr> scene_light_meshes;
 
 	File::AssetManagerPtr            asset_manager;
 	
