@@ -31,6 +31,15 @@ namespace File
 		   ungetc(ch,f);
 		}
 
+		// used for returning instances from load
+		struct NodeInstance_t
+		{
+			Scene::MeshDataPtr mesh;
+			Render::MaterialPtr material;
+			std::string textureFilename;
+			glm::mat4 xform;
+		};
+
 		class InternalSceneNode;
 		typedef std::shared_ptr<InternalSceneNode> InternalSceneNodePtr;
 		class InternalSceneNode
@@ -38,15 +47,16 @@ namespace File
 		public:
 			InternalSceneNode(const std::string& name);
 			void add( InternalSceneNodePtr child );
-			void setMeshMaterial( const Scene::MeshDataPtr &mesh, const Render::MaterialPtr &material );
 			void visit(int spaces);
 
 			std::string name;
 			std::string fileScope;
 			std::vector<InternalSceneNodePtr> children;
+
 			Scene::MeshDataPtr mesh;
 			Render::MaterialPtr material;
-			glm::mat4 tform;
+			std::string textureFilename;
+			glm::mat4 xform;
 		};
 
 		struct camera_def
@@ -66,11 +76,11 @@ namespace File
 
 		struct active_def
 		{
-			std::string tformName;
-			glm::mat4 tformMatrix;
-			std::stack<glm::mat4> tformStack;
-			// Keep track of transform hiearchy so we know when to pop a static tform
-			std::stack<eTransformType> tformTypeStack;
+			std::string xformName;
+			glm::mat4 xformMatrix;
+			std::stack<glm::mat4> xformStack;
+			// Keep track of transform hiearchy so we know when to pop a static xform
+			std::stack<eTransformType> xformTypeStack;
 		
 			Render::MaterialPtr extMaterial; // found in .aff-s
 			std::string texture;
@@ -112,7 +122,7 @@ namespace File
 		struct poly_t
 		{
 			// TODO geometry!
-			glm::mat4 tform;
+			glm::mat4 xform;
 			Render::MaterialPtr mat;
 			std::string texture;
 		};

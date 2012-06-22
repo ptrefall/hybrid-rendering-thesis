@@ -65,7 +65,7 @@ void ParseXform::parse(FILE *f, File::BART::active_def &active, const std::funct
 			throw std::runtime_error("Error: { expected.");
 
 		/* add a static transform here e.g.,viAddStaticXform(scale,rot,deg,trans); */
-		active.tformName = std::string("static");
+		active.xformName = std::string("static");
 
 		// T*R*S
 		glm::mat4 thisTransform = glm::mat4(1.0f);
@@ -73,11 +73,11 @@ void ParseXform::parse(FILE *f, File::BART::active_def &active, const std::funct
 		thisTransform = glm::rotate( thisTransform, deg, rot );
 		thisTransform = glm::scale( thisTransform, scale );
 
-		active.tformTypeStack.push( File::BART::STATIC_TRANSFORM );
-		active.tformStack.push( active.tformMatrix );
-		active.tformMatrix *= thisTransform;
+		active.xformTypeStack.push( File::BART::STATIC_TRANSFORM );
+		active.xformStack.push( active.xformMatrix );
+		active.xformMatrix *= thisTransform;
 
-		pushNodeFunc( active.tformName, thisTransform);	
+		pushNodeFunc( active.xformName, thisTransform);	
 	}
 	else   /* keyframe animated transform */
 	{
@@ -92,25 +92,25 @@ void ParseXform::parse(FILE *f, File::BART::active_def &active, const std::funct
 		/* add an animated transform here
 		* e.g., viAddXform(name);
 		*/
-		active.tformName = std::string(name);
-		active.tformTypeStack.push( File::BART::ANIMATED_TRANSFORM );
+		active.xformName = std::string(name);
+		active.xformTypeStack.push( File::BART::ANIMATED_TRANSFORM );
 
-		pushNodeFunc( active.tformName, glm::mat4(1.f) );	
+		pushNodeFunc( active.xformName, glm::mat4(1.f) );	
 	}
 	
 }
 
 void ParseXform::end(File::BART::active_def &active, const std::function<void()> &popNodeFunc)
 {
-	if ( active.tformTypeStack.top() == File::BART::STATIC_TRANSFORM )
+	if ( active.xformTypeStack.top() == File::BART::STATIC_TRANSFORM )
 	{
-		if ( active.tformStack.size() == 0 ) 
+		if ( active.xformStack.size() == 0 ) 
 			throw std::runtime_error("no more to pop from matrix stack... will underflow...");
 
-		active.tformMatrix = active.tformStack.top();
-		active.tformStack.pop();
+		active.xformMatrix = active.xformStack.top();
+		active.xformStack.pop();
 	}
 
 	popNodeFunc();
-	active.tformTypeStack.pop();
+	active.xformTypeStack.pop();
 }

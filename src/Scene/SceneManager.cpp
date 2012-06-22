@@ -219,16 +219,27 @@ void SceneManager::initScene(	const File::AssetManagerPtr &asset_manager,
 	auto scene_dir = config.getString("load", "dir", "procedural\\");
 	auto scene_file = config.getString("load", "scene", "balls.nff");
 
-	auto nodes = bart_loader->load(scene_dir, scene_file);
-	for(auto it=begin(nodes); it!=end(nodes); ++it)
+	auto meshInstances = bart_loader->load(scene_dir, scene_file);
+	for(auto it=begin(meshInstances); it!=end(meshInstances); ++it)
 	{
-		auto &node = *it;
+		auto &instance = *it;
+		BARTMeshPtr node = BARTMeshPtr( new BARTMesh(instance.mesh) );
+		node->setMaterial( instance.material );
+		node->setObjectToWorldMatrix( instance.xform );
+		
+		if ( instance.textureFilename != "" ) {
+			Render::UniformPtr tex_sampler = std::make_shared<Render::Uniform>(this->getGBufferPass()->getShader()->getFS(), "diffuse_tex");
+			auto tex2d = asset_manager->getTex2DAbsolutePath( instance.textureFilename, true );
+			Render::SamplerPtr dummy_sampler; // TODO
+			node->setTexture(0, tex2d, tex_sampler, dummy_sampler ); 
+		}
+
 		node->setObjectToWorldUniform(	g_buffer_pass->getObjectToWorldUniform());
 		node->setWorldToViewUniform(	g_buffer_pass->getWorldToViewUniform());
 		node->setViewToClipUniform(		g_buffer_pass->getViewToClipUniform());
 		node->setNormalToViewUniform(	g_buffer_pass->getNormalToViewUniform());
 		//node->setTexture(array_tex, tex_sampler, array_sampler);
+
+		this->add( node );
 	}
-	for(unsigned int i = 0; i < nodes.size(); i++)
-		add(nodes[i]);
 }

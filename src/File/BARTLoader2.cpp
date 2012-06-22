@@ -26,20 +26,21 @@ BARTLoader2::BARTLoader2(const AssetManagerPtr &asset_manager, const std::string
 {
 }
 
-std::vector<Scene::BARTMeshPtr> &BARTLoader2::load(const std::string& sceneFolder, const std::string& mainSceneFile)
+std::vector<BART::NodeInstance_t> BARTLoader2::load(const std::string& sceneFolder, const std::string& mainSceneFile)
 {
 	this->sceneFolder = sceneFolder;
 	this->mainSceneFile = mainSceneFile;
 
 	detailLevel = 0;
 	mAnimations = nullptr;
-	active.tformMatrix = glm::mat4(1.0f);
+	active.xformMatrix = glm::mat4(1.0f);
 
 	pushNode("root", glm::mat4(1.0f));
 	parseFile(base_dir + sceneFolder + mainSceneFile);
 
-	flattenSceneGraph_r( sceneRoot, glm::mat4(1.f) );
-	return sceneNodeList;
+	std::vector<BART::NodeInstance_t> flattenedSceneGraph;
+	flattenSceneGraph_r( sceneRoot, glm::mat4(1.f), flattenedSceneGraph );
+	return flattenedSceneGraph;
 }
 
 //////////////////////////////////////////////////////////////
@@ -65,7 +66,7 @@ void BARTLoader2::pushNode(const std::string& name, const glm::mat4& localTransf
 	else if (name == "null") 
 	{ 
 		active.sceneNode->add( newNode );
-		newNode->tform = glm::mat4(1.f);
+		newNode->xform = glm::mat4(1.f);
 		active.sceneNode = newNode;
 		active.includefileToNodeMap[includeName] = active.sceneNode;
 	}
@@ -75,7 +76,7 @@ void BARTLoader2::pushNode(const std::string& name, const glm::mat4& localTransf
 		active.sceneNode = newNode;
 	}
 
-	active.sceneNode->tform = localTransform;
+	active.sceneNode->xform = localTransform;
 	active.sceneNode->fileScope = includeName;
 	active.nodeStack.push( active.sceneNode );
 
@@ -245,20 +246,22 @@ void BARTLoader2::setMaterialState_r( const BART::InternalSceneNodePtr& node )
 }
 
 
-void BARTLoader2::flattenSceneGraph_r( const BART::InternalSceneNodePtr &node, const glm::mat4 &parentXform /*bool flattenTransform*/)
+void BARTLoader2::flattenSceneGraph_r( const BART::InternalSceneNodePtr &node, const glm::mat4 &parentXform, std::vector<BART::NodeInstance_t> &flattenedSceneGraph)
 {
-	glm::mat4 combinedXform = parentXform * node->tform; // first apply local- then parent xform
+	glm::mat4 combinedXform = parentXform * node->xform; // first apply local- then parent xform
 	
 	if ( node->mesh.get() != nullptr )
 	{
-		auto finalMesh = std::make_shared<Scene::BARTMesh>( node->mesh );
-		finalMesh->setMaterial( node->material );
-		finalMesh->setObjectToWorldMatrix( combinedXform ); // still need to use global xform.
-		sceneNodeList.push_back( finalMesh );
+		BART::NodeInstance_t finalNode;
+		finalNode.mesh = node->mesh;
+		finalNode.material = node->material;
+		finalNode.textureFilename = node->textureFilename;
+		finalNode.xform = combinedXform;
+		flattenedSceneGraph.push_back( finalNode );
 	}
 
 	for(auto it=begin(node->children); it!=end(node->children); ++it )
-		flattenSceneGraph_r( *it, combinedXform );
+		flattenSceneGraph_r( *it, combinedXform, flattenedSceneGraph );
 }
 
 ////////////////////////////////////////////////////
@@ -277,14 +280,6 @@ void File::BART::InternalSceneNode::add( InternalSceneNodePtr child )
 	children.push_back(child);
 }
 
-void File::BART::InternalSceneNode::setMeshMaterial( const Scene::MeshDataPtr &mesh, const Render::MaterialPtr &material )
-{
-	if ( this->mesh.get() != nullptr ) {
-		throw std::runtime_error("tried set on InternalSceneNode that already has a mesh");
-	}
-	this->mesh = mesh;
-	this->material = material;
-}
 
 void File::BART::InternalSceneNode::visit(int spaces) 
 {

@@ -200,15 +200,7 @@ void ParseMesh::addMesh( const Scene::MeshDataPtr &meshData, File::BART::active_
 	if( active.sceneNode->name == "root" )
 		throw std::runtime_error("Active SceneNode was root when parsing mesh!");
 
-	//auto mesh = std::make_shared<Scene::BARTMesh>( meshData );
-	
-	//if ( active.texture != "" ) {
-	//	Render::UniformPtr tex_sampler = std::make_shared<Render::Uniform>(Kernel::getSingleton()->getSceneManager()->getGBufferPass()->getShader()->getFS(), "diffuse_tex");
-	//	auto tex2d = asset_manager->getTex2DAbsolutePath( active.texture, true );
-	//	Render::SamplerPtr dummy_sampler; // TODO
-	//	mesh->setTexture(0, tex2d, tex_sampler, dummy_sampler ); 
-	//}
-
-	//mesh->setMaterial( active.extMaterial );
-	active.sceneNode->setMeshMaterial( meshData, active.extMaterial );
+	active.sceneNode->mesh = meshData;
+	active.sceneNode->material = active.extMaterial;
+	active.sceneNode->textureFilename = active.texture;
 }
