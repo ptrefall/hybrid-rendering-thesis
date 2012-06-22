@@ -34,7 +34,7 @@ namespace File
 		// used for returning instances from load
 		struct NodeInstance_t
 		{
-			Scene::MeshDataPtr mesh;
+			Scene::MeshDataPtr meshData;
 			Render::MaterialPtr material;
 			std::string textureFilename;
 			glm::mat4 xform;

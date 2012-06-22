@@ -1,4 +1,4 @@
-#include "OptixTriMeshLoader.h"
+#include "Raytracer/OptixTriMeshLoader.h"
 
 #include <Optix/optixu/optixpp_namespace.h>
 #include <glm/glm.hpp>
@@ -6,7 +6,7 @@
 
 #include <Render/PBO.h>
 #include <Scene/proto_camera.h>
-#include <Scene/OptixMesh.h>
+#include <Scene/OptixInstance.h>
 #include <Scene/Mesh.h>
 #include <File/MeshLoader.h>
 #include <File/BARTLoader2.h>
@@ -264,11 +264,14 @@ private:
 		std::string model_dir = resource_dir + "models\\";
 		File::MeshLoader mesh_loader(model_dir);
 
-		auto geo_ico = OptixTriMeshLoader::fromMeshData(mesh_loader.loadMeshDataEasy("icosphere.3ds"), context, isect_program, bbox_program);
+		auto icosphereMeshData = mesh_loader.loadMeshDataEasy("icosphere.3ds");
+		
+		auto icoGeometryAndMesh = OptixTriMeshLoader::fromMeshData( icosphereMeshData, context, isect_program, bbox_program);
+		scene_instances.push_back( icoGeometryAndMesh.triMesh );
 		
 		// create ico sphere for each light
 		for (size_t i=0; i<lights.size(); ++i){
-			auto ico_instance = Scene::OptixMeshPtr( new Scene::OptixMesh(geo_ico.triMesh, geo_ico.rtGeo, top_level_group, debug_normals_material) );
+			auto ico_instance = Scene::OptixInstancePtr( new Scene::OptixInstance(icoGeometryAndMesh.rtGeo, top_level_group, debug_normals_material) );
 			ico_instance->setPosition( glm::vec3(lights[i].pos.x,lights[i].pos.y,lights[i].pos.z) );
 			scene_instances.push_back(ico_instance);
 			scene_light_meshes.push_back(ico_instance);
@@ -281,29 +284,18 @@ private:
 		asset_manager = File::AssetManagerPtr( new File::AssetManager(resource_dir) );
 		File::BARTLoader2 bart_loader( asset_manager, resource_dir+"bart_scenes\\" );
 
-		auto nodes = bart_loader.load(scene_dir, scene_file);
-		for(auto it=begin(nodes); it!=end(nodes); ++it)
+		auto bartNodes = bart_loader.load(scene_dir, scene_file);
+		for(auto it=begin(bartNodes); it!=end(bartNodes); ++it)
 		{
-			//Scene::SceneNodePtr &node = *it;
-			auto &node = *it;
-			Scene::MeshDataPtr meshData = node.mesh;
+			auto &bartNode = *it;
 			
-			//optix::Material mtl = phong_material;
-			//if ( meshData->name == "dragon.aff" ) {
-			//	mtl = glass_mat;
-			//}
+			auto geometryAndMesh = OptixTriMeshLoader::fromMeshData( bartNode.meshData , context, isect_program, bbox_program);
+			auto optixInstance = Scene::OptixInstancePtr( new Scene::OptixInstance( geometryAndMesh.rtGeo, recieve_shadow_group, debug_normals_material ) );
+			optixInstance->setObjectToWorldMatrix( bartNode.xform );
+			optixInstance->setMaterial( bartNode.material );
 
-			auto bartGeo = OptixTriMeshLoader::fromMeshData( meshData , context, isect_program, bbox_program);
-			auto instance = Scene::OptixMeshPtr( new Scene::OptixMesh( bartGeo.triMesh, bartGeo.rtGeo, recieve_shadow_group, debug_normals_material ) );
-			instance->setObjectToWorldMatrix( node.xform );
-			instance->setMaterial( node.material );
-			//instance->removeFromScene();
-			/*
-			if ( meshData->name != "dragon.aff" ) {
-				instance->removeFromScene();
-			}
-			*/
-			scene_instances.push_back(instance);
+			scene_instances.push_back(optixInstance);
+			scene_instances.push_back( geometryAndMesh.triMesh );
 		}
 		
 		top_level_acceleration->markDirty();
@@ -525,9 +517,8 @@ private:
 	optix::Acceleration              top_level_acceleration;
 	optix::Group                     recieve_shadow_group;
 	
-	std::vector<Scene::OptixMeshPtr> scene_instances;
-	std::vector<Scene::OptixMeshPtr> scene_light_meshes;
-	
+	std::vector<Scene::SceneNodePtr> scene_instances;
+	std::vector<Scene::SceneNodePtr> scene_light_meshes;
 
 	File::AssetManagerPtr            asset_manager;
 	

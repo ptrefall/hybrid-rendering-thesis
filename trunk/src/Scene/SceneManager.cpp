@@ -223,7 +223,7 @@ void SceneManager::initScene(	const File::AssetManagerPtr &asset_manager,
 	for(auto it=begin(meshInstances); it!=end(meshInstances); ++it)
 	{
 		auto &instance = *it;
-		BARTMeshPtr node = BARTMeshPtr( new BARTMesh(instance.mesh) );
+		BARTMeshPtr node = BARTMeshPtr( new BARTMesh(instance.meshData) );
 		node->setMaterial( instance.material );
 		node->setObjectToWorldMatrix( instance.xform );
 		
@@ -239,6 +239,9 @@ void SceneManager::initScene(	const File::AssetManagerPtr &asset_manager,
 		node->setViewToClipUniform(		g_buffer_pass->getViewToClipUniform());
 		node->setNormalToViewUniform(	g_buffer_pass->getNormalToViewUniform());
 		//node->setTexture(array_tex, tex_sampler, array_sampler);
+
+		//auto optixGeometry = geometryFromMeshData( instance.mesh );
+		//auto optixInstance = OptixInstancePtr( geo, top_level, instance.xform );
 
 		this->add( node );
 	}
