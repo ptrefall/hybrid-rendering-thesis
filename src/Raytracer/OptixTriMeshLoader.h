@@ -1,10 +1,7 @@
 #include <Optix/optixu/optixpp_namespace.h>
 #include <string>
 
-#include <Scene/Mesh.h>
-
-//struct MeshData;
-//typedef std::shared_ptr<MeshData> MeshDataPtr;
+#include "../Scene/Mesh.h"
 
 class OptixTriMeshLoader
 {

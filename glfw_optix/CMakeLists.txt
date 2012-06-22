@@ -37,8 +37,10 @@ file(GLOB 		  HYBRID_HEADER
 	${CMAKE_SOURCE_DIR}/src/Scene/SceneNode.h
 	${CMAKE_SOURCE_DIR}/src/Scene/Mesh.h
 	${CMAKE_SOURCE_DIR}/src/Scene/BARTMesh.h
-	${CMAKE_SOURCE_DIR}/src/Scene/OptixMesh.h
+	${CMAKE_SOURCE_DIR}/src/Scene/OptixInstance.h
 	${CMAKE_SOURCE_DIR}/src/File/MeshLoader.h
+
+	${CMAKE_SOURCE_DIR}/src/Raytracer/OptixTriMeshLoader.h
 )
 
 file(GLOB 		  HYBRID_SOURCE
@@ -60,8 +62,10 @@ file(GLOB 		  HYBRID_SOURCE
 	${CMAKE_SOURCE_DIR}/src/Scene/SceneNode.cpp
 	${CMAKE_SOURCE_DIR}/src/Scene/Mesh.cpp
 	${CMAKE_SOURCE_DIR}/src/Scene/BARTMesh.cpp
-	${CMAKE_SOURCE_DIR}/src/Scene/OptixMesh.cpp
+	${CMAKE_SOURCE_DIR}/src/Scene/OptixInstance.cpp
 	${CMAKE_SOURCE_DIR}/src/File/MeshLoader.cpp
+
+	${CMAKE_SOURCE_DIR}/src/Raytracer/OptixTriMeshLoader.cpp
 )
 
 file(GLOB_RECURSE OPTIX_SCRIPTS ${CMAKE_SOURCE_DIR}/bin/resources/glfw_optix/*.cu)

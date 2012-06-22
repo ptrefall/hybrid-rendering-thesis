@@ -253,7 +253,7 @@ void BARTLoader2::flattenSceneGraph_r( const BART::InternalSceneNodePtr &node, c
 	if ( node->mesh.get() != nullptr )
 	{
 		BART::NodeInstance_t finalNode;
-		finalNode.mesh = node->mesh;
+		finalNode.meshData = node->mesh;
 		finalNode.material = node->material;
 		finalNode.textureFilename = node->textureFilename;
 		finalNode.xform = combinedXform;

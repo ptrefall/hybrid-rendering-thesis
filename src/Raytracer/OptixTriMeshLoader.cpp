@@ -1,9 +1,9 @@
 #include "OptixTriMeshLoader.h"
 
-//using namespace OptixTriMeshLoader;
-
 OptixTriMeshLoader::OptixGeometryAndTriMesh_t OptixTriMeshLoader::fromMeshData(Scene::MeshDataPtr data, optix::Context rtContext, optix::Program &isect_program, optix::Program &bbox_program )
 {
+	// for convenience, use Scene::Mesh to create VBO's. 
+	// Just make sure someone keeps a pointer to it so its not destroyed
 	auto mesh = Scene::MeshPtr( new Scene::Mesh(data) );
 
 	int num_indices = data->indices.size();
