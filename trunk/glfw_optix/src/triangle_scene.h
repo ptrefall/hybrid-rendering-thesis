@@ -112,9 +112,7 @@ public:
 	void renderRaster()
 	{
 		//for ( size_t i=0; i<scene_instances.size(); ++i ){
-		//	if ( scene_instances[i]->getName() != "dragon.aff" ) {
-		//		scene_instances[i]->render( boring_shader );
-		//	}
+		//	scene_instances[i]->render( boring_shader );
 		//}
 	}
 

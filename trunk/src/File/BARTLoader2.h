@@ -24,7 +24,7 @@ namespace File
 		
 		
 		//std::vector<Scene::SceneNodePtr> &load(const std::string& sceneFolder, const std::string& mainSceneFile);
-		std::vector<Scene::BARTMeshPtr> &load(const std::string& sceneFolder, const std::string& mainSceneFile);
+		std::vector<BART::NodeInstance_t> load(const std::string& sceneFolder, const std::string& mainSceneFile);
 
 	private:
 		std::string base_dir;
@@ -45,7 +45,7 @@ namespace File
 		void parseInclude(FILE *fp);
 
 		void setMaterialState_r( const BART::InternalSceneNodePtr& node );
-		void flattenSceneGraph_r( const BART::InternalSceneNodePtr &node, const glm::mat4 &parentXform );
+		void flattenSceneGraph_r( const BART::InternalSceneNodePtr &node, const glm::mat4 &parentXform, std::vector<BART::NodeInstance_t> &flattenedSceneGraph );
 
 		///////////////////////////////////
 		// MISC INTERNAL PARSING DATA
