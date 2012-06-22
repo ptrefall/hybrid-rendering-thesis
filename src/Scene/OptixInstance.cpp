@@ -11,8 +11,12 @@
 using namespace Scene;
 using namespace glm;
 
-OptixInstance::OptixInstance(optix::Geometry &geo, optix::Group &parent_group, optix::Material &optix_material)
-					 : parent_group(parent_group)
+OptixInstance::OptixInstance( const Render::VAOPtr &vao, const Render::VBOPtr &vbo, const Render::IBOPtr &ibo, 
+	                          optix::Geometry &geo, optix::Group &parent_group, optix::Material &optix_material)
+					 : vao(vao)
+					 , vbo(vbo)
+					 , ibo(ibo)
+					 , parent_group(parent_group)
 					 , optix_material(optix_material)
 {
 	/////////////////////////////////

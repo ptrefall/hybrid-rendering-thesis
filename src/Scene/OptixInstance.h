@@ -3,6 +3,10 @@
 #include "SceneNode.h"
 
 #include "../Render/Shader.h"
+#include "../Render/VAO.h"
+#include "../Render/VBO.h"
+#include "../Render/IBO.h"
+
 #include <Optix/optixu/optixpp_namespace.h>
 
 #include <glm/glm.hpp>
@@ -16,7 +20,8 @@ namespace Scene
 	class OptixInstance : public SceneNode
 	{
 	public:
-		OptixInstance(optix::Geometry &geo, optix::Group &parent_group, optix::Material &optix_material);
+		OptixInstance( const Render::VAOPtr &vao, const Render::VBOPtr &vbo, const Render::IBOPtr &ibo, 
+			           optix::Geometry &geo, optix::Group &parent_group, optix::Material &optix_material);
 		virtual void render(const Render::ShaderPtr &active_program);
 		void setTexture(int slot, const Render::Tex2DPtr &tex, const std::string &uni_name) override;
 
@@ -56,5 +61,11 @@ namespace Scene
 		optix::Group            parent_group; // for top level group registration
 
 		optix::Group            dummy; // toggle rendering
+
+		// Keep pointers to GL objects around, 
+		// as they are used by optix::Geometry
+		Render::VAOPtr vao;
+		Render::VBOPtr vbo;
+		Render::IBOPtr ibo;
 	};
 }
