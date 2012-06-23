@@ -31,6 +31,7 @@ namespace Render
 		void unbind(unsigned int index_offset);
 
 		void reshape(unsigned int w, unsigned int h);
+		Raytracer::OptixRenderPtr &getRaytracer() { return raytracer; }
 	private:
 		GBuffer_PassPtr g_buffer_pass;
 		Raytracer::OptixRenderPtr raytracer;

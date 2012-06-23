@@ -77,9 +77,10 @@ void main( void )
 	out_FragColor = vec4( 
 		((diffuse * diffuse_mat[material_id] * NdotL) +
 		(specular_mat[material_id] * term) +
-		(diffuse * ambient_mat[material_id])) + ray.rgb, 
+		(diffuse * ambient_mat[material_id])) , 
 		1.0
 		);
+		//+ ray.rgb
 		
 	//out_FragColor = vec4( diffuse, 1.0 );
 	//out_FragColor = vec4( N, 1.0 );

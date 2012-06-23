@@ -6,6 +6,10 @@
 #include "Cube.h"
 #include "CubeSphere.h"
 #include "BARTMesh.h"
+#include "OptixInstance.h"
+#include "../Raytracer/OptixTriMeshLoader.h"
+#include "../Raytracer/OptixRender.h"
+#include "../Render/Passes/Raytrace/Raytrace_Pass.h"
 
 #include "../Render/Passes/Final/Final_Pass.h"
 #include "../Render/Passes/GBuffer/GBuffer_Pass.h"
@@ -14,6 +18,10 @@
 #include "../Render/DebugOutput.h"
 
 #include "../Parser/INIParser.h"
+
+#include <algorithm>
+#include <map>
+#include <ctime>
 
 using namespace Scene;
 
@@ -219,30 +227,89 @@ void SceneManager::initScene(	const File::AssetManagerPtr &asset_manager,
 	auto scene_dir = config.getString("load", "dir", "procedural\\");
 	auto scene_file = config.getString("load", "scene", "balls.nff");
 
-	auto meshInstances = bart_loader->load(scene_dir, scene_file);
-	for(auto it=begin(meshInstances); it!=end(meshInstances); ++it)
+	auto bartNodes = bart_loader->load(scene_dir, scene_file);
+	//std::vector<Scene::MeshDataPtr> meshPtrs;
+	//for(auto it=begin(bartNodes); it!=end(bartNodes); ++it)
+	//{
+	//	auto &bartNode = *it;
+	//	BARTMeshPtr node = BARTMeshPtr( new BARTMesh(bartNode.meshData) );
+	//	node->setMaterial( bartNode.material );
+	//	node->setObjectToWorldMatrix( bartNode.xform );
+
+	//	auto resIter = std::find( std::begin(meshPtrs), std::end(meshPtrs), bartNode.meshData );
+	//	if ( resIter == std::end(meshPtrs) ) {
+	//		meshPtrs.push_back( bartNode.meshData );
+	//	}
+	//	
+	//	if ( bartNode.textureFilename != "" ) {
+	//		Render::UniformPtr tex_sampler = std::make_shared<Render::Uniform>(this->getGBufferPass()->getShader()->getFS(), "diffuse_tex");
+	//		auto tex2d = asset_manager->getTex2DAbsolutePath( bartNode.textureFilename, true );
+	//		Render::SamplerPtr dummy_sampler; // TODO
+	//		node->setTexture(0, tex2d, tex_sampler, dummy_sampler ); 
+	//	}
+
+	//	node->setObjectToWorldUniform(	g_buffer_pass->getObjectToWorldUniform());
+	//	node->setWorldToViewUniform(	g_buffer_pass->getWorldToViewUniform());
+	//	node->setViewToClipUniform(		g_buffer_pass->getViewToClipUniform());
+	//	node->setNormalToViewUniform(	g_buffer_pass->getNormalToViewUniform());
+	//	//node->setTexture(array_tex, tex_sampler, array_sampler);
+
+	//	//auto optixGeometry = geometryFromMeshData( instance.mesh );
+	//	//auto optixInstance = OptixInstancePtr( geo, top_level, instance.xform );
+
+	//	this->add( node );
+	//}
+
+	// Key, Value
+	std::map<Scene::MeshDataPtr, OptixTriMeshLoader::OptixGeometryAndTriMesh_t> meshdata_optixmesh_map;
+	puts("converting scene data to optix and GL objects");
+
+	// We need a context to create rtGeometry, and programs
+	optix::Context context = raytrace_pass->getRaytracer()->getContext();
+	const std::string optix_dir = resource_dir + "\\Optix";
+	optix::Program isect_program = context->createProgramFromPTXFile( optix_dir+"\\triangle_mesh_small.cu.ptx", "mesh_intersect" );
+	optix::Program bbox_program = context->createProgramFromPTXFile( optix_dir+"\\triangle_mesh_small.cu.ptx", "mesh_bounds" );
+
+	// Create debug-normals Material Program, will later be replaced with anyhit for shadow
+	std::string path_to_ptx = optix_dir + "\\mat_normal.cu.ptx";
+	optix::Program closest_hit_program = context->createProgramFromPTXFile( path_to_ptx, "closest_hit_radiance" );
+	//optix::Program any_hit_program = context->createProgramFromPTXFile( path_to_ptx, "any_hit_radiance" );
+	optix::Material debug_normals_material = context->createMaterial();
+	debug_normals_material->setClosestHitProgram(0 /*radiance*/, closest_hit_program); // debug normals only uses closest hit.
+	//debug_normals_material->setAnyHitProgram(1 /*shadow*/, any_hit_program); // debug normals only uses closest hit.
+
+	// Create the group all trace-able geometry is to be a child of
+	optix::Group top_level_group = context->createGroup();
+	optix::Variable top_object = context->declareVariable("top_object");
+	top_object->set( top_level_group );
+	optix::Acceleration top_level_acceleration = context->createAcceleration("Bvh", "Bvh"); // can only use Bvh with current GLBO format
+	top_level_group->setAcceleration(top_level_acceleration);
+
+	for(auto it=begin(bartNodes); it!=end(bartNodes); ++it)
 	{
-		auto &instance = *it;
-		BARTMeshPtr node = BARTMeshPtr( new BARTMesh(instance.meshData) );
-		node->setMaterial( instance.material );
-		node->setObjectToWorldMatrix( instance.xform );
-		
-		if ( instance.textureFilename != "" ) {
-			Render::UniformPtr tex_sampler = std::make_shared<Render::Uniform>(this->getGBufferPass()->getShader()->getFS(), "diffuse_tex");
-			auto tex2d = asset_manager->getTex2DAbsolutePath( instance.textureFilename, true );
-			Render::SamplerPtr dummy_sampler; // TODO
-			node->setTexture(0, tex2d, tex_sampler, dummy_sampler ); 
+		auto &bartNode = *it;
+						
+		auto foundit = meshdata_optixmesh_map.find( bartNode.meshData );
+		if ( foundit == meshdata_optixmesh_map.end() ) {
+			
+			meshdata_optixmesh_map[bartNode.meshData] = OptixTriMeshLoader::fromMeshData( bartNode.meshData , context, isect_program, bbox_program );
 		}
 
-		node->setObjectToWorldUniform(	g_buffer_pass->getObjectToWorldUniform());
-		node->setWorldToViewUniform(	g_buffer_pass->getWorldToViewUniform());
-		node->setViewToClipUniform(		g_buffer_pass->getViewToClipUniform());
-		node->setNormalToViewUniform(	g_buffer_pass->getNormalToViewUniform());
-		//node->setTexture(array_tex, tex_sampler, array_sampler);
+		auto triMesh = meshdata_optixmesh_map[bartNode.meshData].triMesh;
+		auto rtGeo = meshdata_optixmesh_map[bartNode.meshData].rtGeo;
+		auto optixInstance = Scene::OptixInstancePtr( 
+				                new Scene::OptixInstance( triMesh->getVao(), triMesh->getVbo(), triMesh->getIbo(), 
+								                        rtGeo, top_level_group, debug_normals_material ) );
+		optixInstance->setObjectToWorldMatrix( bartNode.xform );
+		optixInstance->setMaterial( bartNode.material );
 
-		//auto optixGeometry = geometryFromMeshData( instance.mesh );
-		//auto optixInstance = OptixInstancePtr( geo, top_level, instance.xform );
-
-		this->add( node );
+		this->add(optixInstance);
 	}
+
+	puts("compiling context...");
+	clock_t timeStart = clock();
+	raytrace_pass->getRaytracer()->compileContext();
+	clock_t timeEnd = clock()-timeStart;
+	std::cout << "optix compile took " << timeEnd/(double)CLOCKS_PER_SEC << " seconds " << std::endl;
+
 }

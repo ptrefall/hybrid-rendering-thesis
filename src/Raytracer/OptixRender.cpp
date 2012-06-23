@@ -14,34 +14,43 @@
 using namespace Raytracer;
 using namespace optix;
 
+
+
 OptixRender::OptixRender(const Render::GBuffer_PassPtr &g_buffer_pass, unsigned int width, unsigned int height, const std::string& baseDir)
 	: g_buffer_pass(g_buffer_pass), width(width), height(height), baseDir(baseDir)
 {
     context = minimalCreateContext();
 
-	optix::Program ray_gen_program = context->createProgramFromPTXFile( baseDir + "g_buffer.cu.ptx", "gbuffer_compose" );
-	context->setRayGenerationProgram( 0, ray_gen_program );
+	std::string path_to_ptx = baseDir + "pinhole_camera.cu.ptx";
+	optix::Program ray_gen_program = context->createProgramFromPTXFile( path_to_ptx, "pinhole_camera" );
+	context->setRayGenerationProgram(0, ray_gen_program);
+
 	unsigned int screenDims[] = {width,height};
 	ray_gen_program->declareVariable("rtLaunchDim")->set2uiv( screenDims );
 	createGBuffers();
 	context["g_buffer_diffuse"]->set(g_buffer_diffuse);
 	context["g_buffer_position"]->set(g_buffer_position);
 	context["g_buffer_normal"]->set(g_buffer_normal);
-    
-    // First Run, trap any exceptions before mainloop
+}
+
+void OptixRender::compileContext()
+{
+	// First Run, trap any exceptions before mainloop
 	try{
 		context->validate();
 		context->compile();
 		context->launch( 0, width, height);
 	}catch(const optix::Exception &e){
 		std::cout << e.getErrorString();
+		system("pause");
+		exit(1);
 	}
 }
 
 optix::Context OptixRender::minimalCreateContext()
 {
 	Context context = Context::create();
-	context->setRayTypeCount( 1 );
+	context->setRayTypeCount( 1 ); // radiance only for now
 	context->setEntryPointCount( 1 );
 
 	return context;

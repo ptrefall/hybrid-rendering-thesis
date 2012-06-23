@@ -37,7 +37,6 @@ namespace Render
 		void reshape(unsigned int w, unsigned int h);
 
 		ShaderPtr getShader() const { return shader; }
-		void reloadShaders();
 
 		MaterialPtr addMaterial(const MaterialPtr &material) { materials.push_back(material); return material; }
         void setRayTexture(const Render::Tex2DPtr &tex, const Render::UniformPtr &uniform);

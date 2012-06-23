@@ -94,12 +94,6 @@ void Final_Pass::reshape(unsigned int w, unsigned int h)
 	this->h = h; 
 }
 
-void Final_Pass::reloadShaders()
-{
-	puts("reload");
-	shader = shader_loader->load("deferredRendering.vs", std::string(), "deferredRendering.fs");
-}
-
 void Final_Pass::setRayTexture(const Render::Tex2DPtr &tex, const Render::UniformPtr &uniform)
 {
     this->tex = tex;
