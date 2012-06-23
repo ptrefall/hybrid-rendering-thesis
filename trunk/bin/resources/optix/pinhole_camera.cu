@@ -1,25 +1,6 @@
 
-/*
- * Copyright (c) 2008 - 2009 NVIDIA Corporation.  All rights reserved.
- *
- * NVIDIA Corporation and its licensors retain all intellectual property and proprietary
- * rights in and to this software, related documentation and any modifications thereto.
- * Any use, reproduction, disclosure or distribution of this software and related
- * documentation without an express license agreement from NVIDIA Corporation is strictly
- * prohibited.
- *
- * TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THIS SOFTWARE IS PROVIDED *AS IS*
- * AND NVIDIA AND ITS SUPPLIERS DISCLAIM ALL WARRANTIES, EITHER EXPRESS OR IMPLIED,
- * INCLUDING, BUT NOT LIMITED TO, IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
- * PARTICULAR PURPOSE.  IN NO EVENT SHALL NVIDIA OR ITS SUPPLIERS BE LIABLE FOR ANY
- * SPECIAL, INCIDENTAL, INDIRECT, OR CONSEQUENTIAL DAMAGES WHATSOEVER (INCLUDING, WITHOUT
- * LIMITATION, DAMAGES FOR LOSS OF BUSINESS PROFITS, BUSINESS INTERRUPTION, LOSS OF
- * BUSINESS INFORMATION, OR ANY OTHER PECUNIARY LOSS) ARISING OUT OF THE USE OF OR
- * INABILITY TO USE THIS SOFTWARE, EVEN IF NVIDIA HAS BEEN ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGES
- */
 
-#include "Optix/optix_world.h"
+#include <Optix/optix_world.h>
 #include "helpers.h"
 
 using namespace optix;
@@ -31,20 +12,30 @@ struct PerRayData_radiance
   int    depth;
 };
 
+struct PerRayData_shadow
+{
+  float attenuation;
+};
+
 rtDeclareVariable(float3,        eye, , );
 rtDeclareVariable(float3,        U, , );
 rtDeclareVariable(float3,        V, , );
 rtDeclareVariable(float3,        W, , );
 rtDeclareVariable(float3,        bad_color, , );
 rtDeclareVariable(float,         scene_epsilon, , );
-rtBuffer<uchar4, 2>              output_buffer;
+
+//rtBuffer<uchar4, 2>              output_buffer;
+rtBuffer<uchar4, 2>   g_buffer_diffuse;
+rtBuffer<float4, 2>   g_buffer_position;
+rtBuffer<float4, 2>   g_buffer_normal;
+
 rtDeclareVariable(rtObject,      top_object, , );
 rtDeclareVariable(unsigned int,  radiance_ray_type, , );
 
 rtDeclareVariable(uint2, launch_index, rtLaunchIndex, );
 rtDeclareVariable(uint2, launch_dim,   rtLaunchDim, );
 rtDeclareVariable(float, time_view_scale, , ) = 1e-6f;
-
+rtDeclareVariable(float, fTime, , ); 
 //#define TIME_VIEW
 
 
@@ -65,20 +56,27 @@ RT_PROGRAM void pinhole_camera()
 
   rtTrace(top_object, ray, prd);
 
-#ifdef TIME_VIEW
-  clock_t t1 = clock(); 
- 
-  float expected_fps   = 1.0f;
-  float pixel_time     = ( t1 - t0 ) * time_view_scale * expected_fps;
-  output_buffer[launch_index] = make_color( make_float3(  pixel_time ) ); 
-#else
-  output_buffer[launch_index] = make_color( prd.result );
-#endif
+  //g_buffer_diffuse[launch_index] = make_color( prd.result );
+
+	//g_buffer_diffuse[launch_index].x = g_buffer_diffuse[launch_index].x;
+	//g_buffer_diffuse[launch_index].y = g_buffer_diffuse[launch_index].y;
+	//g_buffer_diffuse[launch_index].z = g_buffer_diffuse[launch_index].z;
+	//g_buffer_diffuse[launch_index].w = g_buffer_diffuse[launch_index].w;
+
+	//g_buffer_position[launch_index].x = g_buffer_position[launch_index].x;
+	//g_buffer_position[launch_index].y = g_buffer_position[launch_index].y;
+	//g_buffer_position[launch_index].z = g_buffer_position[launch_index].z;
+	//g_buffer_position[launch_index].w = g_buffer_position[launch_index].w;
+
+	//g_buffer_normal[launch_index].x = g_buffer_normal[launch_index].x;
+	//g_buffer_normal[launch_index].y = g_buffer_normal[launch_index].y;
+	//g_buffer_normal[launch_index].z = g_buffer_normal[launch_index].z;
+	//g_buffer_normal[launch_index].w = g_buffer_normal[launch_index].w;
 }
 
-RT_PROGRAM void exception()
-{
-  const unsigned int code = rtGetExceptionCode();
-  rtPrintf( "Caught exception 0x%X at launch index (%d,%d)\n", code, launch_index.x, launch_index.y );
-  output_buffer[launch_index] = make_color( bad_color );
-}
+//RT_PROGRAM void exception()
+//{
+//  const unsigned int code = rtGetExceptionCode();
+//  rtPrintf( "Caught exception 0x%X at launch index (%d,%d)\n", code, launch_index.x, launch_index.y );
+//  g_buffer_diffuse[launch_index] = make_color( bad_color );
+//}

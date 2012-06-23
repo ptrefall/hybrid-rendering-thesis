@@ -25,6 +25,8 @@ namespace Raytracer
 		void render();
 		void reshape(unsigned int width, unsigned int height);
 
+		optix::Context getContext() { return context; }; 
+		void compileContext();
 	private:
         Render::GBuffer_PassPtr g_buffer_pass;
 		unsigned int width;

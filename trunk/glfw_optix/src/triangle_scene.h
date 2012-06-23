@@ -16,6 +16,8 @@
 
 #include "commonStructs.h"
 
+#include <map>
+
 struct light_t{
 	glm::vec3 pos; // 12
 	glm::vec3 color; // 12
@@ -54,7 +56,7 @@ public:
 
 	void launch()
 	{
-		context->launch(0, width, height );
+		context->launch( 0, width, height);
 	}
 
 	void compileScene()
@@ -285,15 +287,24 @@ private:
 		File::BARTLoader2 bart_loader( asset_manager, resource_dir+"bart_scenes\\" );
 
 		auto bartNodes = bart_loader.load(scene_dir, scene_file);
+		// Key, Value
+		std::map<Scene::MeshDataPtr, OptixTriMeshLoader::OptixGeometryAndTriMesh_t> meshdata_optixmesh_map;
+		puts("converting scene data to optix and GL objects");
 		for(auto it=begin(bartNodes); it!=end(bartNodes); ++it)
 		{
 			auto &bartNode = *it;
 			
-			auto geometryAndMesh = OptixTriMeshLoader::fromMeshData( bartNode.meshData , context, isect_program, bbox_program );
-			auto triMesh = geometryAndMesh.triMesh;
+			
+			auto foundit = meshdata_optixmesh_map.find( bartNode.meshData );
+			if ( foundit == meshdata_optixmesh_map.end() ) {
+				meshdata_optixmesh_map[bartNode.meshData] = OptixTriMeshLoader::fromMeshData( bartNode.meshData , context, isect_program, bbox_program );
+			}
+
+			auto triMesh = meshdata_optixmesh_map[bartNode.meshData].triMesh;
+			auto rtGeo = meshdata_optixmesh_map[bartNode.meshData].rtGeo;
 			auto optixInstance = Scene::OptixInstancePtr( 
 				                 new Scene::OptixInstance( triMesh->getVao(), triMesh->getVbo(), triMesh->getIbo(), 
-								                           geometryAndMesh.rtGeo, recieve_shadow_group, debug_normals_material ) );
+								                           rtGeo, recieve_shadow_group, debug_normals_material ) );
 			optixInstance->setObjectToWorldMatrix( bartNode.xform );
 			optixInstance->setMaterial( bartNode.material );
 
