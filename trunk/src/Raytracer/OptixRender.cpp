@@ -21,12 +21,19 @@ OptixRender::OptixRender(const Render::GBuffer_PassPtr &g_buffer_pass, unsigned 
 {
     context = minimalCreateContext();
 
+	// Create a single raygen program
 	std::string path_to_ptx = baseDir + "pinhole_camera.cu.ptx";
 	optix::Program ray_gen_program = context->createProgramFromPTXFile( path_to_ptx, "pinhole_camera" );
 	context->setRayGenerationProgram(0, ray_gen_program);
 
 	unsigned int screenDims[] = {width,height};
 	ray_gen_program->declareVariable("rtLaunchDim")->set2uiv( screenDims );
+
+	// Create miss program. might be necessary
+	path_to_ptx = baseDir + "constantbg.cu.ptx";
+	optix::Program miss_program = context->createProgramFromPTXFile( path_to_ptx, "miss" );
+	context->setMissProgram(0, miss_program );
+
 	createGBuffers();
 	context["g_buffer_diffuse"]->set(g_buffer_diffuse);
 	context["g_buffer_position"]->set(g_buffer_position);

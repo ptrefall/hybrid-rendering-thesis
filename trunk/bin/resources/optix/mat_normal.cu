@@ -28,3 +28,4 @@ RT_PROGRAM void any_hit_radiance()
 {
 	prd_shadow.attenuation = 0.f;
 }
+
