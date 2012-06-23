@@ -61,18 +61,19 @@ RT_PROGRAM void pinhole_camera()
 	//g_buffer_diffuse[launch_index].x = g_buffer_diffuse[launch_index].x;
 	//g_buffer_diffuse[launch_index].y = g_buffer_diffuse[launch_index].y;
 	//g_buffer_diffuse[launch_index].z = g_buffer_diffuse[launch_index].z;
-	//g_buffer_diffuse[launch_index].w = g_buffer_diffuse[launch_index].w;
+	g_buffer_diffuse[launch_index].w = static_cast<unsigned char>(prd.result.x*255.f);
 
 	//g_buffer_position[launch_index].x = g_buffer_position[launch_index].x;
 	//g_buffer_position[launch_index].y = g_buffer_position[launch_index].y;
 	//g_buffer_position[launch_index].z = g_buffer_position[launch_index].z;
-	//g_buffer_position[launch_index].w = g_buffer_position[launch_index].w;
+	g_buffer_position[launch_index].w = prd.result.y;
 
 	//g_buffer_normal[launch_index].x = g_buffer_normal[launch_index].x;
 	//g_buffer_normal[launch_index].y = g_buffer_normal[launch_index].y;
 	//g_buffer_normal[launch_index].z = g_buffer_normal[launch_index].z;
 	//g_buffer_normal[launch_index].w = g_buffer_normal[launch_index].w;
 }
+
 
 //RT_PROGRAM void exception()
 //{
