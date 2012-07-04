@@ -1,12 +1,60 @@
 \documentclass[10pt,a4paper,oneside]{article}
 \usepackage[latin1]{inputenc}   % Støtte for direkte input av norske tegn
+\usepackage{graphicx}
 \begin{document}
 
 \include{0/frontpage}
 \include{0/abstract}
-\include{1/chapter1}
+
+\tableofcontents
+
+%\include{sandbox/sandbox}
+\include{previous_work/previous_work}
+\include{opengl3/opengl3}
+\include{optix/optix}
+\include{optix_gl_interop/optix_gl_interop}
+\include{our_hybrid_renderer/our_hybrid_renderer}
+\include{further_work/further_work}
+
+
+\begin{thebibliography}{9}
+
+%\bibitem{cite_mnemonic}
+% Author
+% Paper title
+% publisher
+% edition
+% year of publication
+
+\bibitem{nvidiarobison09}
+	Robison, Austing and Shirley, Peter,
+	Image space gathering,
+	HPG '09: Proceedings of the Conference on High Performance Graphics 2009
+
+\bibitem{joao10}
+  João Cabeleira,
+	Combining Rasterization and Ray Tracing Techniques to Approximate Global Illumination in Real-Time
+  Instituto Superior Técnico,
+  www.voltaico.net
+  2010
+  
+\bibitem{nv2012}
+  Nvidia Corporation,
+  OptiX Ray Tracing Engine
+  Programming Guide version 2.5
+  27. January 2012
+
+\bibitem{Parker10OptiX}
+  Parker et al.,
+  OptiX: A General Purpose Ray Tracing Engine
+  ACM 2010
+  
+\bibitem{Mania2008}
+	K. Mania and E. Reinhard
+	Improving Interaction Performance for Ray Tracing
+	Eurographics Short Paper
+	2008
+
+\end{thebibliography}
 
 \end{document}
-
-% special latex characters: # $ % ^ & _ { } ~ \
-% can be added in your documents using a prefix backslash
