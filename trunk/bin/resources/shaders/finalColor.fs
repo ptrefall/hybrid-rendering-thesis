@@ -74,13 +74,10 @@ void main( void )
 	float shininess = pp_t_ior_mat[material_id].r;
 	float term = compute_gauss_term(N, L, V, NdotL, shininess);
 	
-	float diff_alpha = texture( TEX_DIFF, Vertex.t ).a;
-	float pos_alpha  = texture( TEX_POS,  Vertex.t ).a;
-	vec3 toys = vec3( diff_alpha,pos_alpha,0);
+	float shadow_att = texture( TEX_DIFF, Vertex.t ).a; // from Optix
+
 	out_FragColor = vec4( 
-		((diffuse * diffuse_mat[material_id] * NdotL) +
-		(specular_mat[material_id] * term) +
-		(diffuse * ambient_mat[material_id])) +toys, 
+		((diffuse * diffuse_mat[material_id] * NdotL) + (specular_mat[material_id] * term) + (diffuse * ambient_mat[material_id])), 
 		1.0
 		);
 		//+ ray.rgb

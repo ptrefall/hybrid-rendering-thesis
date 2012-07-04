@@ -15,7 +15,7 @@ GBuffer_Pass::GBuffer_Pass(const File::ShaderLoaderPtr &shader_loader, unsigned 
 	fbo = std::make_shared<FBO>(w,h);
 	
 	//Add render targets
-	fbo->add(GL_COLOR_ATTACHMENT0, std::make_shared<RT>(GL_RGBA8, w,h));					//Diffuse
+	fbo->add(GL_COLOR_ATTACHMENT0, std::make_shared<RT>(GL_RGBA8, w,h));				//Diffuse
 	fbo->add(GL_COLOR_ATTACHMENT1, std::make_shared<RT>(GL_RGBA32F, w,h));				//Position
 	fbo->add(GL_COLOR_ATTACHMENT2, std::make_shared<RT>(GL_RGBA32F, w,h));				//Normal
 	fbo->add(GL_DEPTH_ATTACHMENT,  std::make_shared<RT>(GL_DEPTH_COMPONENT24, w,h));	//Depth

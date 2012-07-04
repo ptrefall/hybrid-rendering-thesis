@@ -29,3 +29,8 @@ RT_PROGRAM void any_hit_radiance()
 	prd_shadow.attenuation = 0.f;
 }
 
+RT_PROGRAM void any_hit_shadow()
+{
+  prd_shadow.attenuation = 0.0f;
+  rtTerminateRay();
+}

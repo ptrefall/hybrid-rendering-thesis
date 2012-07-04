@@ -22,7 +22,7 @@ namespace Scene
 	public:
 		Mesh(MeshDataPtr data);
 
-		virtual void render(const Render::ShaderPtr &active_program) {};
+		virtual void render(const Render::ShaderPtr &active_program);
 		Render::VAOPtr getVao(){return vao;}
 		Render::VBOPtr getVbo(){return vbo;}
 		Render::IBOPtr getIbo(){return ibo;}
