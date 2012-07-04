@@ -9,9 +9,13 @@ Optix can be seen as a framework for launching rays. It doesn't know anything ab
 \paragraph{There are eight} different types of user provided programs in OptiX. These programs are implemented using the CUDA C-language. They all operate on a single ray at a time, except for the bounds program, which is used to determine bounds for acceleration structure construction. For triangle geometry, Optix can access individual vertices of a mesh for constructing a k-dimensional-tree (kdtree) or split bounding volume hiearchy (sbvh).
 
 \begin{enumerate}
-	\item {\textbf{Ray generation} programs (``raygen'' from here on) are launched by the client program using rtContextLaunch(rayProgramIndex, with, height). This invokes many raygen programs in parallel. The raygen is the main entry point into the raytracing pipeline. Input and output buffers are declared inside. You can use a single raygen program as a general compute shader, but the intended use is to implement a camera model by initializing ray origin and direction. After a ray has been initialized, ''rtTrace(startNode,ray,payload'' can be called, and will trace all of start nodes children. }
+	\item {
+	\textbf{Ray generation}
+	              programs (``raygen'' from here on) are launched by the client program using rtContextLaunch(rayProgramIndex, with,                       height). This invokes many raygen programs in parallel. The raygen is the main entry point into the raytracing pipeline.                 Input and output buffers are declared inside. You can use a single raygen program as a general compute shader, but the                   intended use is to implement a camera model by initializing ray origin and direction. After a ray has been initialized,                  ''rtTrace(startNode,ray,payload'' can be
+	              called, and will trace all of start nodes children. 
+	      }
 
-	\item{\textbf{Exeption} programs - occurs when the system encounters problems like out of stack space, or buffer access index is out of range. Also supports user-defined exceptions that can be 	thrown from any program. Can react by printing diagnostic messages or writing specific color values to an output buffer.}
+	\item{\textbf{Exeption} programs are invoked when the system encounters problems like out of stack space, or buffer access index is                   out of range. Also supports user-defined exceptions that can be 	thrown from any program. Can react by printing                         diagnostic messages or   writing specific color values to an output buffer.}
 
 	\item{\textbf{Closest hit} programs are invoked once traversal has found the closest interseciton of a ray with scene geometry.}
 
@@ -27,8 +31,10 @@ Optix can be seen as a framework for launching rays. It doesn't know anything ab
 	\item {\textbf{Intersection}
                 programs are needed to describe geometry. The program must at least report if and where the ray touches the object, 
                 additional computations may involve normals, texture coordinates and other attributes based on hit position.
-								Intersection programs allow you to trace perfect spheres, cylinders, cubes, CSG-surfaces, parametric surfaces like
-								Bezier and NURBS or even fractal geometries. }
+								Intersection programs allow you to trace perfect spheres, cylinders, cubes,  CSG-surfaces, parametric surfaces like
+								Bezier and NURBS, fractals and of cource triangle meshes. Parker \cite{Parker10OptiX} notes \begin{quote} programmable intersection op-
+eration facilitates direct access to the native format, which can help
+avoid copies when interoperating with rasterization-based systems.\end{quote} In our program we store vertex attributes continously (first all positions, then all normals, etc.) as opposed to storing them interleaved (one position, one normal and so on). Unfortunately, the built in acceleration sbvh and kdtree builders expect triangle geometry to be interleaved, so we settled for the generic bvh builder.}
 	
 	\item{\textbf{Selector}
 								visit programs gives on control over graph traversal.
@@ -44,10 +50,12 @@ The closest hit, any hit and miss programs determine shading. The raygen, select
 			 
 \subsection{Client-side API}
 
-To begin raytracing a scene ``rtContextLaunch( raygenIdx, width, height )'' is called with a given Rey Generation Program index as a parameter. From the ray generation program ``rtTrace( startNode, ray, payload )'' is given the root scene node for traversal. During traversal, if a node a nodes associated selector and acceleration program is run.
+To begin raytracing a scene ``rtContextLaunch( raygenIdx, width, height )'' is called with a given Rey Generation Program index as a parameter. From the ray generation program ``rtTrace( rootNode, ray, payload )'' is given the root scene node for traversal. During traversal, if a node a nodes associated selector and acceleration program is run.
 If the acceleration traverser determines that a primitive node is hit, it invokes the primtives intersection program.
 If the Intersection program calles ``rtReportIntersection'', the primitives associated ``material'' Any Hit Program is called.
 If the ray doesn't hit anything, a miss program is called. The missprogram is allways required.
+
+\subsection{CUDA program API}
 
 \paragraph{A simple raygen program:}
 

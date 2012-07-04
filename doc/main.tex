@@ -1,4 +1,9 @@
-\documentclass[10pt,a4paper,oneside]{article}
+\documentclass[10pt,a4paper,oneside]{article} %report expects chapters?
+
+% http://en.wikibooks.org/wiki/LaTeX/Page_Layout
+%\pdfpagewidth = 441 % 441x666 
+%\pdfpageheight = 666
+
 \usepackage[latin1]{inputenc}   % Støtte for direkte input av norske tegn
 \usepackage{graphicx} % for \includegraphics
 \usepackage{hyperref} % for click-able TOC links and \cite's in PDF
@@ -16,9 +21,12 @@
 
 %\include{sandbox/sandbox}
 \include{previous_work/previous_work}
+% What is raytracing?
+% What is deferred rendering?
 \include{opengl3/opengl3}
 \include{optix/optix}
 \include{optix_gl_interop/optix_gl_interop}
+% BART project and scenes
 \include{our_hybrid_renderer/our_hybrid_renderer}
 \include{further_work/further_work}
 
