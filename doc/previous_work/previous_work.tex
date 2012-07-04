@@ -1,5 +1,12 @@
 \section{Previous work}
 
+There are few commercial rendering engines that combine rasterization and raytracing. Virtually all computer games use rasterization. The demand for graphical fidelidy has driven the development of programmable GPUs. For some time now, it has been possible to implement direct/Whitted-style and pathtracing on a GPU.
+
+Exampels of real time direct raytracing engines. Manta, Razor, Arauna.
+Examples of real time path tracing engines. SmallPT, Brigade.
+
+Examples of hybrid engines; Pixar's REYES
+
 \paragraph{Hybrid shadows} renders world space positions to a texture. Texture is loaded into optix, from there a ray is traced from each world space position against all lights. Attenuates given world space position and saves attenuation value in a shadowmap.
 
 \paragraph{ISG Shadows} Image Space Gathering \cite{nvidiarobison09}
