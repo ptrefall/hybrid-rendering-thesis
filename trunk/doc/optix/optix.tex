@@ -1,13 +1,76 @@
 \section{OptiX}
 
-\subsection{Deferred pipeline}
+OptiX is a closed source raytracing engine designed by Nvidia, and currently only works on their own GPUs.
 
-\subsection{CameraModel}
-The raytracer uses pinhole camera model. The eye is a point, rays are cast from this point, through the viewplane and into the scene. Eyepoint-viewplane distance determines focal length. A rasterizer on the other hand requires a projection matrix.
+Optix can be seen as a framework for launching rays. It doesn't know anything about lights, shadows, ambient occlusion or any other rendering detail for that matter. What it does know is; rays, acceleration structures, scene representation (not a traditional scene hiearchy) and scene traversers. What makes OptiX interesting is programmability; a variety of ray tracing-based algorithms in graphics and non-graphics domains can be implemented \cite{Parker10OptiX} by creating custom programs.
 
-\subsection{Geometry}
+\paragraph{There are eight} different types of user provided programs in OptiX. These programs are implemented using the CUDA C-language. They all operate on a single ray at a time, except for the bounds program, which is used to determine bounds for acceleration structure construction. For triangle geometry, Optix can access individual vertices of a mesh for constructing a k-dimensional-tree (kdtree) or split bounding volume hiearchy (sbvh).
 
-Traditional triangle meshes with vertex attributes (normals, texture coordinates etc)
+\begin{enumerate}
+	\item {\textbf{Ray generation} programs are the entry into the ray tracing pipeline. Input and output buffers are declares inside. You can a single raygen program as a general compute shader. The intended use is to initializes ray origin and direction and then trace into the scene from a given node. Raygen programs can be used to implement a camera model. A ray generation program will create start your camera program for a given input pixel, start the trace operation using rtTrace, and store the final color in an output buffer. Calling the client function rtContextLaunch invokes many raygen programs in parallel.}
 
-\subsection{Various hybrid configurations}
+	\item{\textbf{Exeption} programs - occurs when the system encounters problems like out of stack space, or buffer access index is out of range. Also supports user-defined exceptions that can be 	thrown from any program. Can react by printing diagnostic messages or writing specific color values to an output buffer.}
 
+	\item{\textbf{Closest hit} programs are invoked once traversal has found the closest interseciton of a ray with scene geometry.}
+
+	\item{\textbf{Any hit}
+								allow shading to be kept seperate from geometry.
+								May call rtTerminateRay and stop all traversal. Early ray termination for shadowrays and AO.
+								Also useful for binary transparency by texture look up.
+								Default any hit program is a no-op, often the most desired operation.}
+
+	\item{\textbf{Miss}
+								programs are called when a ray did not intersect any geometry.}
+
+
+
+	\item {\textbf{Intersection}
+								programs are needed to describe geometry. The program must at least report if and where the ray touches the object, 
+								additional computations may involve normals, texture coordinates and other attributes based on hit position.
+								Intersection programs allow you to trace perfect spheres, cylinders, cubes, CSG-surfaces, parametric surfaces like
+								Bezier and NURBS or even fractal geometries. }
+	
+	\item{\textbf{Selector}
+								visit programs gives on control over graph traversal.
+								The program can do traversals based on data stored in a visitor programs payload and make a traversal decision based 	on that data.}
+
+ \item{\textbf{Bounding box}
+ 							 programs obviously compute the bounds associated with each primtive to enable acceleration structures over any geometry.
+ 							 The bounding box program takes a primtive index and computes its bounds. From the client api, a node is associated a given bounds program. }
+ 				
+\end{enumerate}
+			 
+\paragraph{The API}
+
+To begin raytracing a scene ``rtContextLaunch'' is called with a given Rey Generation Program index as a parameter. From the ray generation program ``rtTrace'' is given the root scene node for traversal. During traversal, if a node a nodes associated selector and acceleration program is run.
+
+\par
+If the acceleration traverser determines that a primitive node is hit, it invokes the primtives intersection program.
+
+\par
+If the Intersection program calles ``rtReportIntersection'', the primitives associated ``material'' Any Hit Program is called.
+
+\par
+If the ray doesn't hit anything, a miss program is called. The missprogram is allways required.
+
+Scene Traversal
+\begin{itemize}
+\item Selector Visit program
+\item ntersection program (hit geometry, time to run shade program)
+\end{itemize}
+
+Shading programs
+\begin{itemize}
+	\item Miss program
+  \item Closest Hit program
+  \item Any hit program
+\end{itemize}
+
+\begin{verbatim}
+RT_PROGRAM void pinhole_camera() {
+Ray ray = PinholeCamera::makeRay( launchIndex );
+UserPayload payload;
+rtTrace( topObject, ray, payload );
+outputBuffer[launchIndex] = payload.result;
+}
+\end{verbatim}
