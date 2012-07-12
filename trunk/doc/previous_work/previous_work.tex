@@ -1,4 +1,4 @@
-\section{Previous work}
+\part{Previous work}
 
 There are few commercial rendering engines that combine rasterization and raytracing. Virtually all computer games use rasterization. The demand for graphical fidelidy has driven the development of programmable GPUs. For some time now, it has been possible to implement direct/Whitted-style and pathtracing on a GPU.
 
@@ -12,3 +12,100 @@ Examples of hybrid engines; Pixar's REYES
 \paragraph{ISG Shadows} Image Space Gathering \cite{nvidiarobison09}
 \paragraph{ISG Reflection}
 
+
+\section {Global Illumination (GI) techniques}
+	\subsection{Pure raytracing} 
+		One pass. But produces ugly hard shadows unless we shoot more that one shadowray.
+	\subsection{Photon mapping} A two pass algorithm. Combines ray tracing and particle tracing.
+		\paragraph{1.st pass} photons are cast from the light source and checkt for intersection against the scene.    Every intersecting photon is stored in a photon map. After intersecting the scene a photon may be reflected, refracted or absorbed depending on the material properties of the surface. The selection is done by the Monte Carlo method called 'russian roulette'. If the photon is not absorbed, then a new traveling direction is calculated for it according to the selected behavior.
+			
+		\paragraph{2.nd pass} View rays are cast from the camera and checked for intersection against the scene similar to raytracing. Once the nearest intersection point is found, a pre-defined number of nearest photons are sampled, and interpolated to calculate irradiance at that point.
+
+	\subsection {Radiosity}
+		Diffuse inter-reflections of light in a scene. Divides scene geometry into small
+		patches. For every pair of patches, one defines a camera model for how they can
+		see each other. Ex: paraboloid, cuboid-mapping. These form factors are then used
+		in an iterative process that progressively transfers radiation between the
+		patches.
+
+		Can generate realistic diffuse lighting and is viewpoint independant. As long as
+		geometry and lightsources remain unchanged, the simulation can be effectively
+		sotred and sampled to obtain the scene lighting for any view.
+
+		Con: Limited diffuse lighting effects. Can't do absorb, refract?
+
+	\subsection {Instant Radiosity}
+		A technique developed by Alexander Keller to approximate the simulation of light
+		transfers between purely diffuse surfaces. The algorithm goes as follows, first
+		one casts a large quantity of rays from each light in random directions which
+		are then checked for intersection against the scene. Then, at the intersection
+		point create a so called 'virtual point light' (VPL). These VPLs represent the
+		light bouncing off surfaces. Accuracy may be improved by recursively casting new
+		light rays from each VPL, but one step usually creates a reliable approximation.
+		Once the VPLs have been created, they are rendered as normal point lights.
+		Modern GPUs are very good at this.
+
+	\subsection {Path Tracing}
+		Path tracing combines ray tracing and Monte Carlo methods to approximate the
+		integral of incoming light at each point. It is one of the most physically
+		accurate methods, but also one of the most demanding ones in terms of
+		computations. Path tracing is naturally capable of generating effects like depth
+		of field, caustics and soft shadows. The idea is to cast many rays at each
+		intersection. The number of rays is decided by the properties of the intersected
+		surface, for example its BRDF. If we as an example take a diffuse surface, then
+		rays are distributed on the hemisphere above the intersection point. But, if the
+		surface is glossy, then the generated rays are distributed around the reflection
+		vector. There are many methods that improve the performance of this brute force
+		method, such as stratified sampling, importance sampling and a modification
+		called 'Bidirectional Path Tracing' that is useful to increase the chance of a
+		ray intersecting a surface in scenes with small or occluded light sources.
+
+\section {Real-time Global Illumination}
+	Recent advancements were made by taking classical algorithms and implementing
+	them on GPUs. These effects have been adapted to rasterization, examples are:
+	ambient occlusion, soft shadows, depth-of-field, atmospheric scattering and water reflections and refractions.
+
+	\subsection {Screen Space Ambient Occlusion}
+		Screen Space Ambient Occlusion (SSAO) is a technique that was recently pioneered by Crytek. It approximates ambient occlusion in real-time on the gpu. The technique is decoupled from the scene complexity and requires a smaller amount of rays than the original ambient occlusion technique. It relies entirely on the depth buffer, this means geometry outside whats visible can not cause occlusion.
+
+	\subsection {Screen Space Global Illumination}
+        Screen Space Global Illumination (SSGI) is an extension of SSAO that generates a rough approximation of global illumination on a small scale. SSGI works by sampling colors from the rendered image of the scene to simulate secondary light bounces, it there for suffers from the same limitations as SSAO, so it can only show light interactions between objects that are very close to each other. Despite these limitation it is useful when combined with a coarse global illumination technique like instant radiosity. This way, SSGI can provide high-frequency global illumination and instant radiosity provides coarse, low-frequency global illumination.
+
+	\subsection {Image Space Photon Mapping}
+		The photon mapping algorithm has been adapted for real-time use in an algorithm called image space photon mapping (ISPM), that generates the information about the first bounce of photons on the GPU using Reflective Shadow Maps (RSM). \cite{dachsbacher2005} 
+		From this initial distribution of photons, a reduced set is selected and recursively raytraced on the CPU similarily to original photon mapping. The consecutive bouncing of each photon is stored and sent back to the GPU for rendering. On the GPU, the photons are used to estimate lighting using a scattering approach, the opposite of the gathering approach used by classical photon mapping. The scattering is performed by rendering ellipsoid-shaped volumes in screen space that represent the influence of each photon on the pixels around it. For each pixel affected by the photon volume, the scene properties are sampled and the lighting contribution of that photon is computed for that pixel. ISPM is capable of mathematically identical results to traditional photon mapping as long as it is rendered at full screen resolution.
+
+		\begin{figure}
+			\centering
+				\includegraphics[width=1.00\textwidth]{previous_work/ispm.jpg}
+			\caption{McGuire and Luebke's ISPM extension}
+			\label{fig:ispm}
+		\end{figure}
+
+	\subsection {Global Illumination with Light Propagation Volumes}
+
+	Global Illumination with Light Propagation Volumes (LPV) is a technique for approximation instant radiosity on the GPU. \cite{kaplanyan2009} This technique avoids the instant radiosity requirements for processing a large amount of lights by using a representation of the scene lighting that decouples scene illumination from light quantity. The first step is to generate an initial distribution of VPLs, this is done by rendering a Reflective Shadow Map (RSM) \cite{dachsbacher2005} from the lights point of view. The radiance of each VPL is injected as spherical harmonics into a 3D texture as spherical harmonics that represents the initial distribution of radiance on the scene. Then the initial radiances are propagated iteratively through the radiance volume to simulate light propagation. The volume is then sampled once per-pixel to obtain the irradiance at that location.
+
+\subsection {Real-Time Ray Tracing}
+	Inigo Wald. SIMD. packet tracing. openRT. 
+	\paragraph{Arauna} uses kd-tree for static. bih for dynamic.
+
+\subsection {Real-Time Path Tracing}
+	One of the most complex global illumination algorithms. 
+	\paragraph {Nvidia Optix} demonstration
+	\paragraph {Brigade} 
+	\paragraph {V-ray}
+
+\subsection {Combining Rasterization and Ray Tracing}
+
+Rasterization and Ray Tracing are very different, but can be combined to exploit each ones strengths. Rasterization is good at direct lighting, while raytracing is flexible for many effects.
+
+\subsubsection {RenderMan}
+
+By Pixar.
+
+% part c
+% chapter % funker ikke for article virker det som section subsection
+% subsubsection 
+% paragraph 
+% subparagraph
