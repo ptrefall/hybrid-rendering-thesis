@@ -13,8 +13,8 @@ Examples of hybrid engines; Pixar's REYES
 \paragraph{ISG Reflection}
 
 
-\section {Global Illumination (GI) techniques}
-	\subsection{Pure raytracing} 
+\section {Non-realtime Global Illumination (GI) techniques}
+		\subsection{Pure raytracing} 
 		One pass. But produces ugly hard shadows unless we shoot more that one shadowray.
 	\subsection{Photon mapping} A two pass algorithm. Combines ray tracing and particle tracing.
 		\paragraph{1.st pass} photons are cast from the light source and checkt for intersection against the scene.    Every intersecting photon is stored in a photon map. After intersecting the scene a photon may be reflected, refracted or absorbed depending on the material properties of the surface. The selection is done by the Monte Carlo method called 'russian roulette'. If the photon is not absorbed, then a new traveling direction is calculated for it according to the selected behavior.
@@ -60,13 +60,17 @@ Examples of hybrid engines; Pixar's REYES
 		called 'Bidirectional Path Tracing' that is useful to increase the chance of a
 		ray intersecting a surface in scenes with small or occluded light sources.
 
-\section {Real-time Global Illumination}
-	Recent advancements were made by taking classical algorithms and implementing
-	them on GPUs. These effects have been adapted to rasterization, examples are:
-	ambient occlusion, soft shadows, depth-of-field, atmospheric scattering and water reflections and refractions.
+	\section {Real-time Global Illumination}  
+		Recent advancements were made by taking classical algorithms and implementing them on GPUs. 
+		These effects have been adapted to rasterization, examples are: ambient occlusion, soft shadows,
+		depth-of-field, atmospheric scattering and water reflections and refractions.
 
-	\subsection {Screen Space Ambient Occlusion}
-		Screen Space Ambient Occlusion (SSAO) is a technique that was recently pioneered by Crytek. It approximates ambient occlusion in real-time on the gpu. The technique is decoupled from the scene complexity and requires a smaller amount of rays than the original ambient occlusion technique. It relies entirely on the depth buffer, this means geometry outside whats visible can not cause occlusion.
+    \subsection {Screen Space Ambient Occlusion}  
+		Screen Space Ambient Occlusion SSAO) is a technique that was recently pioneered
+		by Crytek. It approximates ambient occlusion in real-time on the gpu. The
+		technique is decoupled from the scene complexity and requires a smaller amount
+		of rays than the original ambient occlusion technique. It relies entirely on the
+		depth buffer, this means geometry outside whats visible can not cause occlusion.
 
 	\subsection {Screen Space Global Illumination}
         Screen Space Global Illumination (SSGI) is an extension of SSAO that generates a rough approximation of global illumination on a small scale. SSGI works by sampling colors from the rendered image of the scene to simulate secondary light bounces, it there for suffers from the same limitations as SSAO, so it can only show light interactions between objects that are very close to each other. Despite these limitation it is useful when combined with a coarse global illumination technique like instant radiosity. This way, SSGI can provide high-frequency global illumination and instant radiosity provides coarse, low-frequency global illumination.
@@ -81,6 +85,9 @@ Examples of hybrid engines; Pixar's REYES
 			\caption{McGuire and Luebke's ISPM extension}
 			\label{fig:ispm}
 		\end{figure}
+	
+	\subsection {Voxel Cone Tracing}
+		iCare 3D one year ago. Voxelizes triangle scene. Samples using cones. \cite{crassin2011}
 
 	\subsection {Global Illumination with Light Propagation Volumes}
 
@@ -97,12 +104,10 @@ Examples of hybrid engines; Pixar's REYES
 	\paragraph {V-ray}
 
 \subsection {Combining Rasterization and Ray Tracing}
-
-Rasterization and Ray Tracing are very different, but can be combined to exploit each ones strengths. Rasterization is good at direct lighting, while raytracing is flexible for many effects.
+	Rasterization and Ray Tracing are very different, but can be combined to exploit each ones strengths. Rasterization is good at direct lighting, while raytracing is flexible for many effects.
 
 \subsubsection {RenderMan}
-
-By Pixar.
+	By Pixar.
 
 % part c
 % chapter % funker ikke for article virker det som section subsection

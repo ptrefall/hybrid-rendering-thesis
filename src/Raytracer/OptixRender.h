@@ -40,12 +40,14 @@ namespace Raytracer
 		void pbo2Texture();
 		unsigned int getBufferAlignment(optix::Buffer buffer);
 
-		optix::Buffer g_buffer_diffuse;
-		optix::Buffer g_buffer_position;
-		optix::Buffer g_buffer_normal;
+		enum ePBOType{PBO_READ, PBO_WRITE};
+		optix::Buffer* g_buffer_diffuse[2];
+		optix::Buffer* g_buffer_position[2];
+		optix::Buffer* g_buffer_normal[2];
 		
-		Render::PBOPtr g_buffer_diffuse_pbo;
-		Render::PBOPtr g_buffer_position_pbo;
-		Render::PBOPtr g_buffer_normal_pbo;
+		
+		Render::PBOPtr g_buffer_diffuse_pbo[2];
+		Render::PBOPtr g_buffer_position_pbo[2];
+		Render::PBOPtr g_buffer_normal_pbo[2];
 	};
 }

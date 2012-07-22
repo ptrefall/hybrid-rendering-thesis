@@ -24,9 +24,13 @@ rtDeclareVariable(float3,        W, , );
 rtDeclareVariable(float3,        bad_color, , );
 rtDeclareVariable(float,         scene_epsilon, , );
 
-rtBuffer<uchar4, 2>   g_buffer_diffuse;
-rtBuffer<float4, 2>   g_buffer_position;
-rtBuffer<float4, 2>   g_buffer_normal;
+rtBuffer<uchar4, 2>   g_buffer_diffuse_read;
+rtBuffer<float4, 2>   g_buffer_position_read;
+rtBuffer<float4, 2>   g_buffer_normal_read;
+
+rtBuffer<uchar4, 2>   g_buffer_diffuse_write;
+rtBuffer<float4, 2>   g_buffer_position_write;
+rtBuffer<float4, 2>   g_buffer_normal_write;
 
 rtDeclareVariable(rtObject,      top_object, , );
 rtDeclareVariable(unsigned int,  radiance_ray_type, , );
@@ -53,4 +57,7 @@ RT_PROGRAM void pinhole_camera()
 
 	//g_buffer_diffuse[launch_index].w = static_cast<unsigned char>(prd.result.x*255.f);
 	//g_buffer_position[launch_index].w = prd.result.y;
+  g_buffer_diffuse_write[launch_index] = make_color( prd.result );//make_float3(0.f, 0.f, 1.f) );
+  g_buffer_position_write[launch_index] = g_buffer_position_read[launch_index];
+  g_buffer_normal_write[launch_index] = g_buffer_normal_read[launch_index];
 }
