@@ -20,7 +20,7 @@ OptixRender::OptixRender(const Render::GBuffer_PassPtr &g_buffer_pass, unsigned 
 	: g_buffer_pass(g_buffer_pass), width(width), height(height), baseDir(baseDir)
 {
     context = minimalCreateContext();
-
+	
 	// Create a single raygen program
 	std::string path_to_ptx = baseDir + "pinhole_camera.cu.ptx";
 	optix::Program ray_gen_program = context->createProgramFromPTXFile( path_to_ptx, "pinhole_camera" );
@@ -34,10 +34,23 @@ OptixRender::OptixRender(const Render::GBuffer_PassPtr &g_buffer_pass, unsigned 
 	optix::Program miss_program = context->createProgramFromPTXFile( path_to_ptx, "miss" );
 	context->setMissProgram(0, miss_program );
 
+	g_buffer_diffuse[PBO_READ] = new optix::Buffer;
+	g_buffer_diffuse[PBO_WRITE] = new optix::Buffer;
+	g_buffer_position[PBO_READ] = new optix::Buffer;
+	g_buffer_position[PBO_WRITE] = new optix::Buffer;
+	g_buffer_normal[PBO_READ] = new optix::Buffer;
+	g_buffer_normal[PBO_WRITE] = new optix::Buffer;
 	createGBuffers();
-	context["g_buffer_diffuse"]->set(g_buffer_diffuse);
-	context["g_buffer_position"]->set(g_buffer_position);
-	context["g_buffer_normal"]->set(g_buffer_normal);
+	
+	// let Raytracer read from Raster Gbuffer
+	context["g_buffer_diffuse_read"]->set(*g_buffer_diffuse[PBO_READ]);
+	context["g_buffer_position_read"]->set(*g_buffer_position[PBO_READ]);
+	context["g_buffer_normal_read"]->set(*g_buffer_normal[PBO_READ]);
+
+	// let Raytracer write to its own Gbuffer (to be consumed by GLSL/Raster)
+	context["g_buffer_diffuse_write"]->set(*g_buffer_diffuse[PBO_WRITE]);
+	context["g_buffer_position_write"]->set(*g_buffer_position[PBO_WRITE]);
+	context["g_buffer_normal_write"]->set(*g_buffer_normal[PBO_WRITE]);
 }
 
 void OptixRender::compileContext()
@@ -70,39 +83,54 @@ void OptixRender::createGBuffers()
 
 	//DIFFUSE BUFFER
 	context->checkError( rtuGetSizeForRTformat(RT_FORMAT_UNSIGNED_BYTE4, &element_size) );
-	g_buffer_diffuse_pbo = std::make_shared<Render::PBO>(element_size * width * height, GL_STREAM_DRAW, true);
-	g_buffer_diffuse_pbo->unbind();
-	g_buffer_diffuse = context->createBufferFromGLBO(RT_BUFFER_INPUT_OUTPUT, g_buffer_diffuse_pbo->getHandle());
-	g_buffer_diffuse->setFormat(RT_FORMAT_UNSIGNED_BYTE4);
-	g_buffer_diffuse->setSize( width, height );
+	g_buffer_diffuse_pbo[PBO_READ] = std::make_shared<Render::PBO>(element_size * width * height, GL_STREAM_DRAW, true);
+	g_buffer_diffuse_pbo[PBO_READ]->unbind();
+	*g_buffer_diffuse[PBO_READ] = context->createBufferFromGLBO(RT_BUFFER_INPUT, g_buffer_diffuse_pbo[PBO_READ]->getHandle());
+	(*g_buffer_diffuse[PBO_READ])->setFormat(RT_FORMAT_UNSIGNED_BYTE4);
+	(*g_buffer_diffuse[PBO_READ])->setSize( width, height );
 
 	//POSITION BUFFER
 	context->checkError( rtuGetSizeForRTformat(RT_FORMAT_FLOAT4, &element_size) );
-	g_buffer_position_pbo = std::make_shared<Render::PBO>(element_size * width * height, GL_STREAM_DRAW, true);
-	g_buffer_position_pbo->unbind();
-	g_buffer_position = context->createBufferFromGLBO(RT_BUFFER_INPUT_OUTPUT, g_buffer_position_pbo->getHandle());
-	g_buffer_position->setFormat(RT_FORMAT_FLOAT4);
-	g_buffer_position->setSize( width, height );
+	g_buffer_position_pbo[PBO_READ] = std::make_shared<Render::PBO>(element_size * width * height, GL_STREAM_DRAW, true);
+	g_buffer_position_pbo[PBO_READ]->unbind();
+	*g_buffer_position[PBO_READ] = context->createBufferFromGLBO(RT_BUFFER_INPUT, g_buffer_position_pbo[PBO_READ]->getHandle());
+	(*g_buffer_position[PBO_READ])->setFormat(RT_FORMAT_FLOAT4);
+	(*g_buffer_position[PBO_READ])->setSize( width, height );
 
 	//NORMAL BUFFER
 	//context->checkError( rtuGetSizeForRTformat(RT_FORMAT_FLOAT4, &element_size) );
-	g_buffer_normal_pbo = std::make_shared<Render::PBO>(element_size * width * height, GL_STREAM_DRAW, true);
-	g_buffer_normal_pbo->unbind();
-	g_buffer_normal = context->createBufferFromGLBO(RT_BUFFER_INPUT_OUTPUT, g_buffer_normal_pbo->getHandle());
-	g_buffer_normal->setFormat(RT_FORMAT_FLOAT4);
-	g_buffer_normal->setSize( width, height );
+	g_buffer_normal_pbo[PBO_READ] = std::make_shared<Render::PBO>(element_size * width * height, GL_STREAM_DRAW, true);
+	g_buffer_normal_pbo[PBO_READ]->unbind();
+	*g_buffer_normal[PBO_READ] = context->createBufferFromGLBO(RT_BUFFER_INPUT, g_buffer_normal_pbo[PBO_READ]->getHandle());
+	(*g_buffer_normal[PBO_READ])->setFormat(RT_FORMAT_FLOAT4);
+	(*g_buffer_normal[PBO_READ])->setSize( width, height );
 
-	// Set number of devices to be used
-	// Default, 0, means not to specify them here, but let OptiX use its default behavior.
-	int _num_devices = 0;
-	if(_num_devices) 
-	{
-		int max_num_devices    = Context::getDeviceCount();
-		int actual_num_devices = std::min( max_num_devices, std::max( 1, _num_devices ) );
-		std::vector<int> devs(actual_num_devices);
-		for( int i = 0; i < actual_num_devices; ++i ) devs[i] = i;
-			context->setDevices( devs.begin(), devs.end() );
-	}
+	// Write
+	//DIFFUSE BUFFER
+	context->checkError( rtuGetSizeForRTformat(RT_FORMAT_UNSIGNED_BYTE4, &element_size) );
+	g_buffer_diffuse_pbo[PBO_WRITE] = std::make_shared<Render::PBO>(element_size * width * height, GL_STREAM_DRAW, true);
+	g_buffer_diffuse_pbo[PBO_WRITE]->unbind();
+	*g_buffer_diffuse[PBO_WRITE] = context->createBufferFromGLBO(RT_BUFFER_OUTPUT, g_buffer_diffuse_pbo[PBO_WRITE]->getHandle());
+	(*g_buffer_diffuse[PBO_WRITE])->setFormat(RT_FORMAT_UNSIGNED_BYTE4);
+	(*g_buffer_diffuse[PBO_WRITE])->setSize( width, height );
+
+	//POSITION BUFFER
+	context->checkError( rtuGetSizeForRTformat(RT_FORMAT_FLOAT4, &element_size) );
+	g_buffer_position_pbo[PBO_WRITE] = std::make_shared<Render::PBO>(element_size * width * height, GL_STREAM_DRAW, true);
+	g_buffer_position_pbo[PBO_WRITE]->unbind();
+	*g_buffer_position[PBO_WRITE] = context->createBufferFromGLBO(RT_BUFFER_OUTPUT, g_buffer_position_pbo[PBO_WRITE]->getHandle());
+	(*g_buffer_position[PBO_WRITE])->setFormat(RT_FORMAT_FLOAT4);
+	(*g_buffer_position[PBO_WRITE])->setSize( width, height );
+
+	//NORMAL BUFFER
+	//context->checkError( rtuGetSizeForRTformat(RT_FORMAT_FLOAT4, &element_size) );
+	g_buffer_normal_pbo[PBO_WRITE] = std::make_shared<Render::PBO>(element_size * width * height, GL_STREAM_DRAW, true);
+	g_buffer_normal_pbo[PBO_WRITE]->unbind();
+	*g_buffer_normal[PBO_WRITE] = context->createBufferFromGLBO(RT_BUFFER_OUTPUT, g_buffer_normal_pbo[PBO_WRITE]->getHandle());
+	(*g_buffer_normal[PBO_WRITE])->setFormat(RT_FORMAT_FLOAT4);
+	(*g_buffer_normal[PBO_WRITE])->setSize( width, height );
+
+
 }
 
 
@@ -133,17 +161,17 @@ void OptixRender::render()
 	auto raster_diffuse = raster_fbo->getRenderTexture(0);
 	auto raster_position = raster_fbo->getRenderTexture(1);
 	auto raster_normal = raster_fbo->getRenderTexture(2);
-	g_buffer_diffuse_pbo->bufferFromTextureOnGPU(raster_diffuse, 0);
-	g_buffer_position_pbo->bufferFromTextureOnGPU(raster_position, 0);
-	g_buffer_normal_pbo->bufferFromTextureOnGPU(raster_normal, 0);
+	g_buffer_diffuse_pbo[PBO_READ]->bufferFromTextureOnGPU(raster_diffuse, 0);
+	g_buffer_position_pbo[PBO_READ]->bufferFromTextureOnGPU(raster_position, 0);
+	g_buffer_normal_pbo[PBO_READ]->bufferFromTextureOnGPU(raster_normal, 0);
 
 	try {
 		context->launch(0, width,height);
 	} catch (optix::Exception& e) {
 		std::cout << e.getErrorString();
 		return; 
-	} 
-	 
+	}
+
 	glActiveTexture(GL_TEXTURE0); 
 	pbo2Texture();
 }
@@ -163,6 +191,7 @@ unsigned int OptixRender::getBufferAlignment(optix::Buffer buffer)
     else                             return 1;
 }
 
+// Take G-buffer generated in Raytracer, convert to GLSL readable
 void OptixRender::pbo2Texture()
 {
 	auto raster_fbo = g_buffer_pass->getFBO();
@@ -170,21 +199,21 @@ void OptixRender::pbo2Texture()
 	auto raster_position = raster_fbo->getRenderTexture(1);
 	auto raster_normal = raster_fbo->getRenderTexture(2);
 
-	g_buffer_diffuse_pbo->bind();
+	g_buffer_diffuse_pbo[PBO_WRITE]->bind();
 	{
-		g_buffer_diffuse_pbo->align(getBufferAlignment(g_buffer_diffuse));
-		g_buffer_diffuse_pbo->copyToTextureOnGPU(raster_diffuse, 0);
-	} g_buffer_diffuse_pbo->unbind();
+		g_buffer_diffuse_pbo[PBO_WRITE]->align(getBufferAlignment(*g_buffer_diffuse[PBO_WRITE]));
+		g_buffer_diffuse_pbo[PBO_WRITE]->copyToTextureOnGPU(raster_diffuse, 0);
+	} g_buffer_diffuse_pbo[PBO_WRITE]->unbind();
 
-	g_buffer_position_pbo->bind();
+	g_buffer_position_pbo[PBO_WRITE]->bind();
 	{
-		g_buffer_position_pbo->align(getBufferAlignment(g_buffer_position));
-		g_buffer_position_pbo->copyToTextureOnGPU(raster_position, 0);
-	} g_buffer_position_pbo->unbind();
+		g_buffer_position_pbo[PBO_WRITE]->align(getBufferAlignment(*g_buffer_position[PBO_WRITE]));
+		g_buffer_position_pbo[PBO_WRITE]->copyToTextureOnGPU(raster_position, 0);
+	} g_buffer_position_pbo[PBO_WRITE]->unbind();
 
-	g_buffer_normal_pbo->bind();
+	g_buffer_normal_pbo[PBO_WRITE]->bind();
 	{
-		g_buffer_normal_pbo->align(getBufferAlignment(g_buffer_normal));
-		g_buffer_normal_pbo->copyToTextureOnGPU(raster_normal, 0);
-	} g_buffer_normal_pbo->unbind();
+		g_buffer_normal_pbo[PBO_WRITE]->align(getBufferAlignment(*g_buffer_normal[PBO_WRITE]));
+		g_buffer_normal_pbo[PBO_WRITE]->copyToTextureOnGPU(raster_normal, 0);
+	} g_buffer_normal_pbo[PBO_WRITE]->unbind();
 } 
