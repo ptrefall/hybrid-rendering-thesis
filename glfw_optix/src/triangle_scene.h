@@ -304,7 +304,7 @@ private:
 			auto rtGeo = meshdata_optixmesh_map[bartNode.meshData].rtGeo;
 			auto optixInstance = Scene::OptixInstancePtr( 
 				                 new Scene::OptixInstance( triMesh->getVao(), triMesh->getVbo(), triMesh->getIbo(), 
-								                           rtGeo, recieve_shadow_group, debug_normals_material ) );
+								                           rtGeo, recieve_shadow_group, phong_material ) );
 			optixInstance->setObjectToWorldMatrix( bartNode.xform );
 			optixInstance->setMaterial( bartNode.material );
 

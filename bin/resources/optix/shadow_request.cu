@@ -3,16 +3,13 @@
 
 using namespace optix;
 
-//rtTextureSampler<float4, 2>  request_texture;
-//rtBuffer<unsigned char, 2>   shadow_buffer;
-
-rtBuffer<uchar4, 2>   g_buffer_diffuse_read;
+//rtBuffer<uchar4, 2>   g_buffer_diffuse_read;
 rtBuffer<float4, 2>   g_buffer_position_read;
-rtBuffer<float4, 2>   g_buffer_normal_read;
+//rtBuffer<float4, 2>   g_buffer_normal_read;
 
 rtBuffer<uchar4, 2>   g_buffer_diffuse_write;
-rtBuffer<float4, 2>   g_buffer_position_write;
-rtBuffer<float4, 2>   g_buffer_normal_write;
+//rtBuffer<float4, 2>   g_buffer_position_write;
+//rtBuffer<float4, 2>   g_buffer_normal_write;
 
 rtDeclareVariable(uint, shadow_ray_type, , );
 rtDeclareVariable(float, scene_epsilon, , );
@@ -29,7 +26,7 @@ struct PerRayData_shadow
 RT_PROGRAM void shadow_request()
 {
   //float3 ray_origin = make_float3(tex2D(g_buffer_position, launch_index.x, launch_index.y));
-  float3 ray_origin = make_float3( g_buffer_position_read[launch_index] ) ;
+  float3 ray_origin = make_float3( g_buffer_position_read[launch_index] ) ; // xyz
   
 
   PerRayData_shadow prd_shadow;
@@ -41,11 +38,13 @@ RT_PROGRAM void shadow_request()
     float dist = sqrtf(dot(L,L));
     float3 ray_direction = L/dist;
     optix::Ray ray = optix::make_Ray(ray_origin, ray_direction, shadow_ray_type, scene_epsilon, dist);
- //   rtTrace(top_object, ray, prd_shadow);
+    rtTrace(top_object, ray, prd_shadow);
   }
 
  //g_buffer_diffuse_write[launch_index].x = static_cast<unsigned char>(prd_shadow.attenuation*255.99f);
-  g_buffer_diffuse_write[launch_index].x = static_cast<unsigned char>(ray_origin.x*255.99f);
-  g_buffer_diffuse_write[launch_index].y = static_cast<unsigned char>(ray_origin.y*255.99f);
-  g_buffer_diffuse_write[launch_index].z = static_cast<unsigned char>(ray_origin.z*255.99f);
+
+  // G-buffer Position debugging with limited range...
+  //g_buffer_diffuse_write[launch_index].x = static_cast<unsigned char>(ray_origin.x*255.99f);
+  //g_buffer_diffuse_write[launch_index].y = static_cast<unsigned char>(ray_origin.y*255.99f);
+  //g_buffer_diffuse_write[launch_index].z = static_cast<unsigned char>(-ray_origin.z*255.99f);
 }

@@ -10,6 +10,7 @@
 #include <iostream>
 
 #include <Optix/optixu/optixu.h> 
+#include <CUDA/cuda.h>
 
 using namespace Raytracer;
 using namespace optix;
@@ -20,12 +21,13 @@ OptixRender::OptixRender(const Render::GBuffer_PassPtr &g_buffer_pass, unsigned 
 	: g_buffer_pass(g_buffer_pass), width(width), height(height), baseDir(baseDir)
 {
     context = minimalCreateContext();
+
 	
 	// Create a single raygen program
-	std::string path_to_ptx = baseDir + "shadow_request.cu.ptx";
-	optix::Program ray_gen_program = context->createProgramFromPTXFile( path_to_ptx, "shadow_request" );
+	std::string path_to_ptx = baseDir + "pinhole_camera.cu.ptx";
+	optix::Program ray_gen_program = context->createProgramFromPTXFile( path_to_ptx, "pinhole_camera" );
 	context->setRayGenerationProgram(0, ray_gen_program);
-	context["shadow_ray_type"]->setUint(0u);
+	//context["shadow_ray_type"]->setUint(0u);
 	context["scene_epsilon"]->setFloat(1e-4f);
 
 	unsigned int screenDims[] = {width,height};
@@ -175,6 +177,7 @@ void OptixRender::render()
 		std::cout << e.getErrorString();
 		return; 
 	}
+	
 
 	glActiveTexture(GL_TEXTURE0); 
 	pbo2Texture();
