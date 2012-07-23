@@ -25,6 +25,9 @@ namespace Raytracer
 		void render();
 		void reshape(unsigned int width, unsigned int height);
 
+		void bind(unsigned int active_program, unsigned int index_offset);
+		void unbind(unsigned int index_offset);
+
 		optix::Context getContext() { return context; }; 
 		void compileContext();
 	private:
@@ -49,5 +52,7 @@ namespace Raytracer
 		Render::PBOPtr g_buffer_diffuse_pbo[2];
 		Render::PBOPtr g_buffer_position_pbo[2];
 		Render::PBOPtr g_buffer_normal_pbo[2];
+
+		Render::Tex2DPtr shadow_tex;
 	};
 }

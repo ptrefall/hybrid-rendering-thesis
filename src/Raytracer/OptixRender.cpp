@@ -22,9 +22,11 @@ OptixRender::OptixRender(const Render::GBuffer_PassPtr &g_buffer_pass, unsigned 
     context = minimalCreateContext();
 	
 	// Create a single raygen program
-	std::string path_to_ptx = baseDir + "pinhole_camera.cu.ptx";
-	optix::Program ray_gen_program = context->createProgramFromPTXFile( path_to_ptx, "pinhole_camera" );
+	std::string path_to_ptx = baseDir + "shadow_request.cu.ptx";
+	optix::Program ray_gen_program = context->createProgramFromPTXFile( path_to_ptx, "shadow_request" );
 	context->setRayGenerationProgram(0, ray_gen_program);
+	context["shadow_ray_type"]->setUint(0u);
+	context["scene_epsilon"]->setFloat(1e-4f);
 
 	unsigned int screenDims[] = {width,height};
 	ray_gen_program->declareVariable("rtLaunchDim")->set2uiv( screenDims );
@@ -33,6 +35,8 @@ OptixRender::OptixRender(const Render::GBuffer_PassPtr &g_buffer_pass, unsigned 
 	path_to_ptx = baseDir + "constantbg.cu.ptx";
 	optix::Program miss_program = context->createProgramFromPTXFile( path_to_ptx, "miss" );
 	context->setMissProgram(0, miss_program );
+
+	shadow_tex = std::make_shared<Render::Tex2D>(Render::T2DTexParams(GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, 4, width,height));
 
 	g_buffer_diffuse[PBO_READ] = new optix::Buffer;
 	g_buffer_diffuse[PBO_WRITE] = new optix::Buffer;
@@ -195,17 +199,17 @@ unsigned int OptixRender::getBufferAlignment(optix::Buffer buffer)
 void OptixRender::pbo2Texture()
 {
 	auto raster_fbo = g_buffer_pass->getFBO();
-	auto raster_diffuse = raster_fbo->getRenderTexture(0);
-	auto raster_position = raster_fbo->getRenderTexture(1);
-	auto raster_normal = raster_fbo->getRenderTexture(2);
+	//auto raster_diffuse = raster_fbo->getRenderTexture(0);
+	//auto raster_position = raster_fbo->getRenderTexture(1);
+	//auto raster_normal = raster_fbo->getRenderTexture(2);
 
 	g_buffer_diffuse_pbo[PBO_WRITE]->bind();
 	{
 		g_buffer_diffuse_pbo[PBO_WRITE]->align(getBufferAlignment(*g_buffer_diffuse[PBO_WRITE]));
-		g_buffer_diffuse_pbo[PBO_WRITE]->copyToTextureOnGPU(raster_diffuse, 0);
+		g_buffer_diffuse_pbo[PBO_WRITE]->copyToTextureOnGPU(shadow_tex, 0);
 	} g_buffer_diffuse_pbo[PBO_WRITE]->unbind();
 
-	g_buffer_position_pbo[PBO_WRITE]->bind();
+	/*g_buffer_position_pbo[PBO_WRITE]->bind();
 	{
 		g_buffer_position_pbo[PBO_WRITE]->align(getBufferAlignment(*g_buffer_position[PBO_WRITE]));
 		g_buffer_position_pbo[PBO_WRITE]->copyToTextureOnGPU(raster_position, 0);
@@ -215,5 +219,16 @@ void OptixRender::pbo2Texture()
 	{
 		g_buffer_normal_pbo[PBO_WRITE]->align(getBufferAlignment(*g_buffer_normal[PBO_WRITE]));
 		g_buffer_normal_pbo[PBO_WRITE]->copyToTextureOnGPU(raster_normal, 0);
-	} g_buffer_normal_pbo[PBO_WRITE]->unbind();
+	} g_buffer_normal_pbo[PBO_WRITE]->unbind();*/
 } 
+
+void OptixRender::bind(unsigned int active_program, unsigned int index_offset)
+{
+	glActiveTexture(GL_TEXTURE0 + index_offset);
+	shadow_tex->bind();
+}
+
+void OptixRender::unbind(unsigned int index_offset)
+{
+	shadow_tex->unbind();
+}

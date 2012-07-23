@@ -5,7 +5,7 @@
 #define TEXCOORD	3
 #define FRAG_COLOR	0
 
-uniform sampler2D TEX_DIFF; 
+uniform sampler2D TEX_DIFF;
 uniform sampler2D TEX_POS;
 uniform sampler2D TEX_NORM;
 uniform sampler2D TEX_RAY;
@@ -75,11 +75,14 @@ void main( void )
 	float term = compute_gauss_term(N, L, V, NdotL, shininess);
 	
 	float shadow_att = texture( TEX_DIFF, Vertex.t ).a; // from Optix
-
+    
+    out_FragColor = vec4(ray.rgb,1.0);
+    /*
 	out_FragColor = vec4( 
-		((diffuse * diffuse_mat[material_id] * NdotL) + (specular_mat[material_id] * term) + (diffuse * ambient_mat[material_id])), 
+		((diffuse * diffuse_mat[material_id] * NdotL) + (specular_mat[material_id] * term) + (diffuse * ambient_mat[material_id])) * ray.r, 
 		1.0
 		);
+    */
 		//+ ray.rgb
 		
 	//out_FragColor = vec4( diffuse, 1.0 );
