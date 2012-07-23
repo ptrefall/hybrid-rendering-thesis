@@ -1,0 +1,27 @@
+
+
+0. Abstract
+1. Introduction. Why.
+2. Previous work
+3. Rasterizer
+   Why a deferred pipeline is advantagous.
+   OpenGL3?
+   
+4. Raytracing
+   1. in general
+   2. OptiX
+   
+5. Why create a hybrid renderer? Generelt
+   1. visual effects
+   2. geometry better suited for tracing
+   
+6. Implementation
+   
+7. Our results / Conclusion
+   ...tables of performance timings...
+   Hardware achitecture limitations, strengths.
+   
+8. Further work. Evt under Conclusion.
+
+---
+Referances
