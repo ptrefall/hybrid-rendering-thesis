@@ -227,7 +227,6 @@ void SceneManager::initScene(	const File::AssetManagerPtr &asset_manager,
 	auto scene_dir = config.getString("load", "dir", "procedural\\");
 	auto scene_file = config.getString("load", "scene", "balls.nff");
 
-	
 	// Key, Value
 	std::map<Scene::MeshDataPtr, OptixTriMeshLoader::OptixGeometryAndTriMesh_t> meshdata_optixmesh_map;
 	puts("converting scene data to optix and GL objects");
@@ -240,11 +239,11 @@ void SceneManager::initScene(	const File::AssetManagerPtr &asset_manager,
 
 	// Create debug-normals Material Program, will later be replaced with anyhit for shadow
 	std::string path_to_ptx = optix_dir + "\\mat_normal.cu.ptx";
-	//optix::Program closest_hit_program = context->createProgramFromPTXFile( path_to_ptx, "closest_hit_radiance" );
-	optix::Program any_hit_program = context->createProgramFromPTXFile( path_to_ptx, "any_hit_shadow" );
+	optix::Program closest_hit_program = context->createProgramFromPTXFile( path_to_ptx, "closest_hit_radiance" );
+	//optix::Program any_hit_program = context->createProgramFromPTXFile( path_to_ptx, "any_hit_shadow" );
 	optix::Material debug_normals_material = context->createMaterial();
-	//debug_normals_material->setClosestHitProgram(0 /*radiance*/, closest_hit_program); // debug normals only uses closest hit.
-	debug_normals_material->setAnyHitProgram(0 /*shadow*/, any_hit_program); // debug normals only uses closest hit.
+	debug_normals_material->setClosestHitProgram(0 /*radiance*/, closest_hit_program); // debug normals only uses closest hit.
+	//debug_normals_material->setAnyHitProgram(0 /*shadow*/, any_hit_program); // debug normals only uses closest hit.
 	
 	// Create the group all trace-able geometry is to be a child of
 	optix::Group top_level_group = context->createGroup();
@@ -264,19 +263,20 @@ void SceneManager::initScene(	const File::AssetManagerPtr &asset_manager,
 			meshdata_optixmesh_map[bartNode.meshData] = OptixTriMeshLoader::fromMeshData( bartNode.meshData , context, isect_program, bbox_program );
 		}
 
-
+		
 		auto triMesh = meshdata_optixmesh_map[bartNode.meshData].triMesh;
 		auto rtGeo = meshdata_optixmesh_map[bartNode.meshData].rtGeo;
-		//auto optixInstance = Scene::OptixInstancePtr( 
-		//		                new Scene::OptixInstance( triMesh->getVao(), triMesh->getVbo(), triMesh->getIbo(), 
-		//						                        rtGeo, top_level_group, debug_normals_material ) );
-		//optixInstance->setObjectToWorldMatrix( bartNode.xform );
-		//optixInstance->setMaterial( bartNode.material );
-
-		//this->add(optixInstance);
+		auto optixInstance = Scene::OptixInstancePtr( 
+				                new Scene::OptixInstance( triMesh->getVao(), triMesh->getVbo(), triMesh->getIbo(), 
+								                        rtGeo, top_level_group, debug_normals_material ) );
+		optixInstance->setObjectToWorldMatrix( bartNode.xform );
+		optixInstance->setMaterial( bartNode.material );
+		
+		this->add(optixInstance);
 
 		// also add trimesh to scene
 		// todo: this doesnt handle instances. only uniques...
+#if 1 
 		triMesh->setMaterial( bartNode.material );
 		triMesh->setObjectToWorldMatrix( bartNode.xform );
 		triMesh->setObjectToWorldUniform(	g_buffer_pass->getObjectToWorldUniform());
@@ -290,6 +290,7 @@ void SceneManager::initScene(	const File::AssetManagerPtr &asset_manager,
 			triMesh->setTexture(0, tex2d, tex_sampler, dummy_sampler ); 
 		}
 		this->add(triMesh);
+#endif
 	}
 
 	puts("validating context...");
