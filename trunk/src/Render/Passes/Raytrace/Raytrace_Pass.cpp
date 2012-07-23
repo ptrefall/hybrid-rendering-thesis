@@ -28,10 +28,13 @@ void Raytrace_Pass::end()
 
 void Raytrace_Pass::bind(unsigned int active_program, unsigned int index_offset)
 {
+	raytracer->bind(active_program, index_offset);
+	raytrace_tex_uniform->bind((int)index_offset, active_program);
 }
 
 void Raytrace_Pass::unbind(unsigned int index_offset)
 {
+	raytracer->unbind(index_offset);
 }
 
 void Raytrace_Pass::reshape(unsigned int w, unsigned int h) 

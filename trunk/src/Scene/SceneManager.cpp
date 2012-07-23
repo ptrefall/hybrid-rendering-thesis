@@ -245,7 +245,7 @@ void SceneManager::initScene(	const File::AssetManagerPtr &asset_manager,
 	optix::Material debug_normals_material = context->createMaterial();
 	//debug_normals_material->setClosestHitProgram(0 /*radiance*/, closest_hit_program); // debug normals only uses closest hit.
 	debug_normals_material->setAnyHitProgram(0 /*shadow*/, any_hit_program); // debug normals only uses closest hit.
-
+	
 	// Create the group all trace-able geometry is to be a child of
 	optix::Group top_level_group = context->createGroup();
 	optix::Variable top_object = context->declareVariable("top_object");
@@ -267,13 +267,13 @@ void SceneManager::initScene(	const File::AssetManagerPtr &asset_manager,
 
 		auto triMesh = meshdata_optixmesh_map[bartNode.meshData].triMesh;
 		auto rtGeo = meshdata_optixmesh_map[bartNode.meshData].rtGeo;
-		auto optixInstance = Scene::OptixInstancePtr( 
-				                new Scene::OptixInstance( triMesh->getVao(), triMesh->getVbo(), triMesh->getIbo(), 
-								                        rtGeo, top_level_group, debug_normals_material ) );
-		optixInstance->setObjectToWorldMatrix( bartNode.xform );
-		optixInstance->setMaterial( bartNode.material );
+		//auto optixInstance = Scene::OptixInstancePtr( 
+		//		                new Scene::OptixInstance( triMesh->getVao(), triMesh->getVbo(), triMesh->getIbo(), 
+		//						                        rtGeo, top_level_group, debug_normals_material ) );
+		//optixInstance->setObjectToWorldMatrix( bartNode.xform );
+		//optixInstance->setMaterial( bartNode.material );
 
-		this->add(optixInstance);
+		//this->add(optixInstance);
 
 		// also add trimesh to scene
 		// todo: this doesnt handle instances. only uniques...
