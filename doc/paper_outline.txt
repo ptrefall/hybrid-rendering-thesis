@@ -12,13 +12,17 @@
    2. OptiX
    
 5. Why create a hybrid renderer? Generelt
-   1. visual effects
-   2. geometry better suited for tracing
+   1. Identify the strengths of each method.
+      Se punkt 3. prepstudy. Rasterization vs Raytracing
+   2. visual effects
+   3. geometry better suited for tracing
    
 6. Implementation
    
 7. Our results / Conclusion
    ...tables of performance timings...
+   perf queries på HybridShadows.
+   + tilsvarende raster-scene.
    Hardware achitecture limitations, strengths.
    
 8. Further work. Evt under Conclusion.
