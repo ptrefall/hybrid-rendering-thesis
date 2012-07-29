@@ -16,10 +16,10 @@ Optix can be seen as a framework for launching rays. It doesn't know anything ab
 
 	\item{\textbf{Exeption} programs are invoked when the system encounters problems like out of stack space, or buffer access index is                   out of range. Also supports user-defined exceptions that can be 	thrown from any program. Can react by printing                         diagnostic messages or   writing specific color values to an output buffer.}
 
-	\item{\textbf{Closest hit} programs are invoked once traversal has found the closest interseciton of a ray with scene geometry.}
+	\item{\textbf{Closest hit} programs are invoked once traversal has found the closest intersection of a ray with scene geometry.}
 
 	\item{\textbf{Any hit}
-		allow shading to be kept seperate from geometry.
+		allow shading to be kept separate from geometry.
 		May call rtTerminateRay and stop all traversal. Early ray termination for shadowrays and AO.
 		Also useful for binary transparency by texture look up.
 		Default any hit program is a no-op, often the most desired operation.
@@ -31,9 +31,9 @@ Optix can be seen as a framework for launching rays. It doesn't know anything ab
 	programs are needed to describe geometry. The program must at least report if and where the ray touches the object, 
 	additional computations may involve normals, texture coordinates and other attributes based on hit position.
 	Intersection programs allow you to trace perfect spheres, cylinders, cubes,  CSG-surfaces, parametric surfaces like
-	Bezier and NURBS, fractals and of cource triangle meshes. Parker \cite{Parker10OptiX} notes \begin{quote} programmable intersection op-
+	Bezier and NURBS, fractals and of course triangle meshes. Parker \cite{Parker10OptiX} notes \begin{quote} programmable intersection op-
 	eration facilitates direct access to the native format, which can help
-	avoid copies when interoperating with rasterization-based systems.\end{quote} In our program we store vertex attributes continously (first all positions, then all normals, etc.) as opposed to storing them interleaved (one position, one normal and so on). Unfortunately, the built in acceleration sbvh and kdtree builders expect triangle geometry to be interleaved, so we settled for the generic bvh builder.
+	avoid copies when interoperating with rasterization-based systems.\end{quote} In our program we store vertex attributes continuously (first all positions, then all normals, etc.) as opposed to storing them interleaved (one position, one normal and so on). Unfortunately, the built in acceleration sbvh and kdtree builders expect triangle geometry to be interleaved, so we settled for the generic bvh builder.
 	}
 	
 	\item{\textbf{Selector}
@@ -42,7 +42,7 @@ Optix can be seen as a framework for launching rays. It doesn't know anything ab
 	}
 
  \item{\textbf{Bounding box}
-		programs obviously compute the bounds associated with each primtive to enable acceleration structures over any geometry. The bounding box program takes a primtive index and computes its bounds. From the client api, a node is associated a given bounds program.
+		programs obviously compute the bounds associated with each primitive to enable acceleration structures over any geometry. The bounding box program takes a primtive index and computes its bounds. From the client api, a node is associated a given bounds program.
 	}
  				
 \end{enumerate}
@@ -52,9 +52,9 @@ The closest hit, any hit and miss programs determine shading. The raygen, select
 \subsection{Client-side API}
 
 To begin raytracing a scene ``rtContextLaunch( raygenIdx, width, height )'' is called with a given Rey Generation Program index as a parameter. From the ray generation program ``rtTrace( rootNode, ray, payload )'' is given the root scene node for traversal. During traversal, if a node a nodes associated selector and acceleration program is run.
-If the acceleration traverser determines that a primitive node is hit, it invokes the primtives intersection program.
-If the Intersection program calles ``rtReportIntersection'', the primitives associated ``material'' Any Hit Program is called.
-If the ray doesn't hit anything, a miss program is called. The missprogram is allways required.
+If the acceleration traverser determines that a primitive node is hit, it invokes the primitives intersection program.
+If the Intersection program calls ``rtReportIntersection'', the primitives associated ``material'' Any Hit Program is called.
+If the ray doesn't hit anything, a miss program is called. The missprogram is always required.
 
 \subsection{CUDA program API}
 
