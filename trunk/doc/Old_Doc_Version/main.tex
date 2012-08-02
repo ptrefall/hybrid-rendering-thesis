@@ -1,0 +1,111 @@
+\documentclass[10pt,a4paper,oneside]{article} %report expects chapters?
+
+% http://en.wikibooks.org/wiki/LaTeX/Page_Layout
+%\pdfpagewidth = 441 % 441x666 
+%\pdfpageheight = 666
+
+\usepackage[latin1]{inputenc}   % Støtte for direkte input av norske tegn
+\usepackage{graphicx} % for \includegraphics
+\usepackage{hyperref} % for click-able TOC links and \cite's in PDF
+\begin{document}
+
+\setcounter{page}{-100}
+\pagestyle{empty} % no page numbers
+\include{0/frontpage}
+\setcounter{page}{-99}
+\include{0/abstract}
+\pagestyle{plain} % turn page numbers on
+\setcounter{page}{0}
+
+\tableofcontents
+
+%\include{sandbox/sandbox}
+\include{previous_work/previous_work}
+% What is raytracing?
+% What is deferred rendering?
+\include{opengl3/opengl3}
+\include{optix/optix}
+\include{optix_gl_interop/optix_gl_interop}
+% BART project and scenes
+\include{why_hybrid/why_hybrid}
+\include{our_hybrid_renderer/our_hybrid_renderer}
+\include{further_work/further_work}
+
+
+\begin{thebibliography}{9}
+
+%\bibitem{cite_mnemonic}
+% Author
+% Paper title
+% publisher
+% edition
+% year of publication
+
+\bibitem{nvidiarobison09}
+	Robison, Austing and Shirley, Peter,
+	"Image space gathering",
+	HPG '09: Proceedings of the Conference on High Performance Graphics 2009
+
+\bibitem{joao10}
+  João Cabeleira,
+	"Combining Rasterization and Ray Tracing Techniques to Approximate Global Illumination in Real-Time"
+  Instituto Superior Técnico,
+  www.voltaico.net
+  2010
+  
+\bibitem{nv2012}
+  Nvidia Corporation,
+  "OptiX Ray Tracing Engine Programming Guide version 2.5"
+  27. January 2012
+
+\bibitem{Parker10OptiX}
+  Parker et al.,
+  "OptiX: A General Purpose Ray Tracing Engine"
+  ACM 2010
+  
+\bibitem{Mania2008}
+	K. Mania and E. Reinhard
+	"Improving Interaction Performance for Ray Tracing"
+	Eurographics Short Paper
+	2008
+\bibitem{dachsbacher2005}
+  Carsten Dachsbacher and Marc Stamminger, 
+  "Reflective Shadow Maps", 
+  in Symposium on Interactive 3D Graphics , 
+  New York, USA, 2005, 
+  pp. 203 - 231.
+
+\bibitem{mcguire2009}
+  Morgan McGuire and David Luebke,
+  "Hardware-Accelerated Global Illumination by Image Space Photon Mapping",
+  Proceedings of the 2009 ACM SIGGRAPH/EuroGraphics conference on High   Performance Graphics,
+  2009,
+  http://graphics.cs.williams.edu/papers/PhotonHPG09/
+
+\bibitem {kaplanyan2009}
+  Anton Kaplanyan, "Light Propagation Volumes in CryEngine3", in Advances in Real-Time 
+  Rendering in 3D Graphics and Games Course,
+  SIGGRAPH, 
+  2009
+
+\bibitem {purcell2002}
+Timoty Purcell, Ian Buck, William Mark, and Pat Hanrahan, 
+"Ray Tracing on Programmable Graphics Hardware", 
+International Conference on Computer Graphics and Interactive Techniques, 2002
+
+\bibitem {popov2007}
+Stefan Popov, Johannes Günthe, Hans-Peter Seidel, and Philipp Slusallek, 
+"Stackless KDTree Traversal for High Performance GPU Ray Tracing", 
+Computer Graphics Forum, vol. 26, 
+no. 3, pp. 415-424, September 2007.
+
+\bibitem {crassin2011}
+Cyril Crassin, Fabrice Neyret, Miguel Sainz, Simon Green, Elmar Eisemann
+"Interactive Indirect Illumination Using Voxel Cone Tracing",
+Pacific Graphics 2011
+
+\bibitem {optixpage}
+Optix. [Online]. http://www.nvidia.com/object/optix.html
+\end{thebibliography}
+
+\end{document}
