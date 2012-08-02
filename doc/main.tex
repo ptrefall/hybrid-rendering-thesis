@@ -11,25 +11,23 @@
 
 \setcounter{page}{-100}
 \pagestyle{empty} % no page numbers
-\include{0/frontpage}
+\include{0_Frontpage/frontpage}
 \setcounter{page}{-99}
-\include{0/abstract}
+\include{0_Abstract/abstract}
 \pagestyle{plain} % turn page numbers on
 \setcounter{page}{0}
 
 \tableofcontents
 
-%\include{sandbox/sandbox}
-\include{previous_work/previous_work}
-% What is raytracing?
-% What is deferred rendering?
-\include{opengl3/opengl3}
-\include{optix/optix}
-\include{optix_gl_interop/optix_gl_interop}
-% BART project and scenes
-\include{why_hybrid/why_hybrid}
-\include{our_hybrid_renderer/our_hybrid_renderer}
-\include{further_work/further_work}
+\include{1_Introduction/introduction}
+\include{2_Previous_Work/previous_work}
+\include{3_Rasterizer/rasterizer}
+\include{4_Raytracing/raytracing}
+\include{5_Why_Hybrid/optix_gl_interop}
+\include{5_Why_Hybrid/why_hybrid}
+\include{6_Implementation/implementation}
+\include{7_Results/results}
+\include{8_Further_Work/further_work}
 
 
 \begin{thebibliography}{9}
