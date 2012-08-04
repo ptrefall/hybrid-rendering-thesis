@@ -1,24 +1,5 @@
 
+\part{Hybridity}
 \section{Why Hybrid}
 
-
-Combining our deferred raster pipeline with OptiX can either be done from scratch, learning what every OptiX API-call does, or, copy one of the GL/Optix interop examples and modify it until it works. 
-
-\subsection{Shared State}
-
-The following state must be synchronized between GL and OptiX
-
-\begin{enumerate}
-	\item Geometry and its transform (model matrix)
-	\item Textures (if we find that they can demonstrate any advantages)
-	\item Camera (view matrix \& projection matrix)
-\end{enumerate}
-
-For geometry, ``optix::Context'' provides functions createBufferFromGLBO and similar createTextureSamplerFromGLImage for textures.
-
-The standard pinhole\_camera.cu implementation is used, then the view vectors (u,v,w) must be extracted from our camera class or the modelview matrix.
-
-\paragraph{Description of the rendering pipeline}
-
-GL and OptiX scenes are independently rendered. We end up with two sets of g-buffers, shading and composition is done in a shader.
-
+Write something about why choosing a hybrid rendering pipeline can be the right thing to do.
