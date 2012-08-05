@@ -14,3 +14,21 @@ The most basic job of a rasterizer is to draw triangles using pixels on a raster
   \caption{Scanline rasterization of pixels}   
   \label{fig:Scanline rasterization of pixels}
 \end{figure}
+
+
+\section{Rasterization Pipelines}
+
+Write something general about rasterization pipelines, to introduce the concept.
+
+
+\subsection{Forward Rendering}
+
+In a forward rendering pipeline (FRP), all surfaces are shaded immediately. The rasterization and shading complexity of an FRP is O(pixels rasterized and shaded * number of lights). This doesn't scale well as the number of lights go up.
+
+\begin{math}
+	\orderof(\sum {shaded pixel} \times \sum light)
+\end{math}
+
+\subsection{Deferred Rendering}
+
+Write something about the deferred rendering pipeline architecture.
