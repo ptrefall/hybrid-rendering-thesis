@@ -106,11 +106,24 @@ Examples of hybrid engines; Pixar's REYES
 \subsection {Combining Rasterization and Ray Tracing}
 	Rasterization and Ray Tracing are very different, but can be combined to exploit each ones strengths. Rasterization is good at direct lighting, while raytracing is flexible for many effects.
 
-\subsubsection {RenderMan}
-	By Pixar.
-
-% part c
-% chapter % funker ikke for article virker det som section subsection
-% subsubsection 
-% paragraph 
-% subparagraph
+\subsubsection {Reyes}
+	\def\onequarter{\sfrac{1}{4}}
+  \def\onehalf{\sfrac{1}{2}}
+  
+	Reyes is a rendering pipeline for CGI developed in the mid-1980s by Pixar. The goal of Reyes was to create renderer that could match raytracing-methods, but at a greater speed. A two-hour movie rendered at 24 frames per second in one year means each frame must take less than three minutes to render \cite{reyes1987}. In order to reach this kind of performance on visually rich scenes, the renderer tries to exploit cache coherency and vectorization. Reyes is a forward rasterizer, but has a ``backdoor'' that allows other rendering methods to be plugged in at the visibility test stage (Z-buffer test for instance). Reyes tesselates models into micropolyons. A micropolygon is a quadrilateral with sides about \onehalf pixel in length, this is necessary to avoid aliasing artifacts, since half a pixel is the Nyquist limit for an image. All micropolygons are shaded before the visibility test, this means a lot of work is wasted (todo: refer to deferred raster chapter), the authors of Reyes argue that computer graphics models are like movie sets in that only the visible parts that will be seen are actually built. This assertion very much depends on the scene. Some of the advantages to doing forward rendering on micropolygons are:
+	
+\begin{itemize}
+	\item The shading of a complete surface can be vectorized
+	\item Texture access can be done contiguosly, this avoids texture map thrashing
+	\item One can avoid texture filtering when micropolygons map exactly to texture map pixels.
+\end{itemize}
+	
+	Micropolyons also allow curved surfaces to be approximated, this has advantages for the artist. Artists can model a low-resolution mesh, and apply some subdivision scheme to the model. The subdivision can be done at render, and saves storage.
+	
+	Pixar has recently released their proprietary subdivision libraries as open source \cite{pixar_subdiv}
+	
+	
+ % movie_len_in_secs: 24 fps * 2 hrs * 3600 seconds = 172800 seconds
+ % seconds in a year: 365 * 24 * 3600 = 31536000
+ % year_secs/movie_len = 182.5 secs
+ % minutes available = 182.5/60 = 3.042~ mins
