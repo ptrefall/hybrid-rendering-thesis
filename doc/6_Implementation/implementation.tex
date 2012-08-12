@@ -1,7 +1,33 @@
 \section{Implementation}
 
+\subsection{Engine architecture}
+The architecture of the engine is mainly focused on the concepts of file loading and parsing, object oriented wrapping of OpenGL, scene objects, and render passes.
+
+\subsubsection{File loading and parsing}
+\paragraph{BART}
+Write something about BART.
+\paragraph{Assimp}
+Write something about Assimp.
+\paragraph{Shaders}
+Write something about shader loading.
+\paragraph{Textures}
+Write something about texture loading.
+\paragraph{Materials}
+Write something about material loadaing and parsing
+\paragraph{Configuration}
+Write something about configuration loading and parsing.
+
+\subsubsection{Object oriented OpenGL wrappers}
+As was explained in chapter (about OpenGL), the OpenGL API is a stack-based state machine. In an engine architecture, it makes for more robust handling when a certain behavior is grouped or stored within a class, and take advantage of the construction of objects and destruction of objects, to automate the state of the OpenGL stack as much as possible.
+
+\subsubsection{Scene objects}
+The scene consist of multiple graphical objects positioned on the screen, and scene objects represents these by declaring the OpenGL render buffers, etc...
+
+\subsubsection{Render Pass}
+A render pass defines a group of scene objects to be rendered by the rasterizer or raytracer, and can write to render buffers or the back buffer. The SceneManager object defines the order in which the different passes are called, and often one render pass depends on another in order to move down the render pipeline. For instance, the final light pass requires that at least the g-buffer pass has been made in order to work.
 
 \subsection{Deferred pipeline}
+
 
 \subsection{CameraModel}
 The raytracer uses pinhole camera model. The eye is a point, rays are cast from this point, through the viewplane and into the scene. Eyepoint-viewplane distance determines focal length. A rasterizer on the other hand requires a projection matrix.
@@ -9,7 +35,5 @@ The raytracer uses pinhole camera model. The eye is a point, rays are cast from 
 \subsection{Various hybrid configurations}
 
 \subsection{Geometry}
-
 Traditional triangle meshes with vertex attributes (normals, texture coordinates etc)
-
 
