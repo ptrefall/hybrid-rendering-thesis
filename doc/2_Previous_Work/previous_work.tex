@@ -44,27 +44,36 @@ Examples of real time path tracing engines;
 \end{figure}	
 	
 		\paragraph{2.nd pass} View rays are cast from the camera and checked for intersection against the scene similar to raytracing. Once the nearest intersection point is found, a pre-defined number of nearest photons are sampled, and interpolated to calculate irradiance at that point.
-
-% H -  here
-% T - top of page
-% B - bottom of page
-% P - page of floats
-% [width=0.90\textwidth]
-
-
 			
 	\subsection {Radiosity}
-		Diffuse inter-reflections of light in a scene. Divides scene geometry into small
-		patches. For every pair of patches, one defines a camera model for how they can
-		see each other. Ex: paraboloid, cuboid-mapping. These form factors are then used
+		Radiosity is a GI-method that creates a diffuse inter-reflections map of light in a scene. It works by dividing the scene geometry into small
+		patches \ref{fig:radiosity_grid}. For every pair of patches, one defines a camera model for how they can
+		see each other. Examples are paraboloid- and cuboid-mapping. These form factors are then used
 		in an iterative process that progressively transfers radiation between the
-		patches.
+		patches. This is a finite element method.
 
-		Can generate realistic diffuse lighting and is viewpoint independent. As long as
+		Radiosity can generate realistic diffuse lighting and is viewpoint independent. As long as
 		geometry and lightsources remain unchanged, the simulation can be effectively
 		sorted and sampled to obtain the scene lighting for any view.
 
-		Con: Limited diffuse lighting effects. Can't do absorb, refract?
+
+\begin{figure}[ht]
+	\begin{minipage}[b]{0.5\linewidth}
+		\centering
+		\includegraphics[width=0.6\textwidth]{Media/prev_work_radiosity_grid.png}
+		\caption{Geometry divided into patches/elements. Image by Hugo Elias.}
+		\label{fig:radiosity_grid}
+	\end{minipage}
+		\hspace{0.5cm}
+		\begin{minipage}[b]{0.5\linewidth}
+			\centering
+		  \includegraphics[width=0.6\textwidth]{Media/prev_work_radiosity_patch.png}
+		  \caption{A single path/element. Image by Hugo Elias, found at freespace.virgin.net/hugo.elias/radiosity/radiosity.htm }
+		  \label{fig:radiosity_patch}
+		\end{minipage}
+\end{figure}	
+
+	The radiosity method isn't perfect. Its slow, it does'nt handle point light sources well, nor shiny surfaces.
 
 	\subsection {Instant Radiosity}
 		A technique developed by Alexander Keller to approximate the simulation of light
