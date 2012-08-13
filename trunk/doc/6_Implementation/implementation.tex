@@ -23,7 +23,7 @@ As was explained in chapter (about OpenGL), the OpenGL API is a stack-based stat
 \subsubsection{Scene objects}
 The scene consist of multiple graphical objects positioned on the screen, and scene objects represents these by declaring the OpenGL render buffers, etc...
 
-\subsubsection{Render Pass}
+\subsubsection{Render pass}
 A render pass defines a group of scene objects to be rendered by the rasterizer or raytracer, and can write to render buffers or the back buffer. The SceneManager object defines the order in which the different passes are called, and often one render pass depends on another in order to move down the render pipeline. For instance, the final light pass requires that at least the g-buffer pass has been made in order to work.
 
 \subsection{Deferred pipeline}
@@ -35,7 +35,7 @@ In the G-buffer pass, all geometry in the scene is rendered by the rasterizer. P
 \subsubsection{Final light pass}
 In the Final light pass, a fullscreen quad is rasterized. For each pixel on the screen, each light in the scene interact with what is stored in the G-buffer for that pixel. The result is written to the back-buffer and displayed on the screen.
 
-\subsection{CameraModel}
+\subsection{Camera model}
 The raytracer uses pinhole camera model. The eye is a point, rays are cast from this point, through the viewplane and into the scene. Eyepoint-viewplane distance determines focal length. A rasterizer on the other hand requires a projection matrix.
 
 \subsection{Various hybrid configurations}
