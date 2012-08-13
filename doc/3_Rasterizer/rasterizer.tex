@@ -23,15 +23,13 @@ Write something general about rasterization pipelines, to introduce the concept.
 
 \subsection{Forward Rendering}
 
-\begin{figure}[H]
-	\begin{math}
-		\orderof(\sum {pixel_{rasterized + shaded}} \times \sum light)
-	\end{math}
-	\caption{The rasterization and shading complexity of a Forward Rendering Pipeline}
-	\label{fig:FRP_complexity}
-\end{figure}
+The rasterization and shading complexity of a Forward Rendering Pipeline
 
-In a forward rendering pipeline (FRP), all surfaces are shaded immediately. As figure~\ref{fig:FRP_complexity} show, this doesn't scale well as the number of lights go up.
+\begin{equation}\label{fig:FRP_complexity}
+  \orderof(\sum {pixel_{rasterized + shaded}} \times \sum light)
+\end{equation}
+
+In a forward rendering pipeline (FRP), all surfaces are shaded immediately. As figure \eqref{fig:FRP_complexity} shows, this doesn't scale well as the number of lights go up.
 
 \subsubsection{Multiple Lights}
 
@@ -47,13 +45,10 @@ Another way of shading a surface with an arbitrary number lights is using a mult
 
 \subsection{Deferred Rendering}
 
-\begin{figure}[H]
-	\begin{math}
+The rasterization and shading complexity of a Deferred Rendering Pipeline:
+\begin{equation}\label{fig:DRP_complexity}
 		\orderof(\sum {pixel_{rasterized}}) + \orderof(\sum {pixel_{GBuffer}} \times \sum {light})
-	\end{math}
-	\caption{The rasterization and shading complexity of a Deferred Rendering Pipeline}
-	\label{fig:DRP_complexity}
-\end{figure}
+\end{equation}
 
 Deferred Rendering Deering1988 is a rasterization-based rendering technique in which the result of drawing the scene is divided and stored in intermediate buffers (called the G-Buffer) using multiple render targets (MRT).  The G-buffer, or Geometry-Buffer, is called so because it stores per pixel geometric properties like depth, normals and texture coordinates; - a caching of the geometry that the camera is viewing, for repeated use further down the rendering pipeline. The G-Buffer is input into a shading algorithm, usually as samplers, to produce the final result. This reduces the input of the scene to what is in the view space when performing shading, and specially reduce the cost of lighting. Lights are rendered in a second pass as geometric volumes, who's surface color is accumulated into a final render target using additive blending. In essence, this gives us a rendering pipeline which drives a single pass per light, as opposed to forward rendering's single pass with a complex shader or multi-pass techniques (typically single pass per mesh per light).
 
