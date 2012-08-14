@@ -17,10 +17,9 @@ uniform vec3 pp_t_ior_mat[16];
 
 uniform struct SLight
 {
-	vec3 position_vs;			//view space
+	vec3 position_vs; //view space
 } light[1];
-
-uniform vec3 CamPos_vs;			//view space
+uniform vec3 CamPos_vs; //view space
 
 in block
 {
@@ -58,18 +57,21 @@ float compute_gauss_term(in vec3 N, in vec3 L, in vec3 V, in float NdotL, in flo
 
 void main( void )
 {
-	vec3 diffuse 	= texture( TEX_DIFF, Vertex.t ).xyz;
-	vec3 position_vs 	= texture( TEX_POS,  Vertex.t ).xyz;							//view space
+	vec3 diffuse = texture( TEX_DIFF, Vertex.t ).xyz;
+	vec3 position_vs = texture( TEX_POS,  Vertex.t ).xyz; //view space
 	vec4 normal_matid = texture( TEX_NORM, Vertex.t );
 	int material_id = int(normal_matid.a);
 	vec4 ray = texture( TEX_RAY, Vertex.t );
 	
-	//vec3 N = -normalize(cross(dFdy(position_vs), dFdx(position_vs)));	//view space
-	//vec3 N = normalize(normal_matid.xyz);								//view space
-	vec3 N = normalize(ray.xyz * 2.0 - 1.0);										//object space???
-	vec3 light_pos_vs = light[0].position_vs;							//view space
-	vec3 L = normalize(light_pos_vs - position_vs);						//view space
-	vec3 V = normalize(CamPos_vs-position_vs);							//view space
+	//Rasterized normals commented out
+	//vec3 N = normalize(normal_matid.xyz); //view space
+
+	//Use raytraced normals
+	vec3 N = normalize(ray.xyz * 2.0 - 1.0); //view space (0 -> 1)
+
+	vec3 light_pos_vs = light[0].position_vs; //view space
+	vec3 L = normalize(light_pos_vs - position_vs); //view space
+	vec3 V = normalize(CamPos_vs-position_vs); //view space
 	
 	float NdotL = max(dot(N,L), 0.0);
 	float shininess = pp_t_ior_mat[material_id].r;
@@ -80,18 +82,11 @@ void main( void )
 	//out_FragColor = vec4(diffuse, 1.0);
 	//out_FragColor = vec4(-position_vs.zzz*0.1, 1.0);
 	//out_FragColor = vec4(N * 0.5 - 0.5, 1.0);
-    out_FragColor = vec4(ray.rgb* 2.0 - 1.0,1.0);
+    //out_FragColor = vec4(ray.rgb* 2.0 - 1.0,1.0);
     
-	/*out_FragColor = vec4( 
-		((diffuse * diffuse_mat[material_id] * NdotL) + (specular_mat[material_id] * term) + (diffuse * ambient_mat[material_id])),// * ray.r, 
-		1.0
-		);
-		//+ ray.rgb*/
-		
-	//out_FragColor = vec4( diffuse, 1.0 );
-	//out_FragColor = vec4( N, 1.0 );
-	//out_FragColor = vec4( (N + 1.0) * 0.5, 1.0 );
-	//out_FragColor = vec4( abs(N), 1.0 );
-	//out_FragColor = vec4(((N + 1.0) * 0.5).rgb, 1.0);
-	//out_FragColor = normal_matid;
+	out_FragColor = vec4( 
+		((diffuse * diffuse_mat[material_id] * NdotL) + 
+		 (specular_mat[material_id] * term) + 
+		 (diffuse * ambient_mat[material_id])), 
+		1.0);
 }
