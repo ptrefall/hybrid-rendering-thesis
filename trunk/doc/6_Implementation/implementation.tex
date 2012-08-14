@@ -32,6 +32,103 @@ The pipeline of the deferred renderer is broken up into two render passes. The G
 \subsubsection{G-buffer pass}
 In the G-buffer pass, all geometry in the scene is rendered by the rasterizer. Position, diffuse and normal data is stored in an MRT in view space.
 
+\begin{Verbatim}[frame=single, label=G-buffer vertex shader]
+#version 330 core
+#define DIFFUSE  0
+#define POSITION 1
+#define NORMAL   2
+#define TEXCOORD 3
+
+uniform mat4 Object_to_World;
+uniform mat4 World_to_View;
+uniform mat4 View_to_Clip;
+uniform mat3 Normal_to_View;
+
+layout(location = POSITION) in vec3 Position_os;
+layout(location = NORMAL)   in vec3 Normal_os;
+layout(location = TEXCOORD) in vec2 TexCoord;
+
+out gl_PerVertex
+{
+   vec4 gl_Position;
+};
+
+out block
+{
+   vec4 position_ws; //world space
+   vec4 position_vs; //view space
+   vec3 normal_vs;   //view space
+   vec2 texcoord;
+} Vertex;
+
+void main( void )
+{	
+   Vertex.texcoord = TexCoord;
+	
+   //Object space to View space
+   Vertex.normal_vs = normalize(Normal_to_View * Normal_os);
+	
+   //Object space to World space
+   Vertex.position_ws = Object_to_World * vec4(Position_os, 1.0);
+	
+   //World  space to View  space
+   Vertex.position_vs = World_to_View * Vertex.position_ws;
+	
+   //View   space to Clip  space
+   gl_Position = View_to_Clip  * Vertex.position_vs;
+}
+\end{Verbatim}
+
+\begin{Verbatim}[frame=single, label=G-buffer fragment shader]
+#version 330 core
+#define DIFFUSE  0
+#define POSITION 1
+#define NORMAL   2
+#define TEXCOORD 3
+
+uniform sampler2D diffuse_tex;
+uniform float material_id;
+
+in block
+{
+   vec4 position_ws; //world space
+   vec4 position_vs; //view space
+   vec3 normal_vs;   //view space
+   vec2 texcoord;
+} Vertex;
+
+layout(location = DIFFUSE,  index = 0) out vec4 out_Diffuse;
+layout(location = POSITION, index = 0) out vec4 out_Position;
+layout(location = NORMAL,   index = 0) out vec4 out_Normal;
+
+vec4 Diffuse();
+vec3 Position();
+vec3 Normal();
+
+void main( void )
+{
+   out_Diffuse  = Diffuse();
+   out_Position = vec4(Position(), 1.0);
+   out_Normal   = vec4(Normal(),material_id);
+}
+
+vec4 Diffuse()
+{
+   return texture(diffuse_tex, Vertex.texcoord);
+}
+vec3 Position()
+{
+   return Vertex.position_vs.xyz;
+}
+vec3 Normal()
+{
+   //view space
+   vec3 frontNormal_vs = gl_FrontFacing ? 
+                         Vertex.normal_vs : -Vertex.normal_vs;
+   return normalize(frontNormal_vs);
+}
+\end{Verbatim}
+
 \subsubsection{Final light pass}
 In the Final light pass, a fullscreen quad is rasterized. For each pixel on the screen, each light in the scene interact with what is stored in the G-buffer for that pixel. The result is written to the back-buffer and displayed on the screen.
 
