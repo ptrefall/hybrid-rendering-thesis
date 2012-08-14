@@ -32,7 +32,7 @@ The pipeline of the deferred renderer is broken up into two render passes. The G
 \subsubsection{G-buffer pass}
 In the G-buffer pass, all geometry in the scene is rendered by the rasterizer. Position, diffuse and normal data is stored in an MRT in view space.
 
-\begin{Verbatim}[frame=single, label=G-buffer vertex shader]
+\begin{Verbatim}[frame=single, numbers=left, label=G-buffer vertex shader]
 #version 330 core
 #define DIFFUSE  0
 #define POSITION 1
@@ -79,7 +79,7 @@ void main( void )
 }
 \end{Verbatim}
 
-\begin{Verbatim}[frame=single, label=G-buffer fragment shader]
+\begin{Verbatim}[frame=single, numbers=left, label=G-buffer fragment shader]
 #version 330 core
 #define DIFFUSE  0
 #define POSITION 1
