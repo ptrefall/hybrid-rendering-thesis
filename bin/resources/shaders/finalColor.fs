@@ -65,7 +65,8 @@ void main( void )
 	vec4 ray = texture( TEX_RAY, Vertex.t );
 	
 	//vec3 N = -normalize(cross(dFdy(position_vs), dFdx(position_vs)));	//view space
-	vec3 N = normalize(normal_matid.xyz);								//view space
+	//vec3 N = normalize(normal_matid.xyz);								//view space
+	vec3 N = normalize(ray.xyz * 2.0 - 1.0);										//object space???
 	vec3 light_pos_vs = light[0].position_vs;							//view space
 	vec3 L = normalize(light_pos_vs - position_vs);						//view space
 	vec3 V = normalize(CamPos_vs-position_vs);							//view space
@@ -76,14 +77,16 @@ void main( void )
 	
 	float shadow_att = texture( TEX_DIFF, Vertex.t ).a; // from Optix
     
-    out_FragColor = vec4(ray.rgb,1.0);
-    /*
-	out_FragColor = vec4( 
-		((diffuse * diffuse_mat[material_id] * NdotL) + (specular_mat[material_id] * term) + (diffuse * ambient_mat[material_id])) * ray.r, 
+	//out_FragColor = vec4(diffuse, 1.0);
+	//out_FragColor = vec4(-position_vs.zzz*0.1, 1.0);
+	//out_FragColor = vec4(N * 0.5 - 0.5, 1.0);
+    out_FragColor = vec4(ray.rgb* 2.0 - 1.0,1.0);
+    
+	/*out_FragColor = vec4( 
+		((diffuse * diffuse_mat[material_id] * NdotL) + (specular_mat[material_id] * term) + (diffuse * ambient_mat[material_id])),// * ray.r, 
 		1.0
 		);
-    */
-		//+ ray.rgb
+		//+ ray.rgb*/
 		
 	//out_FragColor = vec4( diffuse, 1.0 );
 	//out_FragColor = vec4( N, 1.0 );
