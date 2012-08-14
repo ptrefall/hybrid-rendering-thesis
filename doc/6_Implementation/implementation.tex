@@ -5,7 +5,8 @@ The architecture of the engine is mainly focused on the concepts of file loading
 
 \subsubsection{File loading and parsing}
 \paragraph{BART}
-Write something about BART.
+Benchmark for Animated Raytracing (BART) is a scene description format used to compare ray tracing algorithms. On the BART homepage \cite{bart_homepage}, there are three test scenes designed to stress raytracing algorithms. All the scenes use traditional triangle based geometry. The camera and object animation paths are animated using  Kochanek-Bartels splines. The BART format is an extension of the Eric Haines' natural file format (NFF). The source code available doesn't seem to be maintained and didn't work out of the box, so we had to patch it up and make it work with both GL buffer objects (GLBO) and OptiX. We did not find the time to implement animations.
+
 \paragraph{Assimp}
 Write something about Assimp.
 \paragraph{Shaders}

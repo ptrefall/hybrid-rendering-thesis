@@ -17,14 +17,10 @@ Examples of real time path tracing engines;
 
 \paragraph{Hybrid shadows} renders world space positions to a texture. Texture is loaded into optix, from there a ray is traced from each world space position against all lights. Attenuates given world space position and saves attenuation value in a shadowmap.
 
-\paragraph{ISG Shadows} Image Space Gathering \cite{nvidiarobison09}
-\paragraph{ISG Reflection}
-
-
 \section {Non-realtime Global Illumination (GI) techniques}
 		\subsection{Pure raytracing} 
 		One pass. But produces ugly hard shadows unless we shoot more that one shadowray.
-	\subsection{Photon mapping} A two pass algorithm. Combines ray tracing and particle tracing.
+	\subsection{Photon mapping} A two pass algorithm introduced by \cite{jensen95}. Combines stochastic ray tracing (a.k.a. Monte Carlo ray tracer) and particle tracing.
 	\paragraph{1.st pass} photons are cast from the light source and check for intersection against the scene.    Every intersecting photon is stored in a photon map. After intersecting the scene a photon may be reflected, refracted or absorbed depending on the material properties of the surface. The selection is done by the Monte Carlo method called 'russian roulette'. If the photon is not absorbed, then a new traveling direction is calculated for it according to the selected behavior.
 
 \begin{figure}[ht]
