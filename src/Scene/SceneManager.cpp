@@ -16,6 +16,7 @@
 #include "../Render/Passes/Bloom/Bloom_Pass.h"
 #include "../Render/Passes/Raytrace/Raytrace_Pass.h"
 #include "../Render/DebugOutput.h"
+#include "../Render/GPUTimer.h"
 
 #include "../Parser/INIParser.h"
 
@@ -29,6 +30,7 @@ SceneManager::SceneManager(const File::ShaderLoaderPtr &shader_loader, unsigned 
 	: shader_loader(shader_loader), width(width), height(height), resource_dir(resource_dir)
 {
 	debug_output = std::make_shared<Render::DebugOutput>();
+	//gpu_timer = std::make_shared<Render::GPUTimer>();
 
 	//////////////////////////////////////////
 	// DEFERRED RENDERER INITIALIZING
@@ -56,6 +58,11 @@ SceneManager::~SceneManager()
 
 void SceneManager::render()
 {
+	//static int frame_count = 0;
+
+	//static int g_buffer_pass_accum_time = 0;
+	//int g_buffer_pass_dt_time = 0;
+	//gpu_timer->begin();
 	g_buffer_pass->begin();
 	{
 		glEnable(GL_DEPTH_TEST);
@@ -63,12 +70,23 @@ void SceneManager::render()
 			(*it)->render(g_buffer_pass->getShader());
 		glDisable(GL_DEPTH_TEST);
 	} g_buffer_pass->end();
+	/*gpu_timer->end();
+	while(!gpu_timer->isResultAvailable()) {}
+	g_buffer_pass_dt_time = gpu_timer->getTimeElapsed();
+	g_buffer_pass_accum_time += g_buffer_pass_dt_time;*/
 
+
+	/*static int raytrace_pass_accum_time = 0;
+	int raytrace_pass_dt_time = 0;
+	gpu_timer->begin();*/
 	raytrace_pass->begin();
 	{
 	//	//raytrace_pass->update(g_buffer_pass->getRenderTextures(), scene, lights);
 		raytrace_pass->render();
 	} raytrace_pass->end();
+	/*while(!gpu_timer->isResultAvailable()) {}
+	raytrace_pass_dt_time = gpu_timer->getTimeElapsed();
+	raytrace_pass_accum_time += raytrace_pass_dt_time;*/
 
 	/*light_pass->begin();
 	{
@@ -84,12 +102,21 @@ void SceneManager::render()
 		bloom_pass->render_final_step();
 	} bloom_pass->end();*/
 
+	/*static int final_pass_accum_time = 0;
+	int final_pass_dt_time = 0;
+	gpu_timer->begin();*/
 	final_pass->begin();
 	{
 		//final_pass->update(light_pass->getFinalColorTexture(), bloom_pass->getFilterTexture());
 		bindLights(final_pass->getShader());
 		final_pass->render();
 	} final_pass->end();
+	/*while(!gpu_timer->isResultAvailable()) {}
+	final_pass_dt_time = gpu_timer->getTimeElapsed();
+	final_pass_accum_time += final_pass_dt_time;*/
+
+	//std::cout << frame_count << " " << g_buffer_pass_dt_time << " " << raytrace_pass_dt_time << " " << final_pass_dt_time << " " << g_buffer_pass_accum_time << " " << raytrace_pass_accum_time << " " << final_pass_accum_time << std::endl;
+	//frame_count++;
 }
 
 void SceneManager::bindLights(const Render::ShaderPtr &active_program)

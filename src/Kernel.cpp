@@ -2,6 +2,7 @@
 #include "Parser\INIParser.h"
 
 #include "Render\Shader.h"
+#include "Render\GPUTimer.h"
 #include "File\AssetManager.h"
 #include "File\ShaderLoader.h"
 #include "File\MaterialLoader.h"
@@ -124,8 +125,28 @@ void Kernel::run(int start_time, std::function<void()> main_loop_body)
 	prev_time = start_time;
 
 	running = true;
+	Render::GPUTimer gpu_timer;
+	long long gpu_accum = 0;
+	long frame_counter = 0;
+	bool test_gpu_time = true;
 	while(running)
+	{
+		if(test_gpu_time)
+			gpu_timer.begin();
 		main_loop_body();
+		if(test_gpu_time)
+			gpu_timer.end();
+		if(gpu_timer.isResultAvailable())
+		{
+			int gpu_dt = gpu_timer.getTimeElapsed();
+			gpu_accum += (long long)gpu_dt;
+			std::cout << frame_counter << " " << gpu_dt << " " << gpu_accum << std::endl;
+			frame_counter++;
+			test_gpu_time = true;
+		}
+		else
+			test_gpu_time = false;
+	}
 
 	Kernel::Shutdown();
 }

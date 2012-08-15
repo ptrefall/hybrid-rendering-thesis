@@ -64,10 +64,10 @@ void main( void )
 	vec4 ray = texture( TEX_RAY, Vertex.t );
 	
 	//Rasterized normals commented out
-	//vec3 N = normalize(normal_matid.xyz); //view space
+	vec3 N = normalize(normal_matid.xyz); //view space
 
 	//Use raytraced normals
-	vec3 N = normalize(ray.xyz * 2.0 - 1.0); //view space (0 -> 1)
+	//vec3 N = normalize(ray.xyz * 2.0 - 1.0); //view space (0 -> 1)
 
 	vec3 light_pos_vs = light[0].position_vs; //view space
 	vec3 L = normalize(light_pos_vs - position_vs); //view space
