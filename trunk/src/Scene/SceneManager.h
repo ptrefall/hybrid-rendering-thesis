@@ -18,6 +18,7 @@ namespace Render
 	class Bloom_Pass; typedef std::shared_ptr<Bloom_Pass> Bloom_PassPtr;
 	class Raytrace_Pass; typedef std::shared_ptr<Raytrace_Pass> Raytrace_PassPtr;
 	class DebugOutput; typedef std::shared_ptr<DebugOutput> DebugOutputPtr;
+	class GPUTimer; typedef std::shared_ptr<GPUTimer> GPUTimerPtr;
 }
 
 namespace Scene
@@ -68,5 +69,7 @@ namespace Scene
 		Render::Final_PassPtr final_pass;
 
 		Render::DebugOutputPtr debug_output;
+
+		//Render::GPUTimerPtr gpu_timer;
 	};
 }
