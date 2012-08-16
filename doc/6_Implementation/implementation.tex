@@ -444,6 +444,22 @@ void main( void )
 }
 \end{Verbatim}
 
+\subsection{Raytracer pipeline}
+The pipeline of the raytracer is represented by a single pass in the scene manager's render setup. The render pass is a layer on top of the Optix renderer.
+
+\subsubsection{Raytrace pass}
+The render pass object for the raytracer sets up the Optix render instance and the uniform sampler which the result of the raytracer is output to.
+Then, during rendering, the beginning of the pass will call glFlush, to make sure the previous pass is complete before the raytrace pass starts to render. This was done so that we knew the G-Buffer was generated before the raytracer started to use it as input data.
+Next the Optix render instance is called to render.
+The Raytrace pass holds the functionality of binding and unbinding, which is called by the next render pass. This makes the raytracer output bind itself (the uniform and generated texture) to active the data for the shader stages.
+
+\subsubsection{Optix renderer}
+At construction, the Optix renderer initializes the Optix context, loads, compiles and verifies the optix programs from file, generates buffer data from the G-Buffer via Optix built-in GL buffer conversion methods and assign the buffers to specific names in the Optix context. We had to use PBO buffers to get proper interop with Optix. We couldn't get texture samplers to work.
+At render-time, the pinhole camera data is updated from the first person camera instance, and the G-Buffer data is uploaded to the respective PBOs. Then the context is launched. Finally, the PBOs data is downloaded to the raytracer's g-buffer, utilizing the PBOs efficient GPU-side data copy between the buffer and texture sampler.
+
+\subsubsection{OptiX programs}
+
+
 \subsection{Camera model}
 The raytracer uses pinhole camera model. The eye is a point, rays are cast from this point, through the viewplane and into the scene. Eyepoint-viewplane distance determines focal length. A rasterizer on the other hand requires a projection matrix.
 
