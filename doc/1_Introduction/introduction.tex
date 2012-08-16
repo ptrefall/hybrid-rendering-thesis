@@ -1,4 +1,12 @@
 
 \part{Introduction}
 
-Write a more formal introduction.
+In the modern age of computer graphics, the call for techniques to achieve photo-realistic images for real-time graphics is ever increasing. Realistic lighting and shadowing of scenes, dynamic reflection and refraction, smooth silluettes, caustics, and high geometric detail at any distance are some of the problems.
+
+For a long time, rasterization has been the choice for real-time graphics, while ray-tracing has been the superior technique for photo-realistic offline rendering.
+
+In this paper we propose using a blend of rasterization and raytracing for real-time graphics, and try to identify the strengths and weaknesses of these different rendering techniques.
+
+We'll look at the deferred shading technique for rasterization, allowing the entire pipeline to be represented in view space, complimenting the raytracer.
+
+First we review previous techniques, before we look a bit closer at the rasterization and raytracer pipelines. After that we should be ready to analyze the question, \emph{why hybrid?}, and get into the complications of interopability between the rasterizer and raytracer. Next we'll go through the implementation details of our work, before we round off with a conclusion and suggestions for further work on the topic.
