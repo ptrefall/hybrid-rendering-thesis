@@ -4,43 +4,49 @@
 
 Virtually all optical phenomena can be modelled using ray tracing. The same can not be said for rasterization. 
 
-\paragraph A typical problem with rasterization is the blending order of fragments needed for translucent surfaces. This is required if a scene contains more than one planar glass surface or any curved glass. Blending order can be solved using an A-buffer \cite{carpenter_1984} at the cost of program complexity and memory. 
+\subsection{Rendering effects that are tricky using rasterization}
 
-\paragraph Shadows using shadow maps have many problems. Ray tracing dosn't suffer aliasing to the same extent.
+	\paragraph A typical problem with rasterization is the blending order of fragments needed for translucent surfaces. This is required if a scene contains more than one planar glass surface or any curved glass. Blending order can be solved using an A-buffer \cite{carpenter_1984} at the cost of program complexity and memory. 
 
-\paragraph Reflections must be done by rendering the scene seen from the surface that is to recieve reflections. Usually the scene is rendered into a cube map using six cameras. This is a crude approximation. Creating multiple reflection bounces quickly becomes more expensive. All surfaces visible in the reflection must be rendered multiple times. A ray tracer in comparison only needs traverse the rays affected.
+	\paragraph Shadows using shadow maps have many problems. Ray tracing dosn't suffer aliasing to the same extent.
 
-\paragraph Refractions. Are done in the same manner as reflections.
+	\paragraph Reflections must be done by rendering the scene seen from the surface that is to recieve reflections. Usually the scene is rendered into a cube map using six cameras. This is a crude approximation. Creating multiple reflection bounces quickly becomes more expensive. All surfaces visible in the reflection must be rendered multiple times. A ray tracer in comparison only needs traverse the rays affected.
 
-So, will we in the future, once computational power is good enough to raytrace at retinal display quality only use ray tracing? Probably not. We surround ourselves with objects that essentially only have diffuse shading. Glass house and porcelain shops are the exception, and even in such scenes, there are an abundance of diffuse surfaces.
+	So, will we in the future, once computational power is good enough to raytrace at retinal display quality only use ray tracing? Probably not. We surround ourselves with objects that essentially only have diffuse shading. Glass house and porcelain shops are the exception, and even in such scenes, there are an abundance of diffuse surfaces.
 
-Raytracing is essential for reflections. Just look at this car:
+	Raytracing is essential for reflections. Just look at this car:
 
-\begin{figure}[ht]
-	\centering
-	\includegraphics[width=0.80\textwidth]{Media/why_hybrid_carphoto.jpg}
-	\caption{The car paint, glass and chrome details are essentially the only reflective surfaces in the scene}
-	\label{fig:citroen_gs}
-\end{figure}
+	\begin{figure}[ht]
+		\centering
+		\includegraphics[width=0.80\textwidth]{Media/why_hybrid_carphoto.jpg}
+		\caption{The car paint, glass and chrome details are essentially the only reflective surfaces in the scene}
+		\label{fig:citroen_gs}
+	\end{figure}
+	
+	\paragraph{Fill(rate) workload}
+	With rasterization, we often tell the GPU to shade large surfaces that's out of view, the GPU quickly clips and discards fragments out side the view frustum. Pixar, as mentioned earlier solves this by cutting the geometry until it fits.
 
-\paragraph{Fill(rate) workload}
-With rasterization, we often tell the GPU to shade large surfaces that's out of view, the GPU quickly clips and discards fragments out side the view frustum. Pixar, as mentioned earlier solves this by cutting the geometry until it fits.
+	Ray tracing doesn't have this problem. We only try to shade what is visible.
 
-Ray tracing doesn't have this problem. We only try to shade what is visible.
+	\paragraph For a raster to be able to render anything, it must be converted to triangles. There are types of geometry where it may be more efficient in both terms of speed and memory to use a raytracer.
 
-\paragraph
-Because of art pipelines and for the sake of simplicity, triangle based pipelines are the most popular.
+	Some examples are:
+	\begin{itemize}
+		\item Distance Fields can be raymarched, or an iso value can be extracted by solving the fields equation in an analytic raytracer. A rasterizer must usually sample all of the         field inside the view volume. This becomes especially problematic if the field changes on a frame-by-frame basis.
 
-A raytracer can be beneficial to render surfaces can naturally be intersected in an analytic raytracer or sampled by a discrete ray marcher.
+		\item Scalar Volume Data. Instead of rendering slices or iso-surfaces, the raw data can be sampled using discrete raytracing (also known as ray marching). %cite [Kajiya1986] The rendering equation ???
 
-Some examples are
-\begin{itemize}
-	\item Distance Fields can be raymarched, or an iso value can be extracted by solving the fields equation in an analytic raytracer. A rasterizer must usually sample all of the         field inside the view volume. This becomes especially problematic if the field changes on a frame-by-frame basis.
+		\item Spline surfaces
+		\item Perfect analytical surfaces
+	\end{itemize}
 
-	\item Scalar Volume Data
-	\item Spline surfaces
-  \item Perfect analytical surfaces
-\end{itemize}
+\subsection{Reasons to use a hybrid}
 
+Its the future. Hardware is becoming increasingly parallel. Ray tracing is trivially paralellizable. Ray tracing won't replace rasterization over night, but it will become an increasingly useful.
 
+Its conceptually simpler. Shaders can be written with fewer dependencies. Tradeing memory and programmer time for compute power.
+
+As mentioned, certain types of geometry are better suited for ray tracing.
+
+%Rasterization has recieved a lot of attention due efficiency. This efficiency is mainly due to its cache and bandwidth friendliness.
 % Unless a way to produce high bandwith memory, thats on par with CPU Registers, ray tracing will allways be slower.
