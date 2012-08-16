@@ -462,6 +462,25 @@ At render-time, the pinhole camera data is updated from the first person camera 
 
 \subsubsection{OptiX programs}
 
+\subsection{OptiX and GL interopability}
+Combining our deferred raster pipeline with OptiX can either be done from scratch, learning what every OptiX API-call does, or, copy one of the GL/Optix interop examples and modify it until it works.
+
+\subsubsection{Shared State}
+The following state must be synchronized between GL and OptiX
+
+\begin{enumerate}
+	\item Geometry and its transform (model matrix)
+	\item Textures (if we find that they can demonstrate any advantages)
+	\item Camera (view matrix \& projection matrix)
+\end{enumerate}
+
+For geometry, ``optix::Context'' provides functions createBufferFromGLBO and similar createTextureSamplerFromGLImage for textures.
+
+The standard pinhole\_camera.cu implementation is used, then the view vectors (u,v,w) must be extracted from our camera class or the modelview matrix.
+
+\paragraph{Description of the rendering pipeline}
+
+GL and OptiX scenes are independently rendered. We end up with two sets of g-buffers, shading and composition is done in a shader.
 
 \subsection{Camera model}
 The raytracer uses pinhole camera model. The eye is a point, rays are cast from this point, through the viewplane and into the scene. Eyepoint-viewplane distance determines focal length. A rasterizer on the other hand requires a projection matrix.
