@@ -4,7 +4,7 @@
 
 Virtually all optical phenomena can be modelled using ray tracing. The same can not be said for rasterization. 
 
-\paragraph A typical problem with rasterization is the blending order of fragments needed for translucent surfaces. This is required if a scene contains more than one planar glass surface or any curved glass. Blending order can be solved using an A-buffer \cite{carpenter_1984} at the cost program complexity and memory. 
+\paragraph A typical problem with rasterization is the blending order of fragments needed for translucent surfaces. This is required if a scene contains more than one planar glass surface or any curved glass. Blending order can be solved using an A-buffer \cite{carpenter_1984} at the cost of program complexity and memory. 
 
 \paragraph Shadows using shadow maps have many problems. Ray tracing dosn't suffer aliasing to the same extent.
 
@@ -12,7 +12,7 @@ Virtually all optical phenomena can be modelled using ray tracing. The same can 
 
 \paragraph Refractions. Are done in the same manner as reflections.
 
-So, will we in the future, once computational power is good enough to raytrace at retinal display quality only use ray tracing? Probably not. We surround ourselves with objects that have essentially only have diffuse shading. Glass house and porcelain shops are the exception, and even in such scenes, there are an abundance of diffuse surfaces.
+So, will we in the future, once computational power is good enough to raytrace at retinal display quality only use ray tracing? Probably not. We surround ourselves with objects that essentially only have diffuse shading. Glass house and porcelain shops are the exception, and even in such scenes, there are an abundance of diffuse surfaces.
 
 Raytracing is essential for reflections. Just look at this car:
 
@@ -24,7 +24,7 @@ Raytracing is essential for reflections. Just look at this car:
 \end{figure}
 
 \paragraph{Fill(rate) workload}
-With rasterization, we often tell the GPU to shade large surfaces that out of view, the GPU quickly clips and discards fragments out side the view frustum. Pixar, as mentioned earlier solves this by cutting the geometry until it fits.
+With rasterization, we often tell the GPU to shade large surfaces that's out of view, the GPU quickly clips and discards fragments out side the view frustum. Pixar, as mentioned earlier solves this by cutting the geometry until it fits.
 
 Ray tracing doesn't have this problem. We only try to shade what is visible.
 
