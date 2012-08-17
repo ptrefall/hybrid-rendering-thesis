@@ -15,11 +15,10 @@ Examples of real time path tracing engines;
 	\item Brigade
 \end{itemize}
 
-\paragraph{Hybrid shadows} renders world space positions to a texture. Texture is loaded into optix, from there a ray is traced from each world space position against all lights. Attenuates given world space position and saves attenuation value in a shadowmap.
-
 \section {Non-realtime Global Illumination (GI) techniques}
 		\subsection{Pure raytracing} 
-		One pass. But produces ugly hard shadows unless we shoot more that one shadowray.
+		One pass. But produces ugly hard shadows unless we shoot more that one shadowray. Hard shadows can be given soft edges using blending trickery, but this it isn't physically correct.
+		
 	\subsection{Photon mapping} A two pass algorithm introduced by \cite{jensen95}. Combines stochastic ray tracing (a.k.a. Monte Carlo ray tracer) and particle tracing.
 	\paragraph{1.st pass} photons are cast from the light source and check for intersection against the scene.    Every intersecting photon is stored in a photon map. After intersecting the scene a photon may be reflected, refracted or absorbed depending on the material properties of the surface. The selection is done by the Monte Carlo method called 'russian roulette'. If the photon is not absorbed, then a new traveling direction is calculated for it according to the selected behavior.
 
@@ -80,7 +79,7 @@ Examples of real time path tracing engines;
 		light bouncing off surfaces. Accuracy may be improved by recursively casting new
 		light rays from each VPL, but one step usually creates a reliable approximation.
 		Once the VPLs have been created, they are rendered as normal point lights.
-		Modern GPUs are very good at this.
+		Modern GPUs are very good at shading surfaces lit by point lights.
 
 	\subsection {Path Tracing}
 		Path tracing combines ray tracing and Monte Carlo methods to approximate the
@@ -127,15 +126,19 @@ Examples of real time path tracing engines;
 		\end{figure}
 	
 	\subsection {Voxel Cone Tracing}
-		iCare 3D one year ago. Voxelizes triangle scene. Samples using cones. \cite{crassin2011}
+		Work done by Cyrril Crassin (icare3d.org) one year ago. Voxelizes triangle scene. Samples using cones. Similar to beam tracing. \cite{crassin2011}
 
 	\subsection {Global Illumination with Light Propagation Volumes}
 
 	Global Illumination with Light Propagation Volumes (LPV) is a technique for approximation instant radiosity on the GPU. \cite{kaplanyan2009} This technique avoids the instant radiosity requirements for processing a large amount of lights by using a representation of the scene lighting that decouples scene illumination from light quantity. The first step is to generate an initial distribution of VPLs, this is done by rendering a Reflective Shadow Map (RSM) \cite{dachsbacher2005} from the lights point of view. The radiance of each VPL is injected as spherical harmonics into a 3D texture as spherical harmonics that represents the initial distribution of radiance on the scene. Then the initial radiances are propagated iteratively through the radiance volume to simulate light propagation. The volume is then sampled once per-pixel to obtain the irradiance at that location.
 
 \subsection {Real-Time Ray Tracing}
-	Inigo Wald. SIMD. packet tracing. openRT. 
-	\paragraph{Arauna} uses kd-tree for static. bih for dynamic.
+	\paragraph Inigo Wald's OpenRT uses traces multiple rays (ray packets) in-one-go using SIMD instructions.
+	
+	\paragraph Jakko Bikker's Arauna uses kd-tree for static geometry and a bounding interval hiearchy (BIH) for dynamic geometry. Has been used for a few student projects at 
+
+\paragraph Nvidia's has a sample included with their OptiX library called hybrid shadows. The hybrid shadows sample renders world space positions to a texture. Texture is loaded into optix, from there a ray is traced from each world space position against all lights. Attenuates given world space position and saves attenuation value in a shadowmap.
+
 
 \subsection {Real-Time Path Tracing}
 	One of the most complex global illumination algorithms. 
@@ -144,7 +147,7 @@ Examples of real time path tracing engines;
 	\paragraph {V-ray}
 
 \subsection {Combining Rasterization and Ray Tracing}
-	Rasterization and Ray Tracing are very different, but can be combined to exploit each ones strengths. Rasterization is good at direct lighting, while raytracing is flexible for many effects.
+	Rasterization and Ray Tracing are very different, but can be combined to exploit each ones strengths. Rasterization is good at direct/local lighting, while raytracing is flexible for many effects.
 
 \subsubsection {Reyes}
 	\def\onequarter{\sfrac{1}{4}}
