@@ -3,6 +3,27 @@
 \section{Concluding remarks}
 We have reviewed how rasterization and ray tracing techniques can be combined to make steps towards photo-realistic, real-time rendering. We identified that the deferred rendering pipeline was a good choice for the rasterization stages, since it easily allows the rasterized g-buffer data to be stored in view space. This is the same space that is output from a raytracer, and makes it simpler to mix the results from the two different rendering techniques.
 
+\begin{figure}[ht]
+	\begin{minipage}[b]{0.3\linewidth}
+		\centering
+		\includegraphics[width=0.8\textwidth]{Media/raster_depth.png}
+		\caption{G-Buffer position data.}
+		\label{fig:gbufferpos}
+	\end{minipage}
+	\begin{minipage}[b]{0.3\linewidth}
+			\centering
+		  \includegraphics[width=0.8\textwidth]{Media/ray_normals.png}
+		  \caption{Raytraced normals data.}
+		  \label{fig:raynormals}
+		\end{minipage}
+		\begin{minipage}[b]{0.3\linewidth}
+			\centering
+		  \includegraphics[width=0.8\textwidth]{Media/raster_diffuse.png}
+		  \caption{G-Buffer diffuse data.}
+		  \label{fig:gbufferdiff}
+		\end{minipage}
+\end{figure}
+
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=1.00\textwidth]{Media/hybrid.png}
