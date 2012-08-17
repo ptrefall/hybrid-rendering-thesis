@@ -59,9 +59,7 @@ If the ray doesn't hit anything, a miss program is called. The missprogram is al
 
 \subsection{CUDA program API}
 
-\paragraph{A simple raygen program:}
-
-\begin{verbatim}
+\begin{Verbatim}[frame=single, numbers=left, label=A simple raygen program]
 // notice use of templates for type and dimension
 rtBuffer<unsigned char, 2> outputBuffer; 
 
@@ -71,4 +69,4 @@ RT_PROGRAM void pinhole_camera() {
   rtTrace( topObject, ray, payload );
   outputBuffer[launchIndex] = payload.result;
 }
-\end{verbatim}
+\end{Verbatim}
