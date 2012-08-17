@@ -2,7 +2,14 @@
 
 
 \section{Introduction}
-Rasterization is an object order method. We have a list of objects in our scene and draw one after another. This is the opposite of an image order rendering technique, like raytracing, where each pixel is traversed. This is why raytracing can be slower than rasterization; -testing each pixel and, for each pixel, testing every object. This pipeline can require more computation than a rasterization pipeline, which is iterating over every object once and coloring the pixels the object occupies.
+Rasterization is an object order method. We have a list of objects in our scene and draw one after another. This is the opposite of an image order rendering technique, like raytracing, where each pixel is traversed. This is why raytracing can be slower than rasterization; -testing each pixel and, for each pixel, testing every object. This pipeline can require more computation (due to intersection tests and recursion) than a rasterization pipeline. A rasterizer iterates over every object once and coloring the pixels the object occupies, while a ray tracer may visit the same object many times.
+
+	\begin{figure}[ht]
+		\centering
+		\includegraphics[width=0.80\textwidth]{Media/rasterizer_image_vs_object_order.png}
+		\caption{Object order and image order rendering}
+		\label{fig:object_vs_image}
+	\end{figure}
 
 Raytracing can be accelerated by spatial sorting, like bounding volume hierarchies, but so can rasterization. Frustrum- and occlusion-culling are just two examples.
 
@@ -16,10 +23,6 @@ The most basic job of a rasterizer is to draw triangles using pixels on a raster
 \end{figure}
 
 \section{Rasterization Pipelines}
-
-
-Write something general about rasterization pipelines, to introduce the concept.
-
 
 \subsection{Forward Rendering}
 

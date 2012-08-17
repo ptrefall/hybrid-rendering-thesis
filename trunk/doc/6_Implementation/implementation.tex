@@ -21,7 +21,7 @@ in game engines / realtime rendering systems of any kind - but is
 not limited to this audience. In the past, it has been used in a 
 wide and diverse range of applications.
 
-Writte in C++, it is available under the liberal BSD license. 
+Written in C++, it is available under the liberal BSD license. 
 There is a C API as well as bindings to various other languages, 
 including Python and D. Assimp loads models into a straight
 forward data structure for further processing. This feature set 
@@ -484,3 +484,6 @@ GL and OptiX scenes are independently rendered. We end up with two sets of g-buf
 
 \subsection{Camera model}
 The raytracer uses pinhole camera model. The eye is a point, rays are cast from this point, through the viewplane and into the scene. Eyepoint-viewplane distance determines focal length. A rasterizer on the other hand requires a projection matrix.
+
+%Some optix cuda code:
+%\input{trimesh_isect.tex}
