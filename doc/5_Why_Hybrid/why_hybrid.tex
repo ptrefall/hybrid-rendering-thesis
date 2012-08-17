@@ -48,38 +48,7 @@ Its conceptually simpler. Shaders can be written with fewer dependencies. Tradin
 
 As mentioned, certain types of geometry are better suited for ray tracing.
 
-Rasterization has recieved a lot of attention due efficiency. This efficiency is mainly due to its cache and bandwidth friendliness. Unless someone invents memory with bandwidth on par with CPU Registers, ray tracing will allways be slower.
-
-\begin{table}[ht]
-	\centering
-		\begin{tabular*}{0.75\textwidth}{l | l | l |}
-		  Method & Ray tracing & Rasterization  \\ \hline
-			Parallelism & Parallel on the fragment level & Can be paralellized using tiled rendering \\
-			Shading & Easy to incorporate global effects & Needs multiple passes for global effects. More cache friendly \\
-		\end{tabular*}
-	\caption{Ray tracing and rasterization differences}
-	\label{tab:RayTracingAndRasterizationDifferences}
-\end{table}
-
-
-Ray tracing is:
-
-\begin{itemize}
-	\item Embarrassingly Parallel
-	\item Per fragment operations
-	\item Global effects
-	\item Demand Driven
-	\item Scales O(log(n)) with scene complexity
-\end{itemize}
-
-Rasterization is:
-
-\begin{itemize}
-	\item Trending towards full programmability
-	\item Keeps improving
-	\item Stream computing model
-	\item Highly successfull
-\end{itemize}
+Rasterization has recieved a lot of attention due to its efficiency. This efficiency is mainly due to its cache and bandwidth friendliness. Unless someone invents memory with bandwidth on par with CPU Registers, ray tracing will allways be slower.
 
 	\begin{figure}[ht]
 		\centering \includegraphics[width=0.80\textwidth]{Media/why_hybrid_raymindmap.png}
@@ -93,6 +62,6 @@ Rasterization is:
 		\label{fig:raster_mmap}
 	\end{figure}
 
-In a raytracer, global effects \ref{fig:ray_mmap} such as reflections/refractions, shadows are handled per fragment.
+In a raytracer, global effects \ref{fig:ray_mmap}, such as reflections, refractions and shadows, are handled per fragment.
 
 \ref{fig:citroen_gs}
