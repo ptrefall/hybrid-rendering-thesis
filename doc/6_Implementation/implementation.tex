@@ -10,60 +10,31 @@ Benchmark for Animated Raytracing (BART) is a scene description format used to c
 \paragraph{Assimp}
 The Assimp homepage \cite{assimp_homepage} defines the library like this:
 \begin{Verbatim}[frame=single,fontshape=it,framesep=1mm]
-Open Asset Import Library (short name: Assimp) is a portable Open
-Source library to import various well-known 3D model formats in a 
-uniform manner. The most recent version also knows how to export 
-3d files and is therefore suitable as general-purpose 3D model 
-converter.
-
-Assimp aims at providing a full asset conversion pipeline for use 
-in game engines / realtime rendering systems of any kind - but is 
-not limited to this audience. In the past, it has been used in a 
-wide and diverse range of applications.
-
-Written in C++, it is available under the liberal BSD license. 
-There is a C API as well as bindings to various other languages, 
-including Python and D. Assimp loads models into a straight
-forward data structure for further processing. This feature set 
-is augmented by various post processing steps - ranging from 
-general optimization tools to stuff like computing normal or 
-tangent vectors.
+Open Asset Import Library (short name: Assimp) is a portable
+Open Source library to import various well-known 3D model formats
+in a uniform manner. The most recent version also knows how to 
+export  3d files and is therefore suitable as general-purpose 
+3D model converter.
 \end{Verbatim}
 
 In our engine, we use Assimp to load 3d model files generated in 3rd party polygon-based modelling software, and parse them into triangle-based buffers that is uploaded to hardware buffers with OpenGL. The engine can also convert this data to buffers for use in OptiX.
 
 \paragraph{Shaders}
-Shaders are loaded from files using the old fopen from stdio. The shader loader also has a shader binding stack, for convenience, allowing render passes and scene objects to push and pop shaders' active state.
+Shaders are loaded from files using the old fopen from \textless stdio.h\textgreater . The shader loader also has a shader binding stack, for convenience, allowing render passes and scene objects to push and pop shaders' active state.
 The state of each shader is contained in the Shader object. It's implementation is based on the program pipeline API in OpenGL 4.
 
 \paragraph{Textures}
 The texture loader is based on DevIL, who's homepage \cite{devil_homepage} describes the library like this:
 \begin{Verbatim}[frame=single,fontshape=it,framesep=1mm]
-Many people may have known DevIL as OpenIL, but the name was 
-changed due to SGI's request.
-
-Developer's Image Library (DevIL) is a programmer's library to 
-develop applications with very powerful image loading 
-capabilities, yet is easy for a developer to learn and use. 
-Ultimate control of images is left to the developer, so 
-unnecessary conversions, etc. are not performed. DevIL utilizes a 
-simple yet powerful syntax. 
+Developer's Image Library (DevIL), formerly known as OpenIL, 
+is a programmer's library to  develop applications with very
+powerful image loading capabilities, yet is easy for a developer
+to learn and use. Ultimate control of images is left to the 
+developer, so unnecessary conversions, etc. are not performed.
+DevIL utilizes a simple yet powerful syntax. 
 
 DevIL can load, save, convert, manipulate, filter and display a 
 wide variety of image formats.
-
-Currently, DevIl can load .bmp, .cut, .dds, .doom, .exr, .hdr, 
-.gif, .ico, .jp2, .jpg, .lbm, .mdl, .mng, .pal, .pbm, .pcd, .pcx, 
-.pgm, .pic, .png, .ppm, .psd, .psp, .raw, .sgi, .tga and .tif 
-files.
-
-Formats supported for saving include .bmp, .dds, .h, .jpg, .pal, 
-.pbm, .pcx, .pgm, .png, .ppm, .raw, .sgi, .tga and .tif.
-
-DevIL currently supports the following APIs for display: OpenGL, 
-Windows GDI, SDL, DirectX and Allegro. Compilers that can compile 
-DevIL or use it include Djgpp, MSVC++, Linux gcc, Delphi, Visual 
-Basic, Power Basic and Dev-C++.
 \end{Verbatim}
 
 The texture loader in our engine loads a Tex2D object instance, which wraps the texture handling mechanisms in OpenGL for 2D textures.
@@ -84,66 +55,45 @@ The scene.ini is loaded by the SceneManager, and is used to define which BART sc
 As was explained in chapter (about OpenGL), the OpenGL API is a stack-based state machine. In an engine architecture, it makes for more robust handling when a certain behavior is grouped or stored within a class, and take advantage of the construction of objects and destruction of objects, to automate the state of the OpenGL stack as much as possible.
 
 \begin{Verbatim}[frame=single, numbers=left, label=VBO header]
-#pragma once
 
-#include <GL3/gl3w.h>
-#include <memory>
-#include <vector>
-
-//Vertex Buffer Object
-class VBO
+class VBO //Vertex Buffer Object
 {
-public:
-   VBO(unsigned int size, unsigned int draw_type);
-   ~VBO();
-
-   void bind();
-   void unbind();
-   unsigned int getHandle() const { return handle; }
-
-   template<class T>
-   unsigned int buffer(const std::vector<T> &data)
-   {
-      glBufferSubData(GL_ARRAY_BUFFER, offset, 
-                      sizeof(T)*data.size(), &data[0]);
-      unsigned int return_offset = offset;
-      offset += sizeof(T)*data.size();
-      return return_offset;
-   }
-private:
-   unsigned int handle;
-   unsigned int offset;
+	public:
+	VBO(unsigned int size, unsigned int draw_type)
+	{
+		glGenBuffers(1, &handle);
+		bind();
+		glBufferData(GL_ARRAY_BUFFER, size, nullptr, 
+		             draw_type);
+	}
+	
+	~VBO() { glDeleteBuffers(1, &handle); }
+	
+	void bind()
+	{
+		glBindBuffer(GL_ARRAY_BUFFER, handle);
+		offset = 0;
+	}
+	void unbind() { glBindBuffer(GL_ARRAY_BUFFER, 0); }
+	unsigned int getHandle() const { return handle; }
+	
+	template<class T>
+	unsigned int buffer(const std::vector<T> &data)
+	{
+		glBufferSubData(GL_ARRAY_BUFFER, offset, 
+										sizeof(T)*data.size(), &data[0]);
+		unsigned int return_offset = offset;
+		offset += sizeof(T)*data.size();
+		return return_offset;
+	}
+	private:
+	unsigned int handle;
+	unsigned int offset;
 };
 \end{Verbatim}
 
-\begin{Verbatim}[frame=single, numbers=left, label=VBO implementation]
-#include "VBO.h"
-
-VBO::VBO(unsigned int size, unsigned int draw_type)
-{
-   glGenBuffers(1, &handle);
-   bind();
-   glBufferData(GL_ARRAY_BUFFER, size, nullptr, draw_type);
-}
-
-VBO::~VBO()
-{
-   glDeleteBuffers(1, &handle);
-}
-
-void VBO::bind()
-{
-   glBindBuffer(GL_ARRAY_BUFFER, handle);
-   offset = 0;
-}
-
-void VBO::unbind()
-{
-   glBindBuffer(GL_ARRAY_BUFFER, 0);
-}
-\end{Verbatim}
-
 \subsubsection{Scene objects}
+
 The scene consist of multiple graphical objects positioned on the screen, and scene objects represents these by declaring the OpenGL render buffers, etc...
 
 \begin{Verbatim}[frame=single, numbers=left, label=Fullscreen quad implementation]
