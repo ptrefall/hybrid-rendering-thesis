@@ -1,8 +1,9 @@
 \section{Further work}
 
-Extend raytracer with intersect programs for geometry that is better suited for raytracing than rasterization. Examples:
+The work presented in this thesis can be improved. 
 \begin{itemize}
-	\item NURBS
-  \item Meta shapes
-  \item Distance fields
+	\item We identified that graphics hardware drivers are still not handling interoperation between Cuda and OpenGL fast enough. Using OpenGL 4.3, a raytracer could be implemented in the Compute Shader stage, which should cancel the interoperation overhead.
+	\item The deferred renderer could be rewritten to take advantage of tile-based parallellization in it's lighting pass. Using OpenGL 4.3, this could also be handled in a Compute Shader now, and probably also integrate well with a Compute Shader based raytracer.
+	\item Improve the BART loader to support animations. That would allow us to compare performance with other BART renderers.
+	\item Extend the raytracer with intersect programs for geometry that is better suited for raytracing than rasterization, like NURBS, Meta Shapes and Distance Fields.
 \end{itemize}
