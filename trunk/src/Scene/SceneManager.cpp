@@ -79,11 +79,11 @@ void SceneManager::render()
 	/*static int raytrace_pass_accum_time = 0;
 	int raytrace_pass_dt_time = 0;
 	gpu_timer->begin();*/
-	raytrace_pass->begin();
+	/*raytrace_pass->begin();
 	{
 	//	//raytrace_pass->update(g_buffer_pass->getRenderTextures(), scene, lights);
 		raytrace_pass->render();
-	} raytrace_pass->end();
+	} raytrace_pass->end();*/
 	/*while(!gpu_timer->isResultAvailable()) {}
 	raytrace_pass_dt_time = gpu_timer->getTimeElapsed();
 	raytrace_pass_accum_time += raytrace_pass_dt_time;*/

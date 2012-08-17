@@ -1,5 +1,36 @@
 \part{Conclusion}
 
+We have reviewed how rasterization and ray tracing techniques can be combined to make steps towards photo-realistic, real-time rendering. We identified that the deferred rendering pipeline was a good choice for the rasterization stages, since it easily allows the rasterized g-buffer data to be stored in view space. This is the same space that is output from a raytracer, and makes it simpler to mix the results from the two different rendering techniques.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1.00\textwidth]{Media/hybrid.png}
+	\caption{Geometry rasterized, normals raytraced. Three of the chairs, and some of the dishes, were only raytraced.}
+	\label{fig:hybrid_image01}
+\end{figure}
+
+The OptiX raytracer API was a good choice for the dissertation work, since it was a complete raytracer implemented on top of Cuda, with accelerated structure support and it's interopability based on Cuda's strong foundation.
+
+In our Hybridity chapters, we identified several rendering problems where the raytracer would be stronger than a rasterizer. Order independent transparency, aliasing-free shadows, reflections and refractions, analytical geometry and volumetric data are a few.
+
+Through our tests, we found that it's quite limited how large part of the scene, and which techniques, can be handled by the ray-tracer, and still keep within the scope of real-time framerates. Interopability alone eats a lot of time. Some tests using DirectX and Computer Shaders showed that the same algorithm would run up to a hundred percent faster than an OpenGL and Cuda interop equivalent. The OpenGL 4.3 specification, that introduce Compute Shader support to OpenGL, was released too late for us to take advantage of it in our work.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1.00\textwidth]{Media/gpu_timer_hybrid.png}
+	\caption{Output from GL TIME ELAPSED per frame for a hybrid scene. Time is averaging around 42'000'000.}
+	\label{fig:hybrid_gpu_time}
+\end{figure}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1.00\textwidth]{Media/gpu_timer_raster_only.png}
+	\caption{Output from GL TIME ELAPSED per frame for a purely rasterized scene. Time is averaging around 4'500'000.}
+	\label{fig:raster_gpu_time}
+\end{figure}
+
+
+
 
 This thesis was originally supposed to explore volume rendering with the OptiX raytracing framework, as this was a proposed assignment by our project advisor. We spent the good half of February 2012 researching volume rendering. We were thinking of exploring compositing volume graphics with typical solid-surface realtime graphics. Pål had for a long time wanted to look closer at tilebased deferred rendering, and we decided to study the ways this relatively new technique could be combined with realtime raytracing. Both deferred rendering with rasterization and raytracing are relatively old techniques that have recently become relevant for realtime graphics. Deferred pipelines became popular around 2004-2005 when GPUs finally had enough memory to allow multiple G-buffers to be held in-memory. Raytracing on GPUs has become easy to program thanks to languages like OpenCL and CUDA. There are visual effects that can only be accomplished accurately with raytracing (reflections and refractions), also certain types of geometry lend themselves naturally to raytracing (signed distance fields and spline-surfaces). Since a deferred renderer outputs much of the information needed (surface position and normal) to start secondary rays, we thought combining the two could be advantageous.
 
