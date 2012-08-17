@@ -69,7 +69,7 @@ We set out with a pretty solid engine architecture. Wrapping OpenGL functionalit
 
 The render pass design also turned out to be very flexible in use, making it easy to add new render passes, and move data between them.
 
-We also learned that in the shaders, it was a good practise to postfix all variables with the space the were in. So that we'd have the \emph{os} postfix for \emph{object space}, the \emph{ws} postfix for \emph{world space}, and so forth. This made it much easier to prevent unintended mixing computations with vectors and matrices that were in different spaces and resolved some weird bugs, specially related to the G-Buffer storage.
+We also learned that in the shaders, it was a good practise to postfix all variables with the space they were in. So that we'd have the \emph{os} postfix for \emph{object space}, the \emph{ws} postfix for \emph{world space}, and so forth. This made it much easier to prevent unintended mixing of computations with vectors and matrices that were in different spaces and resolved some weird bugs, specially related to the G-Buffer storage.
 
 Working with a deferred shading pipeline turned out to be very easy to structure well in code and shaders also, where we'd have a few general shaders, instead of the per-object specialized shaders one often finds in a forward renderer.
 
@@ -77,8 +77,6 @@ Early in the project phase, we spent a lot of time on researching previous work,
 
 OptiX appeared as the best option for us. It was developed by NVidia, and built on top of Cuda. We spent good time in the start researching the OptiX examples and how they interoperated with OpenGL. It all looked very straight forward to implement and customize for our purposes, and for the most part that held true, even though we eventually experienced some problems we were not able to resolve, we had a lot of success modifying existing examples and playing around with it.
 
-The collaboration also worked really well, even though we didn't live in the same city, we were able to communicate regularly over Skype throughout the process. We used SVN for source control, where utilizing it's logging functionality made it easy to update oneself on what the other developer had done. We also losely split up the workload such that one concentrated on the rasterizer integration, while the other concentrated on the OptiX integration, both which worked well seperated. The engine architecture itself was more of a collaboration and result of discussion.
+The collaboration also worked really well, even though we didn't live in the same city, we were able to communicate regularly over Skype throughout the process. We used SVN for source control, where utilizing it's logging functionality made it easy to update oneself on what the other developer had done. We also losely split up the workload such that one concentrated on the rasterizer integration, while the other concentrated on the OptiX integration, both which worked well seperated. The engine architecture itself was more of a collaboration effort and result of discussion.
 
 In the end, we pulled through all summer, in the middle of moving between cities, selling houses and other real-life interferences, making it to the finish line, submitting the thesis. It was a hard struggle at times, specially combating crashes that would restart the computer, and bugs related to interop or OptiX that didn't give much, if any, hints to what was wrong.
-
-We realize that we made some mistakes, where the biggest was to depend so heavily on an advanced third party library, like OptiX, when it was so hard to debug it.
