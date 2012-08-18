@@ -57,9 +57,17 @@ If the acceleration traverser determines that a primitive node is hit, it invoke
 If the Intersection program calls ``rtReportIntersection'', the primitives associated ``material'' Any Hit Program is called.
 If the ray doesn't hit anything, a miss program is called. The missprogram is always required.
 
+	\begin{figure}[ht]
+		\centering
+		\includegraphics[width=0.50\textwidth]{Media/raytracer_optix_flow.png}
+		\caption{Control flow through the ray tracing pipeline. Yellow boxes signify programmability. Blue boxes are algorithms internal to OptiX. Figure taken from \cite{Parker10OptiX} }
+		\label{fig:pipelines}
+	\end{figure}
+
 \subsection{CUDA program API}
 
-\begin{Verbatim}[frame=single, numbers=left, label=A simple raygen program]
+\lstset{language=C++,caption={A simple raygen program},label=raygen.cu}
+\begin{lstlisting}
 // notice use of templates for type and dimension
 rtBuffer<unsigned char, 2> outputBuffer; 
 
@@ -69,4 +77,4 @@ RT_PROGRAM void pinhole_camera() {
   rtTrace( topObject, ray, payload );
   outputBuffer[launchIndex] = payload.result;
 }
-\end{Verbatim}
+\end{lstlisting}
