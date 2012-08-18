@@ -433,6 +433,13 @@ For geometry, ``optix::Context'' provides functions createBufferFromGLBO and sim
 
 The standard pinhole\_camera.cu implementation is used, then the view vectors (u,v,w) must be extracted from our camera class or the modelview matrix.
 
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.90\textwidth]{Media/implementation_camera.png}
+  \caption{During development, we didn't get raster and ray cameras synced on first try...}   
+  \label{fig:raster_ray_camera}
+\end{figure}
+
 \paragraph{Description of the rendering pipeline}
 
 GL and OptiX scenes are independently rendered. We end up with two sets of g-buffers, shading and composition is done in a shader.
