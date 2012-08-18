@@ -35,7 +35,7 @@ The OptiX raytracer API was a good choice for the dissertation work, since it wa
 
 In our Hybridity chapters, we identified several rendering problems where the raytracer would be stronger than a rasterizer. Order independent transparency, aliasing-free shadows, reflections and refractions, analytical geometry and volumetric data are a few.
 
-Through our tests, we found that it's quite limited how large part of the scene, and which techniques, can be handled by the ray-tracer, and still keep within the scope of real-time framerates. Interopability alone eats a lot of time. Some tests using DirectX and Computer Shaders showed that the same algorithm would run up to a hundred percent faster than an OpenGL and Cuda interop equivalent. The OpenGL 4.3 specification, that introduce Compute Shader support to OpenGL, was released too late for us to take advantage of it in our work.
+Through our tests, we found that it's quite limited how large part of the scene, and which techniques, can be handled by the ray-tracer, and still keep within the scope of real-time framerates. Interopability alone eats a lot of time. Some tests using DirectX and Computer Shaders showed that the same algorithm would run up to a hundred percent faster than an OpenGL and Cuda interop equivalent on NVidia drivers. The OpenGL 4.3 specification, that introduce Compute Shader support to OpenGL, was released too late for us to take advantage of it in our work.
 
 \begin{figure}[H]
 	\centering
