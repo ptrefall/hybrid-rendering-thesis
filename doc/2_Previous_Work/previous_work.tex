@@ -19,8 +19,8 @@ Examples of real time path tracing engines;
 		\subsection{Pure raytracing} 
 		One pass. But produces ugly hard shadows unless we shoot more that one shadowray. Hard shadows can be given soft edges using blending trickery, but this it isn't physically correct.
 		
-	\subsection{Photon mapping} A two pass algorithm introduced by \cite{jensen95}. Combines stochastic ray tracing (a.k.a. Monte Carlo ray tracer) and particle tracing.
-	\paragraph{1.st pass} photons are cast from the light source and check for intersection against the scene.    Every intersecting photon is stored in a photon map. After intersecting the scene a photon may be reflected, refracted or absorbed depending on the material properties of the surface. The selection is done by the Monte Carlo method called 'russian roulette'. If the photon is not absorbed, then a new traveling direction is calculated for it according to the selected behavior.
+	\subsection{Photon mapping} A two pass algorithm \cite{jensen95}. Combines stochastic ray tracing (a.k.a. Monte Carlo ray tracer) and particle tracing.
+	\paragraph{1.st pass} photons are cast from the light source and check for intersection against the scene. Every intersecting photon is stored in a photon map. After intersecting the scene a photon may be reflected, refracted or absorbed depending on the material properties of the surface. The selection is done by the Monte Carlo method called 'russian roulette'. If the photon is not absorbed, then a new traveling direction is calculated for it according to the selected behavior.
 
 \begin{figure}[ht]
 	\begin{minipage}[b]{0.5\linewidth}
@@ -41,32 +41,37 @@ Examples of real time path tracing engines;
 		\paragraph{2.nd pass} View rays are cast from the camera and checked for intersection against the scene similar to raytracing. Once the nearest intersection point is found, a pre-defined number of nearest photons are sampled, and interpolated to calculate irradiance at that point.
 			
 	\subsection {Radiosity}
-		Radiosity is a GI-method that creates a diffuse inter-reflections map of light in a scene. It works by dividing the scene geometry into small
-		patches \ref{fig:radiosity_grid}. For every pair of patches, one defines a camera model for how they can
-		see each other. Examples are paraboloid- and cuboid-mapping. These form factors are then used
-		in an iterative process that progressively transfers radiation between the
-		patches. This is a finite element method.
+		Radiosity is a GI-method that creates a diffuse inter-reflections map of light in a scene. In other words, a global illumination method that only works for diffuse objects. It works by dividing the scene geometry into small
+		patches. See figure \ref{fig:radiosity_grid}. For every pair of patches, one defines a camera model for how they can
+		see each other. Examples are paraboloid- and cuboid-mapping. See figure \ref{fig:radiosity_patch} These form factors are then used
+		in an iterative process that progressively transfers radiation between the patches (figure \ref{fig:radiosity_output} ). This is a finite element method.
 
 		Radiosity can generate realistic diffuse lighting and is viewpoint independent. As long as
 		geometry and lightsources remain unchanged, the simulation can be effectively
 		sorted and sampled to obtain the scene lighting for any view.
 
-
 \begin{figure}[ht]
-	\begin{minipage}[b]{0.5\linewidth}
-		\centering
-		\includegraphics[width=0.6\textwidth]{Media/prev_work_radiosity_grid.png}
-		\caption{Geometry divided into patches/elements. Image by Hugo Elias.}
-		\label{fig:radiosity_grid}
-	\end{minipage}
-		\hspace{0.5cm}
-		\begin{minipage}[b]{0.5\linewidth}
-			\centering
-		  \includegraphics[width=0.6\textwidth]{Media/prev_work_radiosity_patch.png}
-		  \caption{A single path/element. Image by Hugo Elias, found at freespace.virgin.net/hugo.elias/radiosity/radiosity.htm }
-		  \label{fig:radiosity_patch}
-		\end{minipage}
-\end{figure}	
+\begin{minipage}[b]{0.3\linewidth}
+\centering
+\includegraphics[width=.8\textwidth]{Media/prev_work_radiosity_grid.png}
+\caption{Geometry divided into patches}
+\label{fig:radiosity_grid}
+\end{minipage}
+\begin{minipage}[b]{0.3\linewidth}
+\centering
+\includegraphics[width=0.8\textwidth]{Media/prev_work_radiosity_fisheye.png}
+\caption{Scene seen from the perspective of a patch }
+\label{fig:radiosity_patch}
+\end{minipage}
+\begin{minipage}[b]{0.3\linewidth}
+\centering
+\includegraphics[width=0.8\textwidth]{Media/prev_work_radiosity_thirdpass.png}
+\caption{Output after three passes. Images by Hugo Elias \cite{elias} }
+\label{fig:radiosity_output}
+\end{minipage}
+\end{figure}
+
+	
 
 	The radiosity method isn't perfect. Its slow, it does'nt handle point light sources well, nor shiny surfaces.
 
