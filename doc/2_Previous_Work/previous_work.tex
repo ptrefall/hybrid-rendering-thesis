@@ -76,15 +76,15 @@ Examples of real time path tracing engines;
 	The radiosity method isn't perfect. Its slow, it does'nt handle point light sources well, nor shiny surfaces.
 
 	\subsection {Instant Radiosity}
-		A technique developed by Alexander Keller to approximate the simulation of light
+		A technique developed by Alexander Keller \cite{keller97} to approximate the simulation of light
 		transfers between purely diffuse surfaces. The algorithm goes as follows, first
 		one casts a large quantity of rays from each light in random directions which
 		are then checked for intersection against the scene. Then, at the intersection
-		point create a so called 'virtual point light' (VPL). These VPLs represent the
+		point, a so called 'virtual point light' (VPL) is created. These VPLs represent the
 		light bouncing off surfaces. Accuracy may be improved by recursively casting new
 		light rays from each VPL, but one step usually creates a reliable approximation.
-		Once the VPLs have been created, they are rendered as normal point lights.
-		Modern GPUs are very good at shading surfaces lit by point lights.
+		Once the VPLs have been created, they are rendered as normal point lights with shadows for increased realism.
+		A modern instant radiosity implementation \cite{laine07} utilizes the fact that GPUs are very good at shading surfaces lit by point lights and filling shadowmaps. Earlier implementations used stencil shadows, where the shadow geometry was constructed on the CPU.
 
 	\subsection {Path Tracing}
 		Path tracing combines ray tracing and Monte Carlo methods to approximate the
@@ -102,7 +102,7 @@ Examples of real time path tracing engines;
 		called 'Bidirectional Path Tracing' that is useful to increase the chance of a
 		ray intersecting a surface in scenes with small or occluded light sources.
 		
-		An advantage for artists is that lighting effects are easy to predict, at least compared to a raytracer that doesn't do photon mapping. In a simple raytracer, the artist must use many lightsources 
+		An advantage for artists is that lighting effects are easy to predict, at least compared to a raytracer that doesn't do photon mapping. In a simple raytracer, the artist must use many lightsources. 
 
 	\section {Real-time Global Illumination}  
 		Recent advancements were made by taking classical algorithms and implementing them on GPUs. 
@@ -135,14 +135,14 @@ Examples of real time path tracing engines;
 
 	\subsection {Global Illumination with Light Propagation Volumes}
 
-	Global Illumination with Light Propagation Volumes (LPV) is a technique for approximation instant radiosity on the GPU. \cite{kaplanyan2009} This technique avoids the instant radiosity requirements for processing a large amount of lights by using a representation of the scene lighting that decouples scene illumination from light quantity. The first step is to generate an initial distribution of VPLs, this is done by rendering a Reflective Shadow Map (RSM) \cite{dachsbacher2005} from the lights point of view. The radiance of each VPL is injected as spherical harmonics into a 3D texture as spherical harmonics that represents the initial distribution of radiance on the scene. Then the initial radiances are propagated iteratively through the radiance volume to simulate light propagation. The volume is then sampled once per-pixel to obtain the irradiance at that location.
+	Global Illumination with Light Propagation Volumes (LPV) is a technique for approximation instant radiosity on the GPU. \cite{kaplanyan2009} This technique avoids the instant radiosity requirements for processing a large amount of lights by using a representation of the scene lighting that decouples scene illumination from light quantity. The first step is to generate an initial distribution of VPLs, this is done by rendering a Reflective Shadow Map (RSM) \cite{dachsbacher2005} from the lights point of view. The radiance of each VPL is injected as spherical harmonics into a 3D texture that represents the initial distribution of radiance on the scene. Then the initial radiances are propagated iteratively through the radiance volume to simulate light propagation. The volume is then sampled once per-pixel to obtain the irradiance at that location.
 
 \subsection {Real-Time Ray Tracing}
 	\paragraph Inigo Wald's OpenRT uses traces multiple rays (ray packets) in-one-go using SIMD instructions.
 	
-	\paragraph Jakko Bikker's Arauna uses kd-tree for static geometry and a bounding interval hiearchy (BIH) for dynamic geometry. Has been used for a few student projects at 
+	\paragraph Another SIMD based raytracer is Jakko Bikker's Arauna, it uses kd-tree for static geometry and a bounding interval hiearchy (BIH) for dynamic geometry.
 
-\paragraph Nvidia's has a sample included with their OptiX library called hybrid shadows. The hybrid shadows sample renders world space positions to a texture. Texture is loaded into optix, from there a ray is traced from each world space position against all lights. Attenuates given world space position and saves attenuation value in a shadowmap.
+\paragraph Nvidia's has a sample included with their OptiX library called hybrid shadows. The hybrid shadows sample renders world space positions to a texture. Texture is loaded into optix, from there a ray is traced from each world space position against all lights. The shadow map can then be made available to the rasterizer and sampled in a fragment shader.
 
 \subsection {Combining Rasterization and Ray Tracing}
 	Rasterization and Ray Tracing are very different, but can be combined to exploit each ones strengths. Rasterization is good at direct/local lighting, while raytracing is flexible for many effects.

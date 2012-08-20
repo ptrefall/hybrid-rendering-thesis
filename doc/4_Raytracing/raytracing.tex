@@ -15,9 +15,9 @@ Optix can be seen as a framework for launching rays. It doesn't know anything ab
       programs (``raygen'' from here on) are launched by the client program using rtContextLaunch(rayProgramIndex, with, height). This invokes many raygen programs in parallel. The raygen is the main entry point into the raytracing pipeline. Input and output buffers are declared inside. You can use a single raygen program as a general compute shader, but the intended use is to implement a camera model by initializing ray origin and direction. After a ray has been initialized, \begin{verbatim}rtTrace startNode,ray,payload \end{verbatim} can be called, and will trace all of start nodes children. 
 	}
 
-	\item{\textbf{Exeption} programs are invoked when the system encounters problems like out of stack space, or buffer access index is                   out of range. Also supports user-defined exceptions that can be 	thrown from any program. Can react by printing                         diagnostic messages or   writing specific color values to an output buffer.}
+	\item{\textbf{Exeption} programs are invoked when the system encounters problems like out of stack space, or buffer access index is out of range. Also supports user-defined exceptions that can be 	thrown from any program. Can react by printing diagnostic messages or   writing specific color values to an output buffer.}
 
-	\item{\textbf{Closest hit} programs are invoked once traversal has found the closest intersection of a ray with scene geometry.}
+	\item{\textbf{Closest hit} programs are invoked once traversal has found the closest intersection of a ray with scene geometry. Surface shading is usually done in a closest hit program. Fragment color information is returned to the raygen program and stored in a buffer (for example a renderbuffer for further manipulation or a framebuffer).}
 
 	\item{\textbf{Any hit}
 		allow shading to be kept separate from geometry.
@@ -26,7 +26,7 @@ Optix can be seen as a framework for launching rays. It doesn't know anything ab
 		Default any hit program is a no-op, often the most desired operation.
 		}
 
-	\item{\textbf{Miss} intersect any geometry. }
+	\item{\textbf{Miss} intersect any geometry. Typically used for enviroment map lookup or background color. }
 
 	\item {\textbf{Intersection}
 	programs are needed to describe geometry. The program must at least report if and where the ray touches the object, 
@@ -65,6 +65,8 @@ If the ray doesn't hit anything, a miss program is called. The missprogram is al
 	\end{figure}
 
 \subsection{CUDA program API}
+
+The simplest CUDA application only has one program; a raygen. The raygen program doesn't need to call rtTrace and can be used as a general CUDA program. See the code listing below \ref{raygen.cu} for a simple raygen program that implements a pinhole camera. The struct UserPayload payload is passed into the call to rtTrace, and is made available to the closest hit, any hit and miss programs when called during ray traversal.
 
 \lstset{language=C++,caption={A simple raygen program},label=raygen.cu}
 \begin{lstlisting}

@@ -55,7 +55,7 @@ As mentioned, certain types of geometry are better suited for ray tracing.
 		\label{fig:pipelines}
 	\end{figure}
 
-Rasterization has recieved a lot of attention due to its efficiency. This efficiency is mainly due to its cache and bandwidth friendliness. Notice in the figure \ref{fig:pipelines} comparing rasterization pipeline and ray tracing algorithm that rasterization has a predictable flow from one stage to the next, while ray tracing has arrows that signify recursive calls for continued traversal, or recursive materials when shading. Unless someone invents memory with bandwidth on par with CPU Registers, ray tracing will allways be slower.
+Rasterization has recieved a lot of attention due to its efficiency. This efficiency is mainly due to its cache and bandwidth friendliness. Notice in the figure \ref{fig:pipelines} comparing rasterization pipeline and ray tracing algorithm that rasterization has a predictable flow from one stage to the next, while ray tracing has arrows that signify recursive calls for continued traversal, or recursive materials when shading. Unless someone invents memory with bandwidth on par with CPU registers, ray tracing will allways be slower.
 
 	\begin{figure}[ht]
 		\centering \includegraphics[width=0.80\textwidth]{Media/why_hybrid_raymindmap.png}
@@ -69,9 +69,4 @@ Rasterization has recieved a lot of attention due to its efficiency. This effici
 		\label{fig:raster_mmap}
 	\end{figure}
 
-In a raytracer, global effects \ref{fig:ray_mmap}, such as reflections, refractions and shadows, are handled per fragment.
-
-
-
-
-\ref{fig:citroen_gs}
+In a raytracer, global effects, such as reflections, refractions and shadows, are handled per fragment.
