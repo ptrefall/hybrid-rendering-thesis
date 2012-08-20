@@ -52,7 +52,7 @@ The engine.ini is loaded by the Kernel, and is used to define the screen propert
 The scene.ini is loaded by the SceneManager, and is used to define which BART scene to load.
 
 \subsubsection{Object oriented OpenGL wrappers}
-As was explained in chapter (about OpenGL), the OpenGL API is a stack-based state machine. In an engine architecture, it makes for more robust handling when a certain behavior is grouped or stored within a class, and take advantage of the construction of objects and destruction of objects, to automate the state of the OpenGL stack as much as possible.
+As was explained in chapter (about OpenGL), the OpenGL API is a stack-based state machine. In an engine architecture, it makes for more robust handling when a certain behavior is grouped or stored within a class, and take advantage of the construction of objects and destruction of objects, to automate the state of the OpenGL stack as much as possible. Code listing \ref{vbo.h} shows how one of the many GL objects is wrapped.
 
 \lstset{language=C++,caption={VBO header},label=vbo.h}
 \begin{lstlisting}
@@ -416,23 +416,14 @@ At construction, the Optix renderer initializes the Optix context, loads, compil
 
 At render-time, the pinhole camera data is updated from the first person camera instance, and the G-Buffer data is uploaded to the respective PBOs. Then the context is launched. Finally, the PBOs data is downloaded to the raytracer's g-buffer, utilizing the PBOs efficient GPU-side data copy between the buffer and texture sampler.
 
-\subsubsection{OptiX programs}
-
-\subsection{OptiX and GL interopability}
-Combining our deferred raster pipeline with OptiX can either be done from scratch, learning what every OptiX API-call does, or, copy one of the GL/Optix interop examples and modify it until it works.
-
-\subsubsection{Shared State}
-The following state must be synchronized between GL and OptiX
+The following is synchronized between GL and OptiX:
 
 \begin{enumerate}
 	\item Geometry and its transform (model matrix)
-	\item Textures (if we find that they can demonstrate any advantages)
 	\item Camera (view matrix \& projection matrix)
 \end{enumerate}
 
-For geometry, ``optix::Context'' provides functions createBufferFromGLBO and similar createTextureSamplerFromGLImage for textures.
-
-The standard pinhole\_camera.cu implementation is used, then the view vectors (u,v,w) must be extracted from our camera class or the modelview matrix.
+The view vectors (u,v,w) needed for a ray tracers pinhole camera is converted from the view matrix.
 
 \begin{figure}[H]
   \centering
@@ -446,7 +437,7 @@ The standard pinhole\_camera.cu implementation is used, then the view vectors (u
 GL and OptiX scenes are independently rendered. We end up with two sets of g-buffers, shading and composition is done in a shader.
 
 \subsection{Camera model}
-The raytracer uses pinhole camera model. The eye is a point, rays are cast from this point, through the viewplane and into the scene. Eyepoint-viewplane distance determines focal length. A rasterizer on the other hand requires a projection matrix.
+The raytracer uses a pinhole camera model. The eye is a point, rays are cast from this point, through the viewplane and into the scene. Eyepoint-viewplane distance determines focal length. A rasterizer on the other hand requires a projection matrix.
 
 \subsection{Geometry}
 
@@ -454,4 +445,4 @@ OptiX is programmable to the level that all geometry must have its own program. 
 
 \lstinputlisting[language=C++,caption={OptiX Triangle Intersection program},label=triangle_mesh_small.cu]{6_Implementation/trimesh.cu}
 
-Notice how normals in \autoref{triangle_mesh_small.cu} are read by supplying a normal offset variable, and adding it to the vertex position index.
+Notice how normals in listing \ref{triangle_mesh_small.cu} are read by supplying a normal offset variable, and adding it to the vertex position index.
